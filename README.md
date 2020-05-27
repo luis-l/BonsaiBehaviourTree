@@ -1,8 +1,3 @@
-# Unity Assets
-
-1. [Bonsai Behaviour Tree](#bonsai-behaviour-tree)
-2. [Autonomous Agents](#autonomous-agents)
-
 ## Bonsai Behaviour Tree
 Advanced behavior tree solution with a graphical editor
 

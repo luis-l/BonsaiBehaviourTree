@@ -3,7 +3,7 @@
 # Get latest from https://github.com/github/gitignore/blob/master/Unity.gitignore
 #
 /[Ll]ibrary/
-/[Tt]emp/
+/[Tt]emp*
 /[Oo]bj/
 /[Bb]uild/
 /[Bb]uilds/
@@ -68,4 +68,8 @@ crashlytics-build.properties
 # Temporary auto-generated Android Assets
 /[Aa]ssets/[Ss]treamingAssets/aa.meta
 /[Aa]ssets/[Ss]treamingAssets/aa/*
+
+# Meta files for these are not important.
+LICENSE*.meta
+README*.meta
 

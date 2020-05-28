@@ -4,24 +4,25 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-    /// <summary>
-    /// Keep re-traversing children until the child return success.
-    /// </summary>
-    [NodeEditorProperties("Decorators/", "RepeatCheckmark")]
-    public class UntilSuccess : Decorator
+  /// <summary>
+  /// Keep re-traversing children until the child return success.
+  /// </summary>
+  [NodeEditorProperties("Decorators/", "RepeatCheckmark")]
+  public class UntilSuccess : Decorator
+  {
+    public override Status Run()
     {
-        public override Status Run()
-        {
-            Status s = _iterator.LastStatusReturned;
+      Status s = _iterator.LastStatusReturned;
 
-            if (s == Status.Success) {
-                return Status.Success;
-            }
+      if (s == Status.Success)
+      {
+        return Status.Success;
+      }
 
-            // Retraverse child.
-            _iterator.Traverse(_child);
+      // Retraverse child.
+      _iterator.Traverse(_child);
 
-            return Status.Running;
-        }
+      return Status.Running;
     }
+  }
 }

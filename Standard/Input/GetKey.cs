@@ -6,14 +6,14 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-    [NodeEditorProperties("Input/", "Keyboard")]
-    public class GetKey : ConditionalAbort
-    {
-        public KeyCode key;
+  [NodeEditorProperties("Input/", "Keyboard")]
+  public class GetKey : ConditionalAbort
+  {
+    public KeyCode key;
 
-        public override bool Condition()
-        {
-            return Input.GetKey(key);
-        }
+    public override bool Condition()
+    {
+      return Input.GetKey(key);
     }
+  }
 }

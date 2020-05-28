@@ -6,14 +6,14 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-    [NodeEditorProperties("Input/", "Mouse")]
-    public class IsMouseButtonDown : ConditionalAbort
-    {
-        public int button = 0;
+  [NodeEditorProperties("Input/", "Mouse")]
+  public class IsMouseButtonDown : ConditionalAbort
+  {
+    public int button = 0;
 
-        public override bool Condition()
-        {
-            return Input.GetMouseButtonDown(button);
-        }
+    public override bool Condition()
+    {
+      return Input.GetMouseButtonDown(button);
     }
+  }
 }

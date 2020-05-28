@@ -5,37 +5,38 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-    /// <summary>
-    /// Displays a message.
-    /// </summary>
-    [NodeEditorProperties("Tasks/", "Log")]
-    public class Print : Task
+  /// <summary>
+  /// Displays a message.
+  /// </summary>
+  [NodeEditorProperties("Tasks/", "Log")]
+  public class Print : Task
+  {
+    public enum LogType { Normal, Warning, Error };
+
+    public string message = "Print Node";
+
+    [Tooltip("The type of message to display.")]
+    public LogType logType = LogType.Normal;
+
+    public override Status Run()
     {
-        public enum LogType { Normal, Warning, Error };
+      switch (logType)
+      {
 
-        public string message = "Print Node";
+        case LogType.Normal:
+          Debug.Log(message);
+          break;
 
-        [Tooltip("The type of message to display.")]
-        public LogType logType = LogType.Normal;
+        case LogType.Warning:
+          Debug.LogWarning(message);
+          break;
 
-        public override Status Run()
-        {
-            switch (logType) {
+        case LogType.Error:
+          Debug.LogError(message);
+          break;
+      }
 
-                case LogType.Normal:
-                    Debug.Log(message);
-                    break;
-
-                case LogType.Warning:
-                    Debug.LogWarning(message);
-                    break;
-
-                case LogType.Error:
-                    Debug.LogError(message);
-                    break;
-            }
-
-            return Status.Success;
-        }
+      return Status.Success;
     }
+  }
 }

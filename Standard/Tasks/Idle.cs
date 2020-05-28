@@ -6,10 +6,11 @@ using Bonsai.Designer;
 /// Always returns running.
 /// </summary>
 [NodeEditorProperties("Tasks/", "Hourglass")]
-public class Idle : Task {
+public class Idle : Task
+{
 
-    public override BehaviourNode.Status Run()
-    {
-        return Status.Running;
-    }
+  public override BehaviourNode.Status Run()
+  {
+    return Status.Running;
+  }
 }

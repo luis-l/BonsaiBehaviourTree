@@ -72,9 +72,6 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     internal List<BehaviourNode> allNodes = new List<BehaviourNode>();
 
-    // The height (level count) of the tree.        
-    private int _height = 0;
-
     public void SetBlackboard(Blackboard bb)
     {
       _blackboard = bb;
@@ -315,8 +312,8 @@ namespace Bonsai.Core
       {
         node.levelOrder = itr.CurrentLevel;
 
-              // This will end up with the highest level.
-              _height = itr.CurrentLevel;
+        // This will end up with the highest level.
+        Height = itr.CurrentLevel;
       };
 
       TreeIterator<BehaviourNode>.Traverse(_root, levelOrder, Traversal.LevelOrder);
@@ -417,10 +414,7 @@ namespace Bonsai.Core
       return _mainIterator != null && _mainIterator.IsRunning;
     }
 
-    public int Height
-    {
-      get { return _height; }
-    }
+    public int Height { get; private set; } = 0;
 
     /// <summary>
     /// Gets the instantiated copy version of a behaviour node from its original version.
@@ -457,14 +451,14 @@ namespace Bonsai.Core
       {
         var nodeCopy = ScriptableObject.Instantiate(originalNode);
 
-              // Linke the root copy.
-              if (originalBT.Root == originalNode)
+        // Linke the root copy.
+        if (originalBT.Root == originalNode)
         {
           cloneBt.Root = nodeCopy;
         }
 
-              // Nodes will be added in pre-order.
-              nodeCopy.ClearTree();
+        // Nodes will be added in pre-order.
+        nodeCopy.ClearTree();
         nodeCopy.Tree = cloneBt;
       };
 

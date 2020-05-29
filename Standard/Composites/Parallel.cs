@@ -1,4 +1,4 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 
 using Bonsai.Core;
@@ -45,7 +45,7 @@ namespace Bonsai.Standard
       }
     }
 
-    public override BehaviourNode.Status Run()
+    public override Status Run()
     {
       // All iterators done.
       // Since there was no failure interruption, that means
@@ -53,7 +53,7 @@ namespace Bonsai.Standard
       // returns success aswell.
       if (IsDone)
       {
-        return BehaviourNode.Status.Success;
+        return Status.Success;
       }
 
       // Process the sub-iterators.
@@ -71,7 +71,7 @@ namespace Bonsai.Standard
         // Iterator finished, it must have returned Success or Failure.
         // If the iterator returned failure, then interrupt the parallel process
         // and have the parallel node return failure.
-        else if (itr.LastStatusReturned == BehaviourNode.Status.Failure)
+        else if (itr.LastStatusReturned == Status.Failure)
         {
           return Status.Failure;
         }

@@ -14,25 +14,18 @@ namespace Bonsai.Core
 
     // Access to the tree so we can find any node from pre-order index.
     private BehaviourTree _tree;
-
-    private BehaviourNode.Status _lastStatusReturned;
-
-    // The level offset is needed to find a nodes position in the traversal stack.
-    // This is needed for parallel node which have their own stacks.
-    private int _levelOffset;
-
     private Queue<int> _requestedTraversals = new Queue<int>();
 
     /// <summary>
     /// Called when the iterators finishes iterating the entire tree.
     /// </summary>
-    public event Action OnDone = delegate { };
+    public Action OnDone = delegate { };
 
     public BehaviourIterator(BehaviourTree tree, int levelOffset)
     {
       _tree = tree;
       _traversal = new IntStack(_tree.Height);
-      _levelOffset = levelOffset;
+      LevelOffset = levelOffset;
     }
 
     /// <summary>
@@ -44,13 +37,13 @@ namespace Bonsai.Core
 
       int index = _traversal.Peek();
       BehaviourNode node = _tree.allNodes[index];
-      _lastStatusReturned = node.Run();
+      LastStatusReturned = node.Run();
 
 #if UNITY_EDITOR
-      node.SetStatusEditor(_lastStatusReturned);
+      node.SetStatusEditor(LastStatusReturned);
 #endif
 
-      if (_lastStatusReturned != BehaviourNode.Status.Running)
+      if (LastStatusReturned != BehaviourNode.Status.Running)
       {
 
         node.OnExit();
@@ -92,13 +85,13 @@ namespace Bonsai.Core
       // If this is not a root node, then notify the parent about the child finishing.
       if (_traversal.Count > 0)
       {
-        node.Parent.OnChildExit(node._indexOrder, _lastStatusReturned);
+        node.Parent.OnChildExit(node._indexOrder, LastStatusReturned);
       }
 
       // If this was a subtree under a parallel node, then notify its parent.
       else if (node.Parent && _tree.IsParallelNode(node.Parent))
       {
-        node.Parent.OnChildExit(node._indexOrder, _lastStatusReturned);
+        node.Parent.OnChildExit(node._indexOrder, LastStatusReturned);
       }
     }
 
@@ -112,7 +105,7 @@ namespace Bonsai.Core
       _traversal.Push(index);
       _requestedTraversals.Enqueue(index);
 
-      _lastStatusReturned = BehaviourNode.Status.Running;
+      LastStatusReturned = BehaviourNode.Status.Running;
 
 #if UNITY_EDITOR
       next.SetStatusEditor(BehaviourNode.Status.Running);
@@ -172,7 +165,7 @@ namespace Bonsai.Core
     /// <returns></returns>
     public int GetIndexInTraversal(BehaviourNode node)
     {
-      return node.levelOrder - _levelOffset;
+      return node.levelOrder - LevelOffset;
     }
 
     public bool IsRunning
@@ -188,19 +181,13 @@ namespace Bonsai.Core
       get { return _traversal.Peek(); }
     }
 
-    public int LevelOffset
-    {
-      get { return _levelOffset; }
-    }
+    public int LevelOffset { get; }
 
     /// <summary>
     /// The last status stored by the iterator. Can be used by composites and decorators
     /// to find out what the child returned.
     /// </summary>
-    public BehaviourNode.Status LastStatusReturned
-    {
-      get { return _lastStatusReturned; }
-    }
+    public BehaviourNode.Status LastStatusReturned { get; private set; }
 
     private void stepBackAbort()
     {
@@ -260,7 +247,6 @@ namespace Bonsai.Core
     private class IntStack
     {
       private int[] _container;
-      private int _count;
 
       public IntStack(int treeHeight)
       {
@@ -268,7 +254,7 @@ namespace Bonsai.Core
         // the the stack needs to have treeHeight + 1 slots.
         int maxDepth = treeHeight + 1;
 
-        _count = 0;
+        Count = 0;
         _container = new int[maxDepth];
 
         for (int i = 0; i < maxDepth; ++i)
@@ -279,23 +265,20 @@ namespace Bonsai.Core
 
       public int Peek()
       {
-        return _container[_count - 1];
+        return _container[Count - 1];
       }
 
       public int Pop()
       {
-        return _container[--_count];
+        return _container[--Count];
       }
 
       public void Push(int value)
       {
-        _container[_count++] = value;
+        _container[Count++] = value;
       }
 
-      public int Count
-      {
-        get { return _count; }
-      }
+      public int Count { get; private set; }
 
       public int GetValue(int index)
       {

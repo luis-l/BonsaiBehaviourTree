@@ -11,9 +11,9 @@ namespace Bonsai.Utility
   public class StateMachine<T>
   {
     /// <summary>
-    /// An event that fires when the machine finishes transitioning to another state.
+    /// Called when the machine finishes transitioning to another state.
     /// </summary>
-    public event Action OnStateChangedEvent = delegate { };
+    public Action OnStateChangedEvent = delegate { };
 
     protected Dictionary<T, State> _states = new Dictionary<T, State>();
 

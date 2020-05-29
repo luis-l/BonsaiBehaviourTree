@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnityEngine;
-
+﻿
 using Bonsai.Core;
 using Bonsai.Designer;
 
@@ -19,9 +16,9 @@ namespace Bonsai.Standard
       var status = _iterator.LastStatusReturned;
 
       // If a child failed then the sequence fails.
-      if (status == BehaviourNode.Status.Failure)
+      if (status == Status.Failure)
       {
-        return BehaviourNode.Status.Failure;
+        return Status.Failure;
       }
 
       // Else child returned success.
@@ -32,14 +29,14 @@ namespace Bonsai.Standard
       // If this was the last child then the sequence returns success.
       if (nextChild == null)
       {
-        return BehaviourNode.Status.Success;
+        return Status.Success;
       }
 
       // Still need children to process.
       else
       {
         _iterator.Traverse(nextChild);
-        return BehaviourNode.Status.Running;
+        return Status.Running;
       }
     }
   }

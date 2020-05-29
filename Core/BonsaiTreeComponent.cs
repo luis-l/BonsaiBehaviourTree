@@ -1,24 +1,15 @@
 ﻿
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bonsai.Core
 {
   public class BonsaiTreeComponent : MonoBehaviour
   {
-    [SerializeField]
-    private BehaviourTree _treeBlueprint;
-
     /// <summary>
     /// The tree blueprint used.
     /// </summary>
-    public BehaviourTree TreeBlueprint
-    {
-      get
-      {
-        return _treeBlueprint;
-      }
-    }
+    [SerializeField]
+    public BehaviourTree TreeBlueprint;
 
     // The instance of the behaviour tree associated with this game object component.
     internal BehaviourTree bt;

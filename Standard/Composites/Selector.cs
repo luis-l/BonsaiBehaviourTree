@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿
 using Bonsai.Core;
 using Bonsai.Designer;
 
@@ -18,9 +16,9 @@ namespace Bonsai.Standard
       var status = _iterator.LastStatusReturned;
 
       // If a child succeeded then the selector succeeds.
-      if (status == BehaviourNode.Status.Success)
+      if (status == Status.Success)
       {
-        return BehaviourNode.Status.Success;
+        return Status.Success;
       }
 
       // Else child returned failure.
@@ -31,14 +29,14 @@ namespace Bonsai.Standard
       // If this was the last child then the selector fails.
       if (nextChild == null)
       {
-        return BehaviourNode.Status.Failure;
+        return Status.Failure;
       }
 
       // Still need children to process.
       else
       {
         _iterator.Traverse(nextChild);
-        return BehaviourNode.Status.Running;
+        return Status.Running;
       }
     }
   }

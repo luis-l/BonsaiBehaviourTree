@@ -20,6 +20,21 @@ namespace Tests
     }
   }
 
+  public class UtilityTask : Task
+  {
+    public float Utility { get; set; }
+
+    public override Status Run()
+    {
+      return Status.Failure;
+    }
+
+    public override float UtilityValue()
+    {
+      return Utility;
+    }
+  }
+
   public static class Helper
   {
     public static BehaviourNode.Status RunBehaviourTree(BehaviourTree tree)

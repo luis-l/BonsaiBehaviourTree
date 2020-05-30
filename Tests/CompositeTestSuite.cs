@@ -42,6 +42,36 @@ namespace Tests
     }
 
     [Test]
+    public void RandomSequencePass()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<RandomSequence>(tree);
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Success, result);
+    }
+
+    [Test]
+    public void RandomSequenceFail()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<RandomSequence>(tree);
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Failure, result);
+    }
+
+    [Test]
     public void SelectorPass()
     {
       BehaviourTree tree = Helper.CreateTree();
@@ -62,6 +92,36 @@ namespace Tests
       BehaviourTree tree = Helper.CreateTree();
 
       var root = Helper.CreateNode<Selector>(tree);
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Failure, result);
+    }
+
+    [Test]
+    public void RandomSelectorPass()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<RandomSelector>(tree);
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      root.AddChild(Helper.CreateNode<Fail>(tree));
+      root.AddChild(Helper.CreateNode<Success>(tree));
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Success, result);
+    }
+
+    [Test]
+    public void RandomSelectorFail()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<RandomSelector>(tree);
       root.AddChild(Helper.CreateNode<Fail>(tree));
       root.AddChild(Helper.CreateNode<Fail>(tree));
       root.AddChild(Helper.CreateNode<Fail>(tree));
@@ -95,6 +155,57 @@ namespace Tests
       root.AddChild(Helper.CreateNode<Success>(tree));
       root.AddChild(Helper.CreateNode<Fail>(tree));
       root.AddChild(Helper.CreateNode<Success>(tree));
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Failure, result);
+    }
+
+    [Test]
+    public void UtilitySelectorPass()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<UtilitySelector>(tree);
+
+      var alpha = Helper.CreateNode<UtilityTask>(tree);
+      var beta = Helper.CreateNode<UtilityTask>(tree);
+      var delta = Helper.CreateNode<UtilityTask>(tree);
+
+      var betaDecorator = Helper.CreateNode<Bonsai.Standard.Success>(tree);
+      betaDecorator.AddChild(beta);
+
+      alpha.Utility = 10f;
+      beta.Utility = 30f;
+      delta.Utility = 20f;
+
+      root.AddChild(alpha);
+      root.AddChild(betaDecorator);
+      root.AddChild(delta);
+      tree.Root = root;
+
+      var result = Helper.RunBehaviourTree(tree);
+      Assert.AreEqual(BehaviourNode.Status.Success, result);
+    }
+
+    [Test]
+    public void UtilitySelectorFail()
+    {
+      BehaviourTree tree = Helper.CreateTree();
+
+      var root = Helper.CreateNode<UtilitySelector>(tree);
+
+      var alpha = Helper.CreateNode<UtilityTask>(tree);
+      var beta = Helper.CreateNode<UtilityTask>(tree);
+      var delta = Helper.CreateNode<UtilityTask>(tree);
+
+      alpha.Utility = 10f;
+      beta.Utility = 30f;
+      delta.Utility = 20f;
+
+      root.AddChild(alpha);
+      root.AddChild(beta);
+      root.AddChild(delta);
       tree.Root = root;
 
       var result = Helper.RunBehaviourTree(tree);

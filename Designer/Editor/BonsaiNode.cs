@@ -108,7 +108,7 @@ namespace Bonsai.Designer
     {
       removeAllChildren();
       unparent(behaviour);
-      ScriptableObject.DestroyImmediate(behaviour, true);
+      Object.DestroyImmediate(behaviour, true);
 
       if (_inputKnob != null)
       {

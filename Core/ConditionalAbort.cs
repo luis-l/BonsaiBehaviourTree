@@ -87,7 +87,7 @@ namespace Bonsai.Core
       return false;
     }
 
-    public override BehaviourNode.Status Run()
+    public override Status Run()
     {
       // Return failure if the condition failed, else
       // return what the child returns if the condition was true.
@@ -124,7 +124,7 @@ namespace Bonsai.Core
           return
               !BehaviourTree.IsUnderSubtree(this, active) &&
               BehaviourTree.IsUnderSubtree(Parent, active) &&
-              this.Priority() > _iterator.GetRunningSubtree(Parent).Priority() &&
+              Priority() > _iterator.GetRunningSubtree(Parent).Priority() &&
               Reevaluate();
 
         // Self aborts always interrupt, regardless of the condition.
@@ -135,7 +135,7 @@ namespace Bonsai.Core
           return
                (BehaviourTree.IsUnderSubtree(this, active) ||
                (BehaviourTree.IsUnderSubtree(Parent, active) &&
-               this.Priority() > _iterator.GetRunningSubtree(Parent).Priority())) &&
+               Priority() > _iterator.GetRunningSubtree(Parent).Priority())) &&
                Reevaluate();
       }
 
@@ -153,7 +153,7 @@ namespace Bonsai.Core
     public static bool IsAbortable(ConditionalAbort aborter, BehaviourNode node)
     {
       // This makes sure that dangling nodes do not show that they can abort nodes under main tree.
-      if (aborter.preOrderIndex == BehaviourNode.kInvalidOrder)
+      if (aborter.preOrderIndex == kInvalidOrder)
       {
         return false;
       }

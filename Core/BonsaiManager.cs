@@ -39,7 +39,7 @@ namespace Bonsai.Core
     public static void DestroyTree(BehaviourTree tree)
     {
       _trees.Remove(tree);
-      ScriptableObject.Destroy(tree);
+      Destroy(tree);
     }
 
     void Awake()

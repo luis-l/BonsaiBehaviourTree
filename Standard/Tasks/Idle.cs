@@ -9,7 +9,7 @@ using Bonsai.Designer;
 public class Idle : Task
 {
 
-  public override BehaviourNode.Status Run()
+  public override Status Run()
   {
     return Status.Running;
   }

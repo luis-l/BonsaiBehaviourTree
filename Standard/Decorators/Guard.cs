@@ -31,7 +31,7 @@ namespace Bonsai.Standard
       // Do not run the child immediately.
     }
 
-    public override BehaviourNode.Status Run()
+    public override Status Run()
     {
       // If we enter the run state of the guard, that means
       // the child already returned.

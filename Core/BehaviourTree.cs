@@ -414,6 +414,11 @@ namespace Bonsai.Core
       return _mainIterator != null && _mainIterator.IsRunning;
     }
 
+    public BehaviourNode.Status LastStatus()
+    {
+      return _mainIterator.LastStatusReturned;
+    }
+
     public int Height { get; private set; } = 0;
 
     /// <summary>
@@ -442,14 +447,14 @@ namespace Bonsai.Core
     /// <returns></returns>
     public static BehaviourTree Clone(BehaviourTree originalBT)
     {
-      var cloneBt = ScriptableObject.Instantiate(originalBT);
-      cloneBt._blackboard = ScriptableObject.Instantiate(originalBT._blackboard);
+      var cloneBt = Instantiate(originalBT);
+      cloneBt._blackboard = Instantiate(originalBT._blackboard);
 
       cloneBt.allNodes.Clear();
 
       Action<BehaviourNode> copier = (originalNode) =>
       {
-        var nodeCopy = ScriptableObject.Instantiate(originalNode);
+        var nodeCopy = Instantiate(originalNode);
 
         // Linke the root copy.
         if (originalBT.Root == originalNode)
@@ -481,8 +486,8 @@ namespace Bonsai.Core
         if (originalParent)
         {
 
-          BehaviourNode copyNode = BehaviourTree.GetInstanceVersion(cloneBt, originalNode);
-          BehaviourNode copyParent = BehaviourTree.GetInstanceVersion(cloneBt, originalParent);
+          BehaviourNode copyNode = GetInstanceVersion(cloneBt, originalNode);
+          BehaviourNode copyParent = GetInstanceVersion(cloneBt, originalParent);
 
           copyParent.ForceSetChild(copyNode);
         }
@@ -558,13 +563,13 @@ namespace Bonsai.Core
       // Destory the cloned subtrees since we do not need them anymore.
       for (int i = 0; i < includedTrees.Length; ++i)
       {
-        ScriptableObject.Destroy(includedTrees[i]);
+        Destroy(includedTrees[i]);
       }
 
       // Destroy the includes
       for (int i = 0; i < includes.Count; ++i)
       {
-        ScriptableObject.Destroy(includes[i]);
+        Destroy(includes[i]);
       }
     }
 

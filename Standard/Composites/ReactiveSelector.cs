@@ -1,5 +1,4 @@
 ﻿
-using Bonsai.Core;
 using Bonsai.Designer;
 
 namespace Bonsai.Standard
@@ -24,7 +23,7 @@ namespace Bonsai.Standard
     public override void OnEnter()
     {
       // Do not traverse the children immediately.
-      _currentChildIndex = BehaviourNode.kInvalidOrder;
+      _currentChildIndex = kInvalidOrder;
     }
 
     public override Status Run()
@@ -36,7 +35,7 @@ namespace Bonsai.Standard
       int reevaluationRange = _childCount;
 
       // There is a running node.
-      if (_currentChildIndex != BehaviourNode.kInvalidOrder)
+      if (_currentChildIndex != kInvalidOrder)
       {
 
         // If this child is running, then the next re-evaluation only needs
@@ -56,7 +55,7 @@ namespace Bonsai.Standard
         {
 
           // The current index is now invalid since there are no running children,
-          _currentChildIndex = BehaviourNode.kInvalidOrder;
+          _currentChildIndex = kInvalidOrder;
 
           // We must then search all the children in the next re-evaluation.
           reevaluationRange = _childCount;
@@ -90,7 +89,7 @@ namespace Bonsai.Standard
         {
 
           // Change in running child. Interrupt the old running child.
-          if (_currentChildIndex != BehaviourNode.kInvalidOrder && _currentChildIndex != i)
+          if (_currentChildIndex != kInvalidOrder && _currentChildIndex != i)
           {
             Tree.Interrupt(_children[_currentChildIndex], true);
           }
@@ -116,7 +115,7 @@ namespace Bonsai.Standard
       return Status.Running;
     }
 
-    protected internal override void OnChildExit(int childIndex, BehaviourNode.Status childStatus)
+    protected internal override void OnChildExit(int childIndex, Status childStatus)
     {
       _childStatuses[childIndex] = childStatus;
     }

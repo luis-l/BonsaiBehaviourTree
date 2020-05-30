@@ -229,6 +229,23 @@ namespace Bonsai.Core
       }
     }
 
+
+    public static TAccum Traverse<TAccum>(T root, Func<TAccum, T, TAccum> accumulator, TAccum initial, Traversal traversal = Traversal.PreOrder)
+    {
+      var itr = new TreeIterator<T>(root, traversal);
+
+
+      while (itr.HasNext())
+      {
+
+        var node = itr.Next();
+        initial = accumulator(initial, node);
+      }
+
+      return initial;
+
+    }
+
     /// <summary>
     /// A pre-order traversal with the option to skip some nodes.
     /// </summary>

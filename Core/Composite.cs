@@ -35,7 +35,11 @@ namespace Bonsai.Core
     public override void OnEnter()
     {
       _currentChildIndex = 0;
-      _iterator.Traverse(NextChild());
+      var next = NextChild();
+      if (next)
+      {
+        _iterator.Traverse(next);
+      }
     }
 
     public IEnumerable<BehaviourNode> Children

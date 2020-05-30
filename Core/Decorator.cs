@@ -16,7 +16,10 @@ namespace Bonsai.Core
     /// </summary>
     public override void OnEnter()
     {
-      _iterator.Traverse(_child);
+      if (_child)
+      {
+        _iterator.Traverse(_child);
+      }
     }
 
     /// <summary>

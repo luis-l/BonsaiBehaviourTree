@@ -1,4 +1,5 @@
 ﻿
+using System.Linq;
 using Bonsai.Core;
 using Bonsai.Designer;
 
@@ -9,11 +10,12 @@ namespace Bonsai.Standard
   {
     public override Status Run()
     {
-      // All iterators done.
-      // Since there was no success interruption, that means
-      // all iterators returned failure, so the parallel node
-      // returns failure aswell.
-      if (IsDone)
+      if (IsAnyChildWithStatus(Status.Success))
+      {
+        return Status.Success;
+      }
+
+      if (AreAllChildrenWithStatus(Status.Failure))
       {
         return Status.Failure;
       }
@@ -21,21 +23,11 @@ namespace Bonsai.Standard
       // Process the sub-iterators.
       for (int i = 0; i < _subIterators.Count; ++i)
       {
-
-        BehaviourIterator itr = _subIterators[i];
-
         // Keep updating the iterators that are not done.
+        BehaviourIterator itr = _subIterators[i];
         if (itr.IsRunning)
         {
           itr.Update();
-        }
-
-        // Iterator finished, it must have returned Success or Failure.
-        // If the iterator returned success, then interrupt the parallel process
-        // and have the parallel node return success.
-        else if (itr.LastStatusReturned == Status.Success)
-        {
-          return Status.Success;
         }
       }
 

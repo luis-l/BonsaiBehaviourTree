@@ -1,6 +1,5 @@
 ﻿
 using System.Collections.Generic;
-using System.Linq;
 
 using Bonsai.Core;
 using Bonsai.Designer;
@@ -18,14 +17,17 @@ namespace Bonsai.Standard
 
     protected Status[] ChildStatuses { get; private set; }
 
+    public override void OnStart()
+    {
+      ChildStatuses = new Status[ChildCount()];
+    }
+
     public override void OnEnter()
     {
-      ChildStatuses = Enumerable.Repeat(Status.Running, _children.Count).ToArray();
-
       // Traverse children at the same time.
       for (int childIndex = 0; childIndex < _children.Count; ++childIndex)
       {
-
+        ChildStatuses[childIndex] = Status.Running;
         var child = _children[childIndex];
         _subIterators[childIndex].Traverse(child);
       }
@@ -80,12 +82,28 @@ namespace Bonsai.Standard
 
     protected bool IsAnyChildWithStatus(Status expected)
     {
-      return Enumerable.Any(ChildStatuses, (Status s) => { return s == expected; });
+      foreach (var status in ChildStatuses)
+      {
+        if (status == expected)
+        {
+          return true;
+        }
+      }
+
+      return false;
     }
 
     protected bool AreAllChildrenWithStatus(Status expected)
     {
-      return Enumerable.All(ChildStatuses, (Status s) => { return s == expected; });
+      foreach (var status in ChildStatuses)
+      {
+        if (status != expected)
+        {
+          return false;
+        }
+      }
+
+      return true;
     }
 
     /// <summary>

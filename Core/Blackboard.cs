@@ -45,7 +45,7 @@ namespace Bonsai.Core
     {
       if (_memory.ContainsKey(key))
       {
-        Debug.LogError("Cannot Add. Register " + key + " already exists in the Blackboard.");
+        Debug.LogWarning("Cannot Add. Register " + key + " already exists in the Blackboard.");
       }
 
       else
@@ -79,7 +79,7 @@ namespace Bonsai.Core
     {
       if (_memory.ContainsKey(key))
       {
-        Debug.LogError("Cannot Add. Register " + key + " already exists in the Blackboard.");
+        Debug.LogWarning("Cannot Add. Register " + key + " already exists in the Blackboard.");
       }
 
       else
@@ -186,14 +186,7 @@ namespace Bonsai.Core
     // Test if the key exists in the memory dictionary.
     public bool Exists(string key)
     {
-      if (!_memory.ContainsKey(key))
-      {
-
-        Debug.LogError("Register " + key + " is not in the Blackboard.");
-        return false;
-      }
-
-      return true;
+      return _memory.ContainsKey(key);
     }
 
     /// <summary>

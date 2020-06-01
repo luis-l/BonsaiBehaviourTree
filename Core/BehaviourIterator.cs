@@ -175,10 +175,11 @@ namespace Bonsai.Core
 
     /// <summary>
     /// Gets the pre-order index of the node at the top of the traversal stack.
+    /// If the iterator is not traversing anything, -1 is returned.
     /// </summary>
     public int CurrentIndex
     {
-      get { return _traversal.Peek(); }
+      get { return _traversal.Count == 0 ? -1 : _traversal.Peek(); }
     }
 
     public int LevelOffset { get; }

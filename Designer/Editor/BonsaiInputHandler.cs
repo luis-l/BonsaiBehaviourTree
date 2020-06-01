@@ -31,65 +31,35 @@ namespace Bonsai.Designer
     private List<BonsaiNode> _draggingSubroots = new List<BonsaiNode>();
 
     private bool _bIsDragging = false;
-    private bool _bIsMakingConnection = false;
-    private bool _bIsAreaSelecting = false;
-
     private Vector2 _areaSelectStartPos = Vector2.zero;
-
-    // The individual node selected, like if it was clicked on.
-    private BonsaiNode _selectedNode = null;
 
     // The node that is currently dragged.
     private BonsaiNode _draggingNode = null;
 
-    // The selected knob that will be making a connection to an input knob.
-    private BonsaiOutputKnob _outputKnobToConnect = null;
-
     // The nodes selected from an area/multi selection.
     private List<BonsaiNode> _selectedNodes = new List<BonsaiNode>();
-
-    // Reference linking actions.
-    private bool _bIsMakingLink = false;
     private Type _referenceLinkType = typeof(BehaviourNode);
     private Action<BehaviourNode> onSelectedForLinking = null;
 
-    internal bool IsRefLinking
-    {
-      get { return _bIsMakingLink; }
-    }
+    internal bool IsRefLinking { get; private set; } = false;
 
-    public bool IsMakingConnection
-    {
-      get { return _bIsMakingConnection; }
-    }
+    public bool IsMakingConnection { get; private set; } = false;
 
-    public BonsaiOutputKnob OutputToConnect
-    {
-      get { return _outputKnobToConnect; }
-    }
+    public BonsaiOutputKnob OutputToConnect { get; private set; } = null;
 
-    public bool IsAreaSelecting
-    {
-      get { return _bIsAreaSelecting; }
-    }
+    public bool IsAreaSelecting { get; private set; } = false;
 
     private void resetState()
     {
-      _bIsAreaSelecting = false;
+      IsAreaSelecting = false;
       _bIsDragging = false;
-      _bIsMakingConnection = false;
+      IsMakingConnection = false;
 
       _draggingNode = null;
-      _outputKnobToConnect = null;
+      OutputToConnect = null;
     }
 
-    public BonsaiNode SelectedNode
-    {
-      get
-      {
-        return _selectedNode;
-      }
-    }
+    public BonsaiNode SelectedNode { get; private set; } = null;
 
     #endregion
 
@@ -123,16 +93,16 @@ namespace Bonsai.Designer
       // Define the actions to take when a single node is selected.
       onSingleSelected = (node) =>
       {
-              // Only apply single node selection on a node that is
-              // not currently under area selection.
-              if (!node.bAreaSelectionFlag)
+        // Only apply single node selection on a node that is
+        // not currently under area selection.
+        if (!node.bAreaSelectionFlag)
         {
 
           _window.editor.ClearReferencedNodes();
           clearAreaSelection();
 
-          _selectedNode = node;
-          _window.editor.canvas.PushToEnd(_selectedNode);
+          SelectedNode = node;
+          _window.editor.canvas.PushToEnd(SelectedNode);
           Selection.activeObject = node.behaviour;
 
           handleOnAborterSelected(node);
@@ -231,8 +201,8 @@ namespace Bonsai.Designer
         Action<BonsaiOutputKnob> outputCallback = (output) =>
         {
           e.Use();
-          _bIsMakingConnection = true;
-          _outputKnobToConnect = output;
+          IsMakingConnection = true;
+          OutputToConnect = output;
         };
 
         // Check to see if we are making connection starting from output knob.
@@ -244,17 +214,17 @@ namespace Bonsai.Designer
 
           Action<BonsaiInputKnob> inputCallback = (input) =>
           {
-                      // Starting a connection from input means that its connected
-                      // output will change its input.
-                      if (input.outputConnection != null)
+            // Starting a connection from input means that its connected
+            // output will change its input.
+            if (input.outputConnection != null)
             {
 
               e.Use();
-              _bIsMakingConnection = true;
-              _outputKnobToConnect = input.outputConnection;
+              IsMakingConnection = true;
+              OutputToConnect = input.outputConnection;
 
-                        // We disconnect the input since we want to change it to a new input.
-                        input.outputConnection.RemoveInputConnection(input);
+              // We disconnect the input since we want to change it to a new input.
+              input.outputConnection.RemoveInputConnection(input);
             }
           };
 
@@ -263,22 +233,22 @@ namespace Bonsai.Designer
       }
 
       // Finish making the connection.
-      else if (e.type == EventType.MouseUp && e.button == 0 && _bIsMakingConnection)
+      else if (e.type == EventType.MouseUp && e.button == 0 && IsMakingConnection)
       {
 
         Action<BonsaiNode> callback = (node) =>
         {
-          _outputKnobToConnect.Add(node.Input);
+          OutputToConnect.Add(node.Input);
 
-                  // When a connection is made, we need to make sure the positional
-                  // ordering reflects the internal tree structure.
-                  node.NotifyParentOfPostionalReordering();
+          // When a connection is made, we need to make sure the positional
+          // ordering reflects the internal tree structure.
+          node.NotifyParentOfPostionalReordering();
         };
 
         _window.editor.OnMouseOverNode_OrInput(callback);
 
-        _bIsMakingConnection = false;
-        _outputKnobToConnect = null;
+        IsMakingConnection = false;
+        OutputToConnect = null;
       }
     }
 
@@ -327,7 +297,7 @@ namespace Bonsai.Designer
 
     private void handleLinking(Event e)
     {
-      if (!_bIsMakingLink) return;
+      if (!IsRefLinking) return;
 
       if (e.type == EventType.MouseDown && e.button == 0)
       {
@@ -356,13 +326,13 @@ namespace Bonsai.Designer
     {
       _referenceLinkType = refType;
       onSelectedForLinking = onNodeSelected;
-      _bIsMakingLink = true;
+      IsRefLinking = true;
     }
 
     internal void EndReferenceLinking()
     {
       onSelectedForLinking = null;
-      _bIsMakingLink = false;
+      IsRefLinking = false;
     }
 
     #endregion
@@ -420,12 +390,12 @@ namespace Bonsai.Designer
     {
       NodeContext context = (NodeContext)o;
 
-      Type nodeType = _selectedNode.behaviour.GetType();
+      Type nodeType = SelectedNode.behaviour.GetType();
 
       switch (context)
       {
         case NodeContext.SetAsRoot:
-          _window.tree.Root = _selectedNode.behaviour;
+          _window.tree.Root = SelectedNode.behaviour;
           break;
 
         case NodeContext.Duplicate:
@@ -438,7 +408,7 @@ namespace Bonsai.Designer
           break;
 
         case NodeContext.Delete:
-          _window.editor.canvas.Remove(_selectedNode);
+          _window.editor.canvas.Remove(SelectedNode);
           break;
       }
     }
@@ -531,8 +501,8 @@ namespace Bonsai.Designer
         _bIsDragging = true;
         _draggingNode = node;
 
-              // Calculate the relative mouse position from the node for dragging.
-              Vector2 mpos = _window.editor.MousePosition();
+        // Calculate the relative mouse position from the node for dragging.
+        Vector2 mpos = _window.editor.MousePosition();
         _singleDragOffset = mpos - _draggingNode.bodyRect.position;
       };
 
@@ -651,20 +621,20 @@ namespace Bonsai.Designer
       {
 
         _areaSelectStartPos = Event.current.mousePosition;
-        _bIsAreaSelecting = true;
+        IsAreaSelecting = true;
         e.Use();
       }
 
       // End area selection
-      else if (e.type == EventType.MouseUp && e.button == 0 && _bIsAreaSelecting)
+      else if (e.type == EventType.MouseUp && e.button == 0 && IsAreaSelecting)
       {
 
         collectAreaSelectedNodes();
-        _bIsAreaSelecting = false;
+        IsAreaSelecting = false;
       }
 
       // Doing area selection.
-      if (_bIsAreaSelecting)
+      if (IsAreaSelecting)
       {
         setSelectedNodesUnderAreaSelection();
       }
@@ -751,7 +721,7 @@ namespace Bonsai.Designer
     {
       EndReferenceLinking();
       _window.editor.ClearReferencedNodes();
-      _selectedNode = null;
+      SelectedNode = null;
       Selection.activeObject = _window.tree;
     }
 

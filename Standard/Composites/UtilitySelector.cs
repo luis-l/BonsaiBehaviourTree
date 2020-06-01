@@ -13,7 +13,7 @@ namespace Bonsai.Standard
   public class UtilitySelector : Selector
   {
 
-    struct Branch
+    private struct Branch
     {
       public Branch(int index, float utility)
       {
@@ -27,24 +27,36 @@ namespace Bonsai.Standard
 
     private Branch[] _branchOrder;
 
+    public override void OnStart()
+    {
+      _branchOrder = Enumerable.Range(0, ChildCount()).Select(index => new Branch(index, 0f)).ToArray();
+    }
+
     public override void OnEnter()
     {
       // Calculate the utility value of each branch.
       if (ChildCount() > 0)
       {
-        Func<float, BehaviourNode, float> sumUtility = (accum, node) =>
+        for (int i = 0; i < ChildCount(); i++)
         {
-          return accum + node.UtilityValue();
-        };
+          _branchOrder[i].Utility = TreeIterator<BehaviourNode>.Traverse(GetChildAt(i), sumUtility, 0f);
+        }
 
-        _branchOrder = Enumerable
-          .Range(0, ChildCount())
-          .Select(index => new Branch(index, TreeIterator<BehaviourNode>.Traverse(GetChildAt(index), sumUtility, 0f)))
-          .OrderByDescending(branch => branch.Utility)
-          .ToArray();
+        Array.Sort(_branchOrder, descendingUtilityOrder);
 
         base.OnEnter();
       }
+    }
+
+    private static float sumUtility(float accumulatedUtility, BehaviourNode node)
+    {
+      return accumulatedUtility + node.UtilityValue();
+    }
+
+
+    private static int descendingUtilityOrder(Branch left, Branch right)
+    {
+      return -left.Utility.CompareTo(right.Utility);
     }
 
     // Get children by utility order.

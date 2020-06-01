@@ -25,6 +25,11 @@ namespace Bonsai.Standard
     // The indices of the children in priority order.
     private Branch[] _branchOrder;
 
+    public override void OnStart()
+    {
+      _branchOrder = Enumerable.Range(0, ChildCount()).Select(index => new Branch(index, 0f)).ToArray();
+    }
+
     // Order the child priorities
     public override void OnEnter()
     {
@@ -49,17 +54,23 @@ namespace Bonsai.Standard
       // Calculate the utility value of each branch.
       if (ChildCount() > 0)
       {
-        Func<float, BehaviourNode, float> maxPriority = (accum, node) =>
+        for (int i = 0; i < ChildCount(); i++)
         {
-          return Math.Max(accum, node.Priority());
-        };
+          _branchOrder[i].Priority = TreeIterator<BehaviourNode>.Traverse(GetChildAt(i), maxPriority, 0f);
+        }
 
-        _branchOrder = Enumerable
-          .Range(0, ChildCount())
-          .Select(index => new Branch(index, TreeIterator<BehaviourNode>.Traverse(GetChildAt(index), maxPriority, int.MinValue)))
-          .OrderByDescending(branch => branch.Priority)
-          .ToArray();
+        Array.Sort(_branchOrder, descendingPriorityOrder);
       }
+    }
+
+    private static float maxPriority(float maxSoFar, BehaviourNode node)
+    {
+      return Math.Max(maxSoFar, node.Priority());
+    }
+
+    private static int descendingPriorityOrder(Branch left, Branch right)
+    {
+      return -left.Priority.CompareTo(right.Priority);
     }
   }
 }

@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Linq;
 
 using Bonsai.Core;
 using Bonsai.Designer;
@@ -9,19 +10,20 @@ namespace Bonsai.Standard
   [NodeEditorProperties("Composites/", "Priority")]
   public class PrioritySelector : Selector
   {
-    // The indices of the children in priority order.
-    private int[] _childrenOrder;
-
-    public override void OnStart()
+    struct Branch
     {
-      _childrenOrder = new int[ChildCount()];
-
-      // Fill in with indices so it can be sorted.
-      for (int i = 0; i < _childrenOrder.Length; ++i)
+      public Branch(int index, float priority)
       {
-        _childrenOrder[i] = i;
+        Index = index;
+        Priority = priority;
       }
+
+      public int Index { get; set; }
+      public float Priority { get; set; }
     }
+
+    // The indices of the children in priority order.
+    private Branch[] _branchOrder;
 
     // Order the child priorities
     public override void OnEnter()
@@ -33,44 +35,31 @@ namespace Bonsai.Standard
     // The order of the children is from highest to lowest priority.
     public override BehaviourNode NextChild()
     {
-      if (_currentChildIndex >= _childrenOrder.Length)
+      if (_currentChildIndex >= _branchOrder.Length)
       {
         return null;
       }
 
-      int index = _childrenOrder[_currentChildIndex];
+      int index = _branchOrder[_currentChildIndex].Index;
       return _children[index];
-    }
-
-    protected internal override void OnAbort(ConditionalAbort child)
-    {
-      if (IsChild(child))
-      {
-
-        sortPriorities();
-
-        for (int i = 0; i < _childrenOrder.Length; ++i)
-        {
-
-          // Match found, start from this priority node.
-          if (child._indexOrder == _childrenOrder[i])
-          {
-            _currentChildIndex = i;
-            break;
-          }
-        }
-      }
     }
 
     private void sortPriorities()
     {
-      _currentChildIndex = 0;
-      Array.Sort(_childrenOrder, comparePriorities);
-    }
+      // Calculate the utility value of each branch.
+      if (ChildCount() > 0)
+      {
+        Func<float, BehaviourNode, float> maxPriority = (accum, node) =>
+        {
+          return Math.Max(accum, node.Priority());
+        };
 
-    private int comparePriorities(int indexA, int indexB)
-    {
-      return _children[indexA].Priority() > _children[indexB].Priority() ? -1 : 1;
+        _branchOrder = Enumerable
+          .Range(0, ChildCount())
+          .Select(index => new Branch(index, TreeIterator<BehaviourNode>.Traverse(GetChildAt(index), maxPriority, int.MinValue)))
+          .OrderByDescending(branch => branch.Priority)
+          .ToArray();
+      }
     }
   }
 }

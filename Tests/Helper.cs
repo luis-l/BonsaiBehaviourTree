@@ -1,46 +1,82 @@
 ﻿
+using System.Collections.Generic;
 using UnityEngine;
 using Bonsai.Core;
+using NUnit.Framework.Internal;
 
 namespace Tests
 {
-  public class Success : Task
+  public class TestNode : Task
   {
-    public override Status Run()
+    public float? PriorityValue { get; set; } = null;
+    public float? Utility { get; set; } = null;
+    public Status ReturnStatus { get; set; }
+
+    public const string kHistoryKey = "TraverseHistory";
+
+    public override void OnStart()
     {
-      return Status.Success;
+      if (!Blackboard.Exists(kHistoryKey))
+      {
+        Blackboard.Add(kHistoryKey, new List<int>());
+      }
     }
-  }
 
-  public class Fail : Task
-  {
     public override Status Run()
     {
-      return Status.Failure;
+      return ReturnStatus;
     }
-  }
 
-  public class UtilityTask : Task
-  {
-    public float Utility { get; set; }
-
-    public override Status Run()
+    public override float Priority()
     {
-      return Status.Failure;
+      return PriorityValue.GetValueOrDefault(base.Priority());
     }
 
     public override float UtilityValue()
     {
-      return Utility;
+      return Utility.GetValueOrDefault(base.UtilityValue());
+    }
+
+    public override void OnEnter()
+    {
+      Blackboard.Get<List<int>>(kHistoryKey).Add(PreOrderIndex);
+    }
+
+    public TestNode WithPriority(float priority)
+    {
+      PriorityValue = priority;
+      return this;
+    }
+
+    public TestNode WithUtility(float utility)
+    {
+      Utility = utility;
+      return this;
     }
   }
 
   public static class Helper
   {
-    public static BehaviourNode.Status RunBehaviourTree(BehaviourTree tree)
+    public static void StartBehaviourTree(BehaviourTree tree)
     {
+      tree.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
       tree.SortNodes();
       tree.Start();
+    }
+
+    public static BehaviourNode.Status StepBehaviourTree(BehaviourTree tree)
+    {
+      if (tree.IsRunning())
+      {
+        tree.Update();
+      }
+
+      return tree.LastStatus();
+    }
+
+    public static BehaviourNode.Status RunBehaviourTree(BehaviourTree tree)
+    {
+      StartBehaviourTree(tree);
 
       while (tree.IsRunning())
       {
@@ -61,7 +97,20 @@ namespace Tests
       node.Tree = tree;
       return node;
     }
-  }
 
+    static public TestNode PassNode(BehaviourTree tree)
+    {
+      var node = CreateNode<TestNode>(tree);
+      node.ReturnStatus = BehaviourNode.Status.Success;
+      return node;
+    }
+
+    static public TestNode FailNode(BehaviourTree tree)
+    {
+      var node = CreateNode<TestNode>(tree);
+      node.ReturnStatus = BehaviourNode.Status.Failure;
+      return node;
+    }
+  }
 }
 

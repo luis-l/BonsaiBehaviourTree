@@ -1,71 +1,5 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-8819669853141981963
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e058f722ffddcd44f887561d85c18e34, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _parentTree: {fileID: 11400000}
-  preOrderIndex: 1
-  postOrderIndex: 14
-  levelOrder: 1
-  _parent: {fileID: 114580271867415780}
-  _indexOrder: 0
-  bonsaiNodePosition: {x: -12.8, y: 128}
-  comment: 
-  _children:
-  - {fileID: 8063610386708641290}
-  - {fileID: -1090452527618125913}
-  - {fileID: 1495475048730360848}
---- !u!114 &-4310486380477184738
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3125ae739752e504a9c041242db34aa8, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _parentTree: {fileID: 11400000}
-  preOrderIndex: -1
-  postOrderIndex: -1
-  levelOrder: -1
-  _parent: {fileID: 0}
-  _indexOrder: 0
-  bonsaiNodePosition: {x: -256, y: 102.4}
-  comment: 
-  _children: []
---- !u!114 &-1090452527618125913
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6290070e5b743314084c4bf4d7201fe5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _parentTree: {fileID: 11400000}
-  preOrderIndex: 14
-  postOrderIndex: 12
-  levelOrder: 2
-  _parent: {fileID: -8819669853141981963}
-  _indexOrder: 1
-  bonsaiNodePosition: {x: -89.59986, y: 345.5999}
-  comment: 
-  waitTime: 1
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -83,7 +17,6 @@ MonoBehaviour:
   _blackboard: {fileID: 114376941799171812}
   allNodes:
   - {fileID: 114580271867415780}
-  - {fileID: -8819669853141981963}
   - {fileID: 8063610386708641290}
   - {fileID: 114066485924181106}
   - {fileID: 114951529963225600}
@@ -96,12 +29,8 @@ MonoBehaviour:
   - {fileID: 114466855100790292}
   - {fileID: 114631563120798210}
   - {fileID: 114976033407663308}
-  - {fileID: -1090452527618125913}
-  - {fileID: 1495475048730360848}
-  - {fileID: -4310486380477184738}
-  - {fileID: 7271645668199829787}
-  panPosition: {x: -88.12481, y: -177.71263}
-  zoomPosition: {x: 2.2199614, y: 2.2199614}
+  panPosition: {x: -43.36689, y: -467.45386}
+  zoomPosition: {x: 1.4132569, y: 1.4132569}
 --- !u!114 &114066485924181106
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -115,12 +44,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 3
+  preOrderIndex: 2
   postOrderIndex: 0
-  levelOrder: 3
+  levelOrder: 2
   _parent: {fileID: 8063610386708641290}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -729.59985, y: 627.2}
+  bonsaiNodePosition: {x: -345.60022, y: 409.60022}
   comment: 
   waitTime: 0.1
 --- !u!114 &114170558304603750
@@ -136,12 +65,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 9
+  preOrderIndex: 8
   postOrderIndex: 10
-  levelOrder: 3
+  levelOrder: 2
   _parent: {fileID: 8063610386708641290}
   _indexOrder: 2
-  bonsaiNodePosition: {x: -191.99992, y: 627.19977}
+  bonsaiNodePosition: {x: 192.00012, y: 409.59998}
   comment: 
   _children:
   - {fileID: 114702548702774506}
@@ -173,12 +102,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 7
+  preOrderIndex: 6
   postOrderIndex: 2
-  levelOrder: 5
+  levelOrder: 4
   _parent: {fileID: 114878835623641032}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -511.99963, y: 857.5995}
+  bonsaiNodePosition: {x: -127.99971, y: 639.9997}
   comment: 
   waitTime: 0.1
 --- !u!114 &114466855100790292
@@ -194,12 +123,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 11
+  preOrderIndex: 10
   postOrderIndex: 9
-  levelOrder: 4
+  levelOrder: 3
   _parent: {fileID: 114170558304603750}
   _indexOrder: 1
-  bonsaiNodePosition: {x: -127.999306, y: 742.3996}
+  bonsaiNodePosition: {x: 256.00073, y: 524.7998}
   comment: 
   _children:
   - {fileID: 114631563120798210}
@@ -218,13 +147,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
   preOrderIndex: 0
-  postOrderIndex: 15
+  postOrderIndex: 12
   levelOrder: 0
   _parent: {fileID: 0}
   _indexOrder: 0
   bonsaiNodePosition: {x: 0, y: 0}
   comment: 
-  _child: {fileID: -8819669853141981963}
+  _child: {fileID: 8063610386708641290}
   loopCount: 10
   infiniteLoop: 1
 --- !u!114 &114631563120798210
@@ -240,12 +169,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 12
+  preOrderIndex: 11
   postOrderIndex: 7
-  levelOrder: 5
+  levelOrder: 4
   _parent: {fileID: 114466855100790292}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -191.99947, y: 857.59955}
+  bonsaiNodePosition: {x: 192.00058, y: 639.99976}
   comment: 
   waitTime: 0.1
 --- !u!114 &114694689269489254
@@ -261,12 +190,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 8
+  preOrderIndex: 7
   postOrderIndex: 3
-  levelOrder: 5
+  levelOrder: 4
   _parent: {fileID: 114878835623641032}
   _indexOrder: 1
-  bonsaiNodePosition: {x: -396.8001, y: 857.5995}
+  bonsaiNodePosition: {x: -12.800124, y: 639.9997}
   comment: 
   waitTime: 0.1
 --- !u!114 &114702548702774506
@@ -282,12 +211,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 10
+  preOrderIndex: 9
   postOrderIndex: 6
-  levelOrder: 4
+  levelOrder: 3
   _parent: {fileID: 114170558304603750}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -255.99998, y: 742.3996}
+  bonsaiNodePosition: {x: 128.00006, y: 524.7998}
   comment: 
   waitTime: 0.1
 --- !u!114 &114718960266230286
@@ -303,12 +232,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 5
+  preOrderIndex: 4
   postOrderIndex: 1
-  levelOrder: 4
+  levelOrder: 3
   _parent: {fileID: 114951529963225600}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -575.9997, y: 742.39954}
+  bonsaiNodePosition: {x: -191.99985, y: 524.79974}
   comment: 
   waitTime: 0.1
 --- !u!114 &114878835623641032
@@ -324,12 +253,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 6
+  preOrderIndex: 5
   postOrderIndex: 4
-  levelOrder: 4
+  levelOrder: 3
   _parent: {fileID: 114951529963225600}
   _indexOrder: 1
-  bonsaiNodePosition: {x: -448.0002, y: 742.3996}
+  bonsaiNodePosition: {x: -64.00023, y: 524.7998}
   comment: 
   _children:
   - {fileID: 114438333272262224}
@@ -347,12 +276,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 4
+  preOrderIndex: 3
   postOrderIndex: 5
-  levelOrder: 3
+  levelOrder: 2
   _parent: {fileID: 8063610386708641290}
   _indexOrder: 1
-  bonsaiNodePosition: {x: -511.9998, y: 627.1998}
+  bonsaiNodePosition: {x: -127.99986, y: 409.60004}
   comment: 
   _children:
   - {fileID: 114718960266230286}
@@ -370,56 +299,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 13
+  preOrderIndex: 12
   postOrderIndex: 8
-  levelOrder: 5
+  levelOrder: 4
   _parent: {fileID: 114466855100790292}
   _indexOrder: 1
-  bonsaiNodePosition: {x: -76.79839, y: 857.59955}
+  bonsaiNodePosition: {x: 307.20157, y: 639.99976}
   comment: 
   waitTime: 0.1
---- !u!114 &1495475048730360848
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6290070e5b743314084c4bf4d7201fe5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _parentTree: {fileID: 11400000}
-  preOrderIndex: 15
-  postOrderIndex: 13
-  levelOrder: 2
-  _parent: {fileID: -8819669853141981963}
-  _indexOrder: 2
-  bonsaiNodePosition: {x: 63.99999, y: 345.60004}
-  comment: 
-  waitTime: 1
---- !u!114 &7271645668199829787
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1ffd532fcd28735448b5f84b50925241, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _parentTree: {fileID: 11400000}
-  preOrderIndex: -1
-  postOrderIndex: -1
-  levelOrder: -1
-  _parent: {fileID: 0}
-  _indexOrder: 0
-  bonsaiNodePosition: {x: -473.6, y: 217.6}
-  comment: 
-  _children: []
 --- !u!114 &8063610386708641290
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -433,12 +320,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _parentTree: {fileID: 11400000}
-  preOrderIndex: 2
+  preOrderIndex: 1
   postOrderIndex: 11
-  levelOrder: 2
-  _parent: {fileID: -8819669853141981963}
+  levelOrder: 1
+  _parent: {fileID: 114580271867415780}
   _indexOrder: 0
-  bonsaiNodePosition: {x: -383.99988, y: 345.59998}
+  bonsaiNodePosition: {x: 0, y: 128}
   comment: 
   _children:
   - {fileID: 114066485924181106}

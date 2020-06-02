@@ -6,7 +6,7 @@ using Bonsai.Core;
 
 namespace Bonsai.Designer
 {
-  public class BonsaiNode : TreeIterator<BonsaiNode>.IterableNode
+  public class BonsaiNode : IIterableNode<BonsaiNode>
   {
     /// <summary>
     /// The rect of the node in canvas space.

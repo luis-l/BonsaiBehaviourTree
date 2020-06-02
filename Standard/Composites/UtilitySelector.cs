@@ -13,7 +13,7 @@ namespace Bonsai.Standard
   public class UtilitySelector : Selector
   {
 
-    private struct Branch
+    private struct Branch : IComparable<Branch>
     {
       public Branch(int index, float utility)
       {
@@ -23,40 +23,29 @@ namespace Bonsai.Standard
 
       public int Index { get; set; }
       public float Utility { get; set; }
+
+      public int CompareTo(Branch other)
+      {
+        // Negate for descending order.
+        return -Utility.CompareTo(other.Utility);
+      }
     }
 
     private Branch[] _branchOrder;
+    private TreeQueryIterator _utilityQueryIterator;
+    private Utility.FixedSorter<Branch> _utilitySorter;
 
     public override void OnStart()
     {
       _branchOrder = Enumerable.Range(0, ChildCount()).Select(index => new Branch(index, 0f)).ToArray();
+      _utilityQueryIterator = new TreeQueryIterator(Tree.Height - LevelOrder);
+      _utilitySorter = new Utility.FixedSorter<Branch>(_branchOrder);
     }
 
     public override void OnEnter()
     {
-      // Calculate the utility value of each branch.
-      if (ChildCount() > 0)
-      {
-        for (int i = 0; i < ChildCount(); i++)
-        {
-          _branchOrder[i].Utility = TreeIterator<BehaviourNode>.Traverse(GetChildAt(i), sumUtility, 0f);
-        }
-
-        Array.Sort(_branchOrder, descendingUtilityOrder);
-
-        base.OnEnter();
-      }
-    }
-
-    private static float sumUtility(float accumulatedUtility, BehaviourNode node)
-    {
-      return accumulatedUtility + node.UtilityValue();
-    }
-
-
-    private static int descendingUtilityOrder(Branch left, Branch right)
-    {
-      return -left.Utility.CompareTo(right.Utility);
+      sortUtilities();
+      base.OnEnter();
     }
 
     // Get children by utility order.
@@ -70,5 +59,19 @@ namespace Bonsai.Standard
       int index = _branchOrder[_currentChildIndex].Index;
       return _children[index];
     }
+
+    private void sortUtilities()
+    {
+      // Calculate the utility value of each branch.
+      if (ChildCount() > 0)
+      {
+        for (int i = 0; i < ChildCount(); i++)
+        {
+          _branchOrder[i].Utility = _utilityQueryIterator.SumUtility(GetChildAt(i));
+        }
+        _utilitySorter.Sort();
+      }
+    }
+
   }
 }

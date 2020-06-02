@@ -5,7 +5,7 @@ namespace Bonsai.Core
 {
   public enum Traversal { PreOrder, PostOrder, LevelOrder };
 
-  public class TreeIterator<T> where T : TreeIterator<T>.IterableNode
+  public class TreeIterator<T> where T : IIterableNode<T>
   {
     // For Pre and Post order.
     private Stack<T> _stackPath;
@@ -169,30 +169,6 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Interface for all nodes that can iterated.
-    /// In order to not expose a list of children,
-    /// classes implement two simple methods for the iterator to use.
-    /// </summary>
-    public interface IterableNode
-    {
-      /// <summary>
-      /// Get the child at some index.
-      /// This will allow the iterator to traverse in reverse
-      /// the child list.
-      /// </summary>
-      /// <param name="index"></param>
-      /// <returns></returns>
-      T GetChildAt(int index);
-
-      /// <summary>
-      /// Get the child count. This tells the iterator to iterate
-      /// from the indices [0, ChildCount() ).
-      /// </summary>
-      /// <returns></returns>
-      int ChildCount();
-    }
-
-    /// <summary>
     /// A helper method to traverse all nodes and execute an action per node.
     /// </summary>
     /// <param name="root">The travseral start.</param>
@@ -230,6 +206,15 @@ namespace Bonsai.Core
     }
 
 
+    /// <summary>
+    /// A helper method to traverse all nodes and accumulate a value over the traversal.
+    /// </summary>
+    /// <typeparam name="TAccum"></typeparam>
+    /// <param name="root"></param>
+    /// <param name="accumulator">The function used to accumulate the value</param>
+    /// <param name="initial">The starting value for the accumulation</param>
+    /// <param name="traversal"></param>
+    /// <returns></returns>
     public static TAccum Traverse<TAccum>(T root, Func<TAccum, T, TAccum> accumulator, TAccum initial, Traversal traversal = Traversal.PreOrder)
     {
       var itr = new TreeIterator<T>(root, traversal);

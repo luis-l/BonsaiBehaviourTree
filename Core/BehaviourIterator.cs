@@ -10,7 +10,7 @@ namespace Bonsai.Core
   {
     // Keeps track of the traversal path.
     // Useful to help on aborts and interrupts.
-    private IntStack _traversal;
+    private readonly Utility.FixedSizeStack<int> _traversal;
 
     // Access to the tree so we can find any node from pre-order index.
     private BehaviourTree _tree;
@@ -24,7 +24,10 @@ namespace Bonsai.Core
     public BehaviourIterator(BehaviourTree tree, int levelOffset)
     {
       _tree = tree;
-      _traversal = new IntStack(_tree.Height);
+
+      // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
+      _traversal = new Utility.FixedSizeStack<int>(_tree.Height + 1);
+
       LevelOffset = levelOffset;
     }
 
@@ -239,52 +242,6 @@ namespace Bonsai.Core
     public int FirstInTraversal
     {
       get { return _traversal.GetValue(0); }
-    }
-
-    /// <summary>
-    /// A simple class to handle a custom stack structure with the 
-    /// ability to query values in the middle of the stack.
-    /// </summary>
-    private class IntStack
-    {
-      private int[] _container;
-
-      public IntStack(int treeHeight)
-      {
-        // The tree height starts from zero
-        // the the stack needs to have treeHeight + 1 slots.
-        int maxDepth = treeHeight + 1;
-
-        Count = 0;
-        _container = new int[maxDepth];
-
-        for (int i = 0; i < maxDepth; ++i)
-        {
-          _container[i] = BehaviourNode.kInvalidOrder;
-        }
-      }
-
-      public int Peek()
-      {
-        return _container[Count - 1];
-      }
-
-      public int Pop()
-      {
-        return _container[--Count];
-      }
-
-      public void Push(int value)
-      {
-        _container[Count++] = value;
-      }
-
-      public int Count { get; private set; }
-
-      public int GetValue(int index)
-      {
-        return _container[index];
-      }
     }
   }
 }

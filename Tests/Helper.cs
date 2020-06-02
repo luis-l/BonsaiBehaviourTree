@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Bonsai.Core;
-using NUnit.Framework.Internal;
 
 namespace Tests
 {

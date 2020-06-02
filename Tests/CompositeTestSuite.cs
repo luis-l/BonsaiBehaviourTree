@@ -264,8 +264,11 @@ namespace Tests
       var alphaDecorator = Helper.CreateNode<Success>(tree);
       alphaDecorator.AddChild(alpha);
 
+      var betaDecorator = Helper.CreateNode<Failure>(tree);
+      betaDecorator.AddChild(beta);
+
       root.AddChild(alphaDecorator);
-      root.AddChild(beta);
+      root.AddChild(betaDecorator);
       root.AddChild(delta);
       tree.Root = root;
 

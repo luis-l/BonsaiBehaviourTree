@@ -12,11 +12,8 @@ namespace Bonsai.Standard
   {
     public override Status Run()
     {
-      // A parent will only receive a Success or Failure, never a Running.
-      var status = _iterator.LastStatusReturned;
-
       // If a child failed then the sequence fails.
-      if (status == Status.Failure)
+      if (_previousChildExitStatus == Status.Failure)
       {
         return Status.Failure;
       }

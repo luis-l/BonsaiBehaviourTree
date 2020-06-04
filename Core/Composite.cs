@@ -13,6 +13,7 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     protected List<BehaviourNode> _children = new List<BehaviourNode>();
 
+    protected Status _previousChildExitStatus;
     protected int _currentChildIndex = 0;
 
     /// <summary>
@@ -219,6 +220,7 @@ namespace Bonsai.Core
     protected internal override void OnChildExit(int childIndex, Status childStatus)
     {
       _currentChildIndex++;
+      _previousChildExitStatus = childStatus;
     }
 
     public sealed override int MaxChildCount()

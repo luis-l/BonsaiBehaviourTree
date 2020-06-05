@@ -229,7 +229,6 @@ namespace Bonsai.Core
       // parallel nodes.
       for (int pIndex = 0; pIndex < _parallelNodeCount; ++pIndex)
       {
-
         Parallel p = _parallelNodes[pIndex];
 
         if (IsUnderSubtree(subroot, p))
@@ -271,7 +270,6 @@ namespace Bonsai.Core
     {
       for (int i = 0; i < _parallelNodeCount; ++i)
       {
-
         if (_parallelNodes[i].preOrderIndex == preOrderIndex)
         {
           return true;
@@ -349,7 +347,6 @@ namespace Bonsai.Core
     {
       for (int i = 0; i < _observerAborts.Count; ++i)
       {
-
         ConditionalAbort node = _observerAborts[i];
 
         // The iterator must be running since aborts can only occur under 

@@ -48,7 +48,6 @@ namespace Bonsai.Core
 
       if (LastStatusReturned != BehaviourNode.Status.Running)
       {
-
         node.OnExit();
         _traversal.Pop();
         callOnChildExit(node);
@@ -65,7 +64,6 @@ namespace Bonsai.Core
       // Make sure to call on enter on any queued new traversals.
       while (_requestedTraversals.Count != 0)
       {
-
         int i = _requestedTraversals.Dequeue();
 
         BehaviourNode node = _tree.allNodes[i];

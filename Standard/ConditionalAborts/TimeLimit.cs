@@ -61,7 +61,7 @@ namespace Bonsai.Standard
       _bChildRunning = true;
     }
 
-    protected internal override void OnChildExit(int childIndex, BehaviourNode.Status childStatus)
+    protected internal override void OnChildExit(int childIndex, Status childStatus)
     {
       _bChildRunning = false;
     }

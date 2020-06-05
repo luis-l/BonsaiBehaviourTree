@@ -39,7 +39,6 @@ namespace Bonsai.Core
       // If the node enters from a state changed (an abort occurred)
       if (_bStateChanged)
       {
-
         // Reset the state change.
         _bStateChanged = false;
 
@@ -54,7 +53,6 @@ namespace Bonsai.Core
       // The node enters normally (not caused by an abort).
       else
       {
-
         _bConditionResult = Condition();
         _bLastReevaluationResult = _bConditionResult;
 
@@ -77,7 +75,6 @@ namespace Bonsai.Core
       // Change of state.
       if (_bConditionResult != _bLastReevaluationResult)
       {
-
         _bStateChanged = true;
         _bLastReevaluationResult = _bConditionResult;
         return true;
@@ -119,7 +116,6 @@ namespace Bonsai.Core
       // if the abort is satisfied and if the condition check changed state.
       switch (abortType)
       {
-
         case AbortType.LowerPriority:
           return
               !BehaviourTree.IsUnderSubtree(this, active) &&
@@ -161,7 +157,6 @@ namespace Bonsai.Core
       // Parallel subtrees cannot abort each other.
       if (aborter.Parent)
       {
-
         if (typeof(Parallel).IsAssignableFrom(aborter.Parent.GetType()))
         {
           return false;
@@ -170,7 +165,6 @@ namespace Bonsai.Core
 
       switch (aborter.abortType)
       {
-
         case AbortType.LowerPriority:
           return
               !BehaviourTree.IsUnderSubtree(aborter, node) &&
@@ -198,7 +192,6 @@ namespace Bonsai.Core
       {
         sub = sub.Parent;
       }
-
       return sub;
     }
   }

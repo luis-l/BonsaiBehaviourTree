@@ -57,7 +57,6 @@ namespace Bonsai.Standard
       // The cooldown is not active, which means we can return if the child finished executing.
       else
       {
-
         // Activate the cool down for the next run if the child succeeded.
         if (_childStatus == Status.Success)
         {

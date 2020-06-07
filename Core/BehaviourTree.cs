@@ -613,6 +613,13 @@ namespace Bonsai.Core
       }
     }
 
+    public void SetRandomSeed(int seed)
+    {
+      Random = new System.Random(seed);
+    }
+
+    public System.Random Random { get; private set; } = new System.Random();
+
 #if UNITY_EDITOR
 
     public void OnDrawGizmos()

@@ -11,12 +11,6 @@ namespace Bonsai.Standard
   {
     private int[] _childrenOrder;
 
-    [Tooltip("The seed for the random generator to use.")]
-    public int seed;
-    public bool useSeed;
-
-    private System.Random rand;
-
     public override void OnStart()
     {
       int childCount = ChildCount();
@@ -27,8 +21,6 @@ namespace Bonsai.Standard
       {
         _childrenOrder[i] = i;
       }
-
-      rand = useSeed ? new System.Random(seed) : new System.Random();
     }
 
     public override void OnEnter()
@@ -55,7 +47,7 @@ namespace Bonsai.Standard
       for (int i = 0; i < childCount; i++)
       {
 
-        int indexPivot = rand.Next(childCount);
+        int indexPivot = Tree.Random.Next(childCount);
 
         // Swap the i-th and pivot elements.
         int tmp = _childrenOrder[i];

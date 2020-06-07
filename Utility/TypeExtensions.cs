@@ -20,19 +20,19 @@ public static class TypeExtensions
   /// </summary>
   public static string SimplifiedName(this Type type)
   {
-    string typeName = type.Name;
+    string name = type.Name;
 
-    if (typeName == "Object")
+    if (name == "Object")
     {
-      typeName = typeof(UnityEngine.Object) == type ? "UnityObject" : "object";
+      name = typeof(UnityEngine.Object) == type ? "UnityObject" : "object";
     }
     else
     {
-      if (SimpleTypeNames.TryGetValue(typeName, out string altTypeName))
-        typeName = altTypeName;
+      if (SimpleTypeNames.TryGetValue(name, out string simple))
+        name = simple;
     }
 
-    return typeName;
+    return name;
   }
 
   /// <summary>

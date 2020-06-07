@@ -1,5 +1,6 @@
 
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Collections.Generic;
 
@@ -323,6 +324,7 @@ namespace Bonsai.Core
     /// The types that can be selected from the Inspector.
     /// </summary>       
     public static Type[] registerTypes;
+    public static string[] registerTypeNames;
 
     static Blackboard()
     {
@@ -365,6 +367,7 @@ namespace Bonsai.Core
       types.Add(typeof(AudioListener));
 
       registerTypes = types.ToArray();
+      registerTypeNames = types.Select(t => t.Name).ToArray();
     }
 
     private static readonly Type kUnityObjectType = typeof(UnityEngine.Object);

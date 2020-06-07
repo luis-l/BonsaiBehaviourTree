@@ -417,33 +417,13 @@ namespace Bonsai.Designer
       {
         public Type type = null;
         public List<TypeSelectionNode> children = new List<TypeSelectionNode>();
+        int index = 0;
 
         public void OnGUI()
         {
-          string name = "None";
-          if (type != null)
-          {
-            name = type.Name;
-          }
-
-          float size = new GUIStyle().CalcSize(new GUIContent(name)).x + 20f;
-          var opt = new GUILayoutOption[] { GUILayout.Width(size) };
-
           // Display the type selection menu.
-          if (EditorGUILayout.DropdownButton(new GUIContent(name), FocusType.Keyboard, opt))
-          {
-
-            // var selectTypeTab = new Tab<Type>(
-
-            //     getValues: () => Blackboard.registerTypes,
-            //     getCurrent: () => type,
-            //     setTarget: (t) => { type = t; },
-            //     getValueName: (t) => t.GetNiceName(),
-            //     title: "Select Type"
-            // );
-
-            // SelectionWindow.Show(selectTypeTab);
-          }
+          index = EditorGUILayout.Popup(index, Blackboard.registerTypeNames);
+          type = Blackboard.registerTypes[index];
         }
 
         public TypeSelectionNode GetChildAt(int index)

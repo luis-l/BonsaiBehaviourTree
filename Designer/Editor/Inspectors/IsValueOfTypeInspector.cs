@@ -4,50 +4,51 @@ using System;
 using UnityEngine;
 using UnityEditor;
 
-using Bonsai.Core;
 using Bonsai.Standard;
 
 namespace Bonsai.Designer
 {
-    [CustomEditor(typeof(IsValueOfType))]
-    public class IsValueOfTypeInspector : Editor
+  [CustomEditor(typeof(IsValueOfType))]
+  public class IsValueOfTypeInspector : Editor
+  {
+    public override void OnInspectorGUI()
     {
-        public override void OnInspectorGUI()
-        {
-            DrawDefaultInspector();
+      DrawDefaultInspector();
 
-            var isValueOfTypeNode = target as IsValueOfType;
+      var isValueOfTypeNode = target as IsValueOfType;
 
-            Type typeToCheck = isValueOfTypeNode.type;
+      Type typeToCheck = isValueOfTypeNode.type;
 
-            string typename = "null";
+      string typename = "null";
 
-            if (typeToCheck != null) {
-                typename = isValueOfTypeNode.type.Name;
-            }
+      if (typeToCheck != null)
+      {
+        typename = isValueOfTypeNode.type.Name;
+      }
 
-            float size = new GUIStyle().CalcSize(new GUIContent(typename)).x + 20f;
-            var opt = new GUILayoutOption[] { GUILayout.Width(size) };
+      float size = new GUIStyle().CalcSize(new GUIContent(typename)).x + 20f;
+      var opt = new GUILayoutOption[] { GUILayout.Width(size) };
 
-            EditorGUILayout.BeginHorizontal();
-            EditorGUILayout.LabelField("Type: ");
+      EditorGUILayout.BeginHorizontal();
+      EditorGUILayout.LabelField("Type: ");
 
-            // Display the type selection menu.
-            if (EditorGUILayout.DropdownButton(new GUIContent(typename), FocusType.Keyboard, opt)) {
+      // Display the type selection menu.
+      if (EditorGUILayout.DropdownButton(new GUIContent(typename), FocusType.Keyboard, opt))
+      {
 
-                // var selectTypeTab = new Tab<Type>(
+        // var selectTypeTab = new Tab<Type>(
 
-                //     getValues: () => Blackboard.registerTypes,
-                //     getCurrent: () => isValueOfTypeNode.type,
-                //     setTarget: (t) => { isValueOfTypeNode.type = t; },
-                //     getValueName: (t) => t.GetNiceName(),
-                //     title: "Select Type"
-                // );
+        //     getValues: () => Blackboard.registerTypes,
+        //     getCurrent: () => isValueOfTypeNode.type,
+        //     setTarget: (t) => { isValueOfTypeNode.type = t; },
+        //     getValueName: (t) => t.GetNiceName(),
+        //     title: "Select Type"
+        // );
 
-                // SelectionWindow.Show(selectTypeTab);
-            }
+        // SelectionWindow.Show(selectTypeTab);
+      }
 
-            EditorGUILayout.EndHorizontal();
-        }
+      EditorGUILayout.EndHorizontal();
     }
+  }
 }

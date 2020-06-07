@@ -20,7 +20,7 @@ namespace Bonsai.Core
     private bool _bLastReevaluationResult = false;
 
     /// <summary>
-    /// The conidition that needs to be satisfied for the node to run its children or to abort.
+    /// The condition that needs to be satisfied for the node to run its children or to abort.
     /// </summary>
     /// <returns></returns>
     public abstract bool Condition();

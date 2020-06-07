@@ -367,7 +367,7 @@ namespace Bonsai.Core
       types.Add(typeof(AudioListener));
 
       registerTypes = types.ToArray();
-      registerTypeNames = types.Select(t => t.Name).ToArray();
+      registerTypeNames = types.Select(t => t.NiceName()).ToArray();
     }
 
     private static readonly Type kUnityObjectType = typeof(UnityEngine.Object);

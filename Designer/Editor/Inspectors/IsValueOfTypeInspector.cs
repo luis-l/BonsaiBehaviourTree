@@ -18,6 +18,7 @@ namespace Bonsai.Designer
     {
       var isValueOfTypeNode = target as IsValueOfType;
       index = Array.FindIndex(Blackboard.registerTypes, t => t == isValueOfTypeNode.type);
+      index = Math.Max(0, index);
     }
 
     public override void OnInspectorGUI()

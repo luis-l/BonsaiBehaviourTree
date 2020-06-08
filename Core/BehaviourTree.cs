@@ -89,7 +89,7 @@ namespace Bonsai.Core
         return;
       }
 
-      preProcess();
+      PreProcess();
 
       for (int i = 0; i < allNodes.Count; ++i)
       {
@@ -107,7 +107,7 @@ namespace Bonsai.Core
 
         if (_observerAborts.Count != 0)
         {
-          tickObservers();
+          TickObservers();
         }
 
         _mainIterator.Update();
@@ -119,7 +119,7 @@ namespace Bonsai.Core
     /// caching observers, and syncinc parallel iterators.
     /// The root must be set.
     /// </summary>
-    private void preProcess()
+    private void PreProcess()
     {
       if (_root == null)
       {
@@ -134,11 +134,11 @@ namespace Bonsai.Core
       // Setup a new list for the observer nodes.
       _observerAborts = new List<ConditionalAbort>();
 
-      cacheObservers();
-      syncIterators();
+      CacheObservers();
+      SyncIterators();
     }
 
-    private void cacheObservers()
+    private void CacheObservers()
     {
       _observerAborts.Clear();
 
@@ -151,9 +151,9 @@ namespace Bonsai.Core
       }
     }
 
-    private void syncIterators()
+    private void SyncIterators()
     {
-      syncParallelIterators();
+      SyncParallelIterators();
 
       _root._iterator = _mainIterator;
 
@@ -197,7 +197,7 @@ namespace Bonsai.Core
       }
     }
 
-    private void syncParallelIterators()
+    private void SyncParallelIterators()
     {
       var parallelNodes = GetNodes<Parallel>();
       _parallelNodeCount = parallelNodes.Count;
@@ -221,7 +221,7 @@ namespace Bonsai.Core
     public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)
     {
       // Interrupt this subtree.
-      subroot.Iterator.stepBackInterrupt(subroot, bFullInterrupt);
+      subroot.Iterator.StepBackInterrupt(subroot, bFullInterrupt);
 
       // Look for parallel nodes under the subroot.
       // Since the parallel count is usually small, we 
@@ -247,7 +247,7 @@ namespace Bonsai.Core
               int childIndex = itr.FirstInTraversal;
               BehaviourNode firstNode = allNodes[childIndex];
 
-              itr.stepBackInterrupt(firstNode.Parent, bFullInterrupt);
+              itr.StepBackInterrupt(firstNode.Parent, bFullInterrupt);
             }
           }
         }
@@ -261,12 +261,12 @@ namespace Bonsai.Core
     /// <returns></returns>
     public bool IsParallelNode(BehaviourNode node)
     {
-      return _parallelNodeCount != 0 && containsParallelPreOrder(node.preOrderIndex);
+      return _parallelNodeCount != 0 && ContainsParallelPreOrder(node.preOrderIndex);
     }
 
     // Here we use a simple linear iteration over the array containing pre-orders for parallel nodes.
     // We do a linear search since the number of parallel node is usually small.
-    private bool containsParallelPreOrder(int preOrderIndex)
+    private bool ContainsParallelPreOrder(int preOrderIndex)
     {
       for (int i = 0; i < _parallelNodeCount; ++i)
       {
@@ -343,7 +343,7 @@ namespace Bonsai.Core
     // Note on multiple aborts:
     // If there are multiple satisfied aborts, then
     // the tree picks the highest order abort (left most).
-    private void tickObservers()
+    private void TickObservers()
     {
       for (int i = 0; i < _observerAborts.Count; ++i)
       {
@@ -370,7 +370,7 @@ namespace Bonsai.Core
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static bool isLowerOrder(int orderA, int orderB)
+    public static bool IsLowerOrder(int orderA, int orderB)
     {
       // 1 is the highest priority.
       // Greater numbers means lower priority.
@@ -383,7 +383,7 @@ namespace Bonsai.Core
     /// <param name="a"></param>
     /// <param name="b"></param>
     /// <returns></returns>
-    public static bool isHigherOrder(int orderA, int orderB)
+    public static bool IsHigherOrder(int orderA, int orderB)
     {
       return orderA < orderB;
     }
@@ -630,7 +630,7 @@ namespace Bonsai.Core
       }
     }
 
-    private void drawGizmos(BehaviourNode n)
+    private void DrawGizmos(BehaviourNode n)
     {
       n.OnDrawGizmos();
     }

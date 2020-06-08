@@ -36,7 +36,7 @@ namespace Bonsai.Core
     /// </summary>
     public void Update()
     {
-      callOnEnterOnQueuedNodes();
+      CallOnEnterOnQueuedNodes();
 
       int index = _traversal.Peek();
       BehaviourNode node = _tree.allNodes[index];
@@ -50,7 +50,7 @@ namespace Bonsai.Core
       {
         node.OnExit();
         _traversal.Pop();
-        callOnChildExit(node);
+        CallOnChildExit(node);
       }
 
       if (_traversal.Count == 0)
@@ -59,7 +59,7 @@ namespace Bonsai.Core
       }
     }
 
-    private void callOnEnterOnQueuedNodes()
+    private void CallOnEnterOnQueuedNodes()
     {
       // Make sure to call on enter on any queued new traversals.
       while (_requestedTraversals.Count != 0)
@@ -69,11 +69,11 @@ namespace Bonsai.Core
         BehaviourNode node = _tree.allNodes[i];
         node.OnEnter();
 
-        callOnChildEnter(node);
+        CallOnChildEnter(node);
       }
     }
 
-    private void callOnChildEnter(BehaviourNode node)
+    private void CallOnChildEnter(BehaviourNode node)
     {
       if (node.Parent)
       {
@@ -81,7 +81,7 @@ namespace Bonsai.Core
       }
     }
 
-    private void callOnChildExit(BehaviourNode node)
+    private void CallOnChildExit(BehaviourNode node)
     {
       // If this is not a root node, then notify the parent about the child finishing.
       if (_traversal.Count > 0)
@@ -132,7 +132,7 @@ namespace Bonsai.Core
       // and will empty the traversal.
       while (_traversal.Peek() != terminatingIndex && _traversal.Count != 0)
       {
-        stepBackAbort();
+        StepBackAbort();
       }
 
       // Only composite nodes need to worry about which of their subtrees fired an abort.
@@ -191,7 +191,7 @@ namespace Bonsai.Core
     /// </summary>
     public BehaviourNode.Status LastStatusReturned { get; private set; }
 
-    private void stepBackAbort()
+    private void StepBackAbort()
     {
       int index = _traversal.Pop();
 
@@ -207,7 +207,7 @@ namespace Bonsai.Core
     /// Only interrupts the subtree until a parallel node.
     /// </summary>
     /// <param name="subtree"></param>
-    internal void stepBackInterrupt(BehaviourNode subtree, bool bFullInterrupt = false)
+    internal void StepBackInterrupt(BehaviourNode subtree, bool bFullInterrupt = false)
     {
       while (_traversal.Count != 0 && _traversal.Peek() != subtree.preOrderIndex)
       {

@@ -335,8 +335,8 @@ namespace Bonsai.Core
     {
       var types = new List<Type>();
 
-      // Region most common data types and Unity Objects
       types.Add(typeof(GameObject));
+      types.Add(typeof(Component));
       types.Add(typeof(Transform));
 
       types.Add(typeof(int));
@@ -345,26 +345,9 @@ namespace Bonsai.Core
       types.Add(typeof(string));
       types.Add(typeof(Vector2));
       types.Add(typeof(Vector3));
+      types.Add(typeof(Quaternion));
 
       types.Add(typeof(List<>));
-
-      types.Add(typeof(Rigidbody));
-      types.Add(typeof(Rigidbody2D));
-
-      types.Add(typeof(BoxCollider));
-      types.Add(typeof(SphereCollider));
-      types.Add(typeof(CapsuleCollider));
-
-      types.Add(typeof(BoxCollider2D));
-      types.Add(typeof(CircleCollider2D));
-      types.Add(typeof(PolygonCollider2D));
-
-      types.Add(typeof(Animation));
-      types.Add(typeof(AnimationCurve));
-
-      types.Add(typeof(AudioClip));
-      types.Add(typeof(AudioSource));
-      types.Add(typeof(AudioListener));
 
       registerTypes = types.ToArray();
       registerTypeNames = types.Select(t => t.NiceName()).ToArray();

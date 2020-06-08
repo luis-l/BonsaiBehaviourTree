@@ -14,7 +14,7 @@ namespace Bonsai.Core
 
     // Access to the tree so we can find any node from pre-order index.
     private BehaviourTree _tree;
-    private Queue<int> _requestedTraversals = new Queue<int>();
+    private Queue<int> _requestedTraversals;
 
     /// <summary>
     /// Called when the iterators finishes iterating the entire tree.
@@ -26,7 +26,9 @@ namespace Bonsai.Core
       _tree = tree;
 
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
-      _traversal = new Utility.FixedSizeStack<int>(_tree.Height + 1);
+      int maxTraversalLength = _tree.Height + 1;
+      _traversal = new Utility.FixedSizeStack<int>(maxTraversalLength);
+      _requestedTraversals = new Queue<int>(maxTraversalLength);
 
       LevelOffset = levelOffset;
     }

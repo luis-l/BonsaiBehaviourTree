@@ -13,8 +13,8 @@ namespace Bonsai.Core
     private readonly Utility.FixedSizeStack<int> _traversal;
 
     // Access to the tree so we can find any node from pre-order index.
-    private BehaviourTree _tree;
-    private Queue<int> _requestedTraversals;
+    private readonly BehaviourTree _tree;
+    private readonly Queue<int> _requestedTraversals;
 
     /// <summary>
     /// Called when the iterators finishes iterating the entire tree.

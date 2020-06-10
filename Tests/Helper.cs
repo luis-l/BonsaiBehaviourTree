@@ -7,7 +7,6 @@ namespace Tests
 {
   public class TestNode : Task
   {
-    public float? PriorityValue { get; set; } = null;
     public float? Utility { get; set; } = null;
     public Status ReturnStatus { get; set; }
 
@@ -26,11 +25,6 @@ namespace Tests
       return ReturnStatus;
     }
 
-    public override float Priority()
-    {
-      return PriorityValue.GetValueOrDefault(base.Priority());
-    }
-
     public override float UtilityValue()
     {
       return Utility.GetValueOrDefault(base.UtilityValue());
@@ -39,12 +33,6 @@ namespace Tests
     public override void OnEnter()
     {
       Blackboard.Get<List<int>>(kHistoryKey).Add(PreOrderIndex);
-    }
-
-    public TestNode WithPriority(float priority)
-    {
-      PriorityValue = priority;
-      return this;
     }
 
     public TestNode WithUtility(float utility)

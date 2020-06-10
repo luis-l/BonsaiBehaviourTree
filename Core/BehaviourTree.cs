@@ -104,7 +104,6 @@ namespace Bonsai.Core
     {
       if (_bTreeInitialized && _mainIterator.IsRunning)
       {
-
         if (_observerAborts.Count != 0)
         {
           TickObservers();

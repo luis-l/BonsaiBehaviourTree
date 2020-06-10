@@ -11,6 +11,7 @@ namespace Bonsai.Core
     // Keeps track of the traversal path.
     // Useful to help on aborts and interrupts.
     private readonly Utility.FixedSizeStack<int> _traversal;
+    private readonly Utility.FixedSizeStack<int> _branchTicks;
 
     // Access to the tree so we can find any node from pre-order index.
     private readonly BehaviourTree _tree;
@@ -28,6 +29,7 @@ namespace Bonsai.Core
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
       int maxTraversalLength = _tree.Height + 1;
       _traversal = new Utility.FixedSizeStack<int>(maxTraversalLength);
+      _branchTicks = new Utility.FixedSizeStack<int>(maxTraversalLength);
       _requestedTraversals = new Queue<int>(maxTraversalLength);
 
       LevelOffset = levelOffset;
@@ -39,6 +41,7 @@ namespace Bonsai.Core
     public void Update()
     {
       CallOnEnterOnQueuedNodes();
+      TickBranch();
 
       int index = _traversal.Peek();
       BehaviourNode node = _tree.allNodes[index];
@@ -50,8 +53,7 @@ namespace Bonsai.Core
 
       if (LastStatusReturned != BehaviourNode.Status.Running)
       {
-        node.OnExit();
-        _traversal.Pop();
+        PopNode();
         CallOnChildExit(node);
       }
 
@@ -61,15 +63,28 @@ namespace Bonsai.Core
       }
     }
 
+    private void TickBranch()
+    {
+      for (int i = 0; i < _branchTicks.Count; i++)
+      {
+        int nodeIndex = _branchTicks.GetValue(i);
+        _tree.allNodes[nodeIndex].OnBranchTick();
+      }
+    }
+
     private void CallOnEnterOnQueuedNodes()
     {
       // Make sure to call on enter on any queued new traversals.
       while (_requestedTraversals.Count != 0)
       {
         int i = _requestedTraversals.Dequeue();
-
         BehaviourNode node = _tree.allNodes[i];
         node.OnEnter();
+
+        if (node.CanTickOnBranch())
+        {
+          _branchTicks.Push(i);
+        }
 
         CallOnChildEnter(node);
       }
@@ -198,10 +213,7 @@ namespace Bonsai.Core
 
     private void StepBackAbort()
     {
-      int index = _traversal.Pop();
-
-      BehaviourNode node = _tree.allNodes[index];
-      node.OnExit();
+      var node = PopNode();
 
 #if UNITY_EDITOR
       node.SetStatusEditor(BehaviourNode.StatusEditor.Aborted);
@@ -216,11 +228,8 @@ namespace Bonsai.Core
     {
       while (_traversal.Count != 0 && _traversal.Peek() != subtree.preOrderIndex)
       {
+        var node = PopNode();
 
-        int index = _traversal.Pop();
-
-        BehaviourNode node = _tree.allNodes[index];
-        node.OnExit();
 #if UNITY_EDITOR
         node.SetStatusEditor(BehaviourNode.StatusEditor.Interruption);
 #endif
@@ -229,10 +238,8 @@ namespace Bonsai.Core
 
       if (bFullInterrupt && _traversal.Count != 0)
       {
-        int index = _traversal.Pop();
+        var node = PopNode();
 
-        BehaviourNode node = _tree.allNodes[index];
-        node.OnExit();
 #if UNITY_EDITOR
         node.SetStatusEditor(BehaviourNode.StatusEditor.Interruption);
 #endif
@@ -248,6 +255,20 @@ namespace Bonsai.Core
     public int FirstInTraversal
     {
       get { return _traversal.GetValue(0); }
+    }
+
+    private BehaviourNode PopNode()
+    {
+      int index = _traversal.Pop();
+      BehaviourNode node = _tree.allNodes[index];
+      node.OnExit();
+
+      if (node.CanTickOnBranch())
+      {
+        _branchTicks.Pop();
+      }
+
+      return node;
     }
   }
 }

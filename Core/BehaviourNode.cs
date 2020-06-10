@@ -62,7 +62,7 @@ namespace Bonsai.Core
     public virtual void OnStart() { }
 
     /// <summary>
-    /// The logic that the node executes.
+    /// Executes when the node is at the top of the execution.
     /// </summary>
     /// <returns></returns>
     public abstract Status Run();
@@ -78,6 +78,17 @@ namespace Bonsai.Core
     public virtual void OnExit() { }
 
     /// <summary>
+    /// Executes every tick when the branch is active.
+    /// Can be used to run concurrent behaviour.
+    /// </summary>
+    public virtual void OnBranchTick() { }
+
+    /// <summary>
+    /// Default behaviour is to not run OnBranchTick.
+    /// </summary>
+    public virtual bool CanTickOnBranch() { return false; }
+
+    /// <summary>
     /// The priority value of the node.
     /// </summary>
     /// <returns>The negated pre-order index, since lower preorders are executed first.</returns>
@@ -87,7 +98,7 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Used for utility theory evaluation.
+    /// Used to evaluate which branch should execute first with the utility selector.
     /// </summary>
     /// <returns></returns>
     public virtual float UtilityValue()

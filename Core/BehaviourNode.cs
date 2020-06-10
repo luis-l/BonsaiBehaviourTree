@@ -248,8 +248,6 @@ namespace Bonsai.Core
 
     public virtual void OnDrawGizmos() { }
 
-    #region Child Operations
-
     public abstract BehaviourNode GetChildAt(int index);
     public abstract int ChildCount();
 
@@ -279,8 +277,6 @@ namespace Bonsai.Core
     public abstract bool CanAddChild(BehaviourNode child);
 
     public abstract int MaxChildCount();
-
-    #endregion
 
     #region Node Editor Meta Data
 

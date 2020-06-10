@@ -143,6 +143,9 @@ namespace Bonsai.Core
         parent.OnAbort(aborter);
       }
 
+      // Any requested traversals are cancelled on abort.
+      _requestedTraversals.Clear();
+
       Traverse(aborter);
     }
 
@@ -233,6 +236,9 @@ namespace Bonsai.Core
 #if UNITY_EDITOR
         node.SetStatusEditor(BehaviourNode.StatusEditor.Interruption);
 #endif
+
+        // Any requested traversals are cancelled on interruption.
+        _requestedTraversals.Clear();
       }
     }
 

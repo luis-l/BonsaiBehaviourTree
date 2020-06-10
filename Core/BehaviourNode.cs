@@ -79,11 +79,9 @@ namespace Bonsai.Core
 
     /// <summary>
     /// The priority value of the node.
-    /// Default value for all nodes is the negated pre-order index,
-    /// since lower preorders are executed first (default behaviour).
     /// </summary>
-    /// <returns></returns>
-    public virtual float Priority()
+    /// <returns>The negated pre-order index, since lower preorders are executed first.</returns>
+    public float Priority()
     {
       return -preOrderIndex;
     }

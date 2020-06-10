@@ -11,7 +11,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Runs the branch that has the highest utility.
   /// </summary>
-  [NodeEditorProperties("Composites/", "Play")]
+  [NodeEditorProperties("Composites/", "Reactive")]
   public class UtilitySelector : Selector
   {
     /// <summary>

@@ -22,7 +22,7 @@ namespace Bonsai.Core
     /// <returns></returns>
     public virtual BehaviourNode NextChild()
     {
-      if (isInChildrenBounds(_currentChildIndex))
+      if (IsInChildrenBounds(_currentChildIndex))
       {
         return _children[_currentChildIndex];
       }
@@ -173,7 +173,7 @@ namespace Bonsai.Core
       _children[child.ChildOrder] = child;
     }
 
-    public bool isInChildrenBounds(int index)
+    public bool IsInChildrenBounds(int index)
     {
       return index >= 0 && index < _children.Count;
     }

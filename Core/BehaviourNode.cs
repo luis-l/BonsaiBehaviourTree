@@ -110,20 +110,20 @@ namespace Bonsai.Core
     /// Called when a child fires an abort.
     /// </summary>
     /// <param name="aborter"></param>
-    protected internal virtual void OnAbort(ConditionalAbort aborter) { }
+    public virtual void OnAbort(ConditionalAbort aborter) { }
 
     /// <summary>
     /// Called when the iterator traverses the child.
     /// </summary>
     /// <param name="childIndex"></param>
-    protected internal virtual void OnChildEnter(int childIndex) { }
+    public virtual void OnChildEnter(int childIndex) { }
 
     /// <summary>
     /// Called when the iterator exits the the child.
     /// </summary>
     /// <param name="childIndex"></param>
     /// <param name="childStatus"></param>
-    protected internal virtual void OnChildExit(int childIndex, Status childStatus) { }
+    public virtual void OnChildExit(int childIndex, Status childStatus) { }
 
     /// <summary>
     /// Called when after the entire tree is finished being copied.

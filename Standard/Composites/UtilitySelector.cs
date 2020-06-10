@@ -53,7 +53,7 @@ namespace Bonsai.Standard
       base.OnEnter();
     }
 
-    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    public override void OnChildExit(int childIndex, Status childStatus)
     {
       // Find next highest utility child.
       if (childStatus == Status.Failure)
@@ -65,7 +65,7 @@ namespace Bonsai.Standard
       base.OnChildExit(childIndex, childStatus);
     }
 
-    protected internal override void OnAbort(ConditionalAbort child)
+    public override void OnAbort(ConditionalAbort child)
     {
       highestUtilityChild = child.ChildOrder;
     }

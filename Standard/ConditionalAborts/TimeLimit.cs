@@ -56,12 +56,12 @@ namespace Bonsai.Standard
       return false;
     }
 
-    protected internal override void OnChildEnter(int childIndex)
+    public override void OnChildEnter(int childIndex)
     {
       _bChildRunning = true;
     }
 
-    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    public override void OnChildExit(int childIndex, Status childStatus)
     {
       _bChildRunning = false;
     }

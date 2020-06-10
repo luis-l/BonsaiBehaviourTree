@@ -9,9 +9,9 @@ namespace Bonsai.Core
   public abstract class Task : BehaviourNode
   {
     // Does nothing since tasks do not have children.
-    protected internal sealed override void OnAbort(ConditionalAbort aborter) { }
-    protected internal sealed override void OnChildEnter(int childIndex) { }
-    protected internal sealed override void OnChildExit(int childIndex, Status childStatus) { }
+    public sealed override void OnAbort(ConditionalAbort aborter) { }
+    public sealed override void OnChildEnter(int childIndex) { }
+    public sealed override void OnChildExit(int childIndex, Status childStatus) { }
 
     /// <summary>
     /// Does nothing.

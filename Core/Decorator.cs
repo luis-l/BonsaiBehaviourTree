@@ -105,7 +105,7 @@ namespace Bonsai.Core
       AddChild(child);
     }
 
-    protected internal sealed override void OnAbort(ConditionalAbort aborter) { }
+    public sealed override void OnAbort(ConditionalAbort aborter) { }
 
     public sealed override bool CanAddChild(BehaviourNode child)
     {

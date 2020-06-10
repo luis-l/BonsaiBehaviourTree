@@ -100,7 +100,7 @@ namespace Bonsai.Standard
       return base.Reevaluate();
     }
 
-    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    public override void OnChildExit(int childIndex, Status childStatus)
     {
       _childStatus = childStatus;
     }

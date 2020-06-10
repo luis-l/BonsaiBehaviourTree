@@ -202,7 +202,7 @@ namespace Bonsai.Core
     /// Called when a composite node has a child that activates when it aborts.
     /// </summary>
     /// <param name="child"></param>
-    protected internal override void OnAbort(ConditionalAbort child)
+    public override void OnAbort(ConditionalAbort child)
     {
       // The default behaviour is to set the current child index of the composite
       // node to this child's index.
@@ -217,7 +217,7 @@ namespace Bonsai.Core
       }
     }
 
-    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    public override void OnChildExit(int childIndex, Status childStatus)
     {
       _currentChildIndex++;
       _previousChildExitStatus = childStatus;

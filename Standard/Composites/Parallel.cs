@@ -75,7 +75,7 @@ namespace Bonsai.Standard
       return Status.Running;
     }
 
-    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    public override void OnChildExit(int childIndex, Status childStatus)
     {
       ChildStatuses[childIndex] = childStatus;
     }

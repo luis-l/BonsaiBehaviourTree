@@ -1,6 +1,8 @@
 ﻿
-using System;
-using System.Linq;
+using System.Collections.Generic;
+
+using UnityEngine;
+
 using Bonsai.Core;
 using Bonsai.Designer;
 
@@ -12,65 +14,145 @@ namespace Bonsai.Standard
   [NodeEditorProperties("Composites/", "Play")]
   public class UtilitySelector : Selector
   {
+    /// <summary>
+    /// Method to evaluate utility.
+    /// </summary>
+    public enum Evaluation { Sum, Max }
 
-    private struct Branch : IComparable<Branch>
-    {
-      public Branch(int index, float utility)
-      {
-        Index = index;
-        Utility = utility;
-      }
+    public Evaluation evaluation = Evaluation.Sum;
+    public float interval = 0.1f;
 
-      public int Index { get; set; }
-      public float Utility { get; set; }
+    private readonly Utility.Timer timer = new Utility.Timer();
 
-      public int CompareTo(Branch other)
-      {
-        // Negate for descending order.
-        return -Utility.CompareTo(other.Utility);
-      }
-    }
-
-    private Branch[] _branchOrder;
-    private TreeQueryIterator _utilityQueryIterator;
-    private Utility.FixedSorter<Branch> _utilitySorter;
+    private int highestUtilityChild = 0;
+    private List<int> branchesLeftToRun;
+    private TreeQueryIterator utilityQueryIterator;
 
     public override void OnStart()
     {
-      _branchOrder = Enumerable.Range(0, ChildCount()).Select(index => new Branch(index, 0f)).ToArray();
-      _utilityQueryIterator = new TreeQueryIterator(Tree.Height - LevelOrder);
-      _utilitySorter = new Utility.FixedSorter<Branch>(_branchOrder);
+      branchesLeftToRun = new List<int>(ChildCount());
+      utilityQueryIterator = new TreeQueryIterator(Tree.Height - LevelOrder);
+
+      timer.AutoRestart = true;
+      timer.OnTimeout += Evaluate;
     }
 
     public override void OnEnter()
     {
-      sortUtilities();
+      timer.WaitTime = interval;
+      timer.Start();
+
+      branchesLeftToRun.Clear();
+      for (int i = 0; i < ChildCount(); i++)
+      {
+        branchesLeftToRun.Add(i);
+      }
+
+      highestUtilityChild = HighestUtilityBranch();
+
       base.OnEnter();
+    }
+
+    protected internal override void OnChildExit(int childIndex, Status childStatus)
+    {
+      // Find next highest utility child.
+      if (childStatus == Status.Failure)
+      {
+        branchesLeftToRun.Remove(childIndex);
+        highestUtilityChild = HighestUtilityBranch();
+      }
+
+      base.OnChildExit(childIndex, childStatus);
+    }
+
+    protected internal override void OnAbort(ConditionalAbort child)
+    {
+      highestUtilityChild = child.ChildOrder;
     }
 
     // Get children by utility order.
     public override BehaviourNode NextChild()
     {
-      if (_currentChildIndex >= _branchOrder.Length)
+      if (branchesLeftToRun.Count == 0)
       {
         return null;
       }
 
-      int index = _branchOrder[_currentChildIndex].Index;
-      return _children[index];
+      return _children[highestUtilityChild];
     }
 
-    private void sortUtilities()
+    public override bool CanTickOnBranch()
+    {
+      return true;
+    }
+
+    public override void OnBranchTick()
+    {
+      timer.Update(Time.deltaTime);
+    }
+
+    private void Evaluate()
+    {
+      // Try to get a higher utility branch.
+      int previousChild = highestUtilityChild;
+      highestUtilityChild = HighestUtilityBranch();
+
+      // Found new higher utility.
+      if (previousChild != highestUtilityChild)
+      {
+        Tree.Interrupt(GetChildAt(previousChild), true);
+
+        // Mark the interruption as a failure, so the select goes to next child.
+        _previousChildExitStatus = Status.Failure;
+      }
+    }
+
+    private int HighestUtilityBranch()
     {
       // Calculate the utility value of each branch.
-      if (ChildCount() > 0)
+      switch (evaluation)
       {
-        for (int i = 0; i < ChildCount(); i++)
-        {
-          _branchOrder[i].Utility = _utilityQueryIterator.SumUtility(GetChildAt(i));
-        }
-        _utilitySorter.Sort();
+        case Evaluation.Sum:
+          return GreatestSumUtilityBranch();
+        case Evaluation.Max:
+          return MaxUtilityBranch();
+        default:
+          break;
       }
+
+      return 0;
+    }
+
+    private int GreatestSumUtilityBranch()
+    {
+      int highestChild = -1;
+      float highest = int.MinValue;
+      foreach (int childIndex in branchesLeftToRun)
+      {
+        float childUtility = utilityQueryIterator.SumUtility(GetChildAt(childIndex));
+        if (childUtility > highest)
+        {
+          highest = childUtility;
+          highestChild = childIndex;
+        }
+      }
+      return highestChild;
+    }
+
+    private int MaxUtilityBranch()
+    {
+      int highestChild = -1;
+      float highest = int.MinValue;
+      foreach (int childIndex in branchesLeftToRun)
+      {
+        float childUtility = utilityQueryIterator.MaxUtility(GetChildAt(childIndex));
+        if (childUtility > highest)
+        {
+          highest = childUtility;
+          highestChild = childIndex;
+        }
+      }
+      return highestChild;
     }
 
   }

@@ -169,7 +169,7 @@ namespace Bonsai.Core
           return
               !BehaviourTree.IsUnderSubtree(aborter, node) &&
               BehaviourTree.IsUnderSubtree(aborter.Parent, node) &&
-              aborter.Priority() > getSubtree(aborter.Parent, node).Priority();
+              aborter.Priority() > GetSubtree(aborter.Parent, node).Priority();
 
         // Self aborts always interrupt, regardless of the condition.
         case AbortType.Self:
@@ -179,13 +179,13 @@ namespace Bonsai.Core
           return
                BehaviourTree.IsUnderSubtree(aborter, node) ||
                (BehaviourTree.IsUnderSubtree(aborter.Parent, node) &&
-               aborter.Priority() > getSubtree(aborter.Parent, node).Priority());
+               aborter.Priority() > GetSubtree(aborter.Parent, node).Priority());
       }
 
       return false;
     }
 
-    private static BehaviourNode getSubtree(BehaviourNode parent, BehaviourNode grandchild)
+    private static BehaviourNode GetSubtree(BehaviourNode parent, BehaviourNode grandchild)
     {
       BehaviourNode sub = grandchild;
       while (sub.Parent != parent)

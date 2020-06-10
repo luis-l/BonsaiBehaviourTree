@@ -24,7 +24,7 @@ Features Overview:
 - Blackboard to share data between tasks.
 - A visual editor to create, edit, view, and debug trees
 - Conditional Aborts (AKA Observer aborts)
-- Includes: Parallel execution, Interrupts, Semaphore Guards, Reactive (Dynamic) Selectors.
+- Includes: Parallel execution, Interrupts, Guards, Services, Concurrent Branch Evaluation.
 - Supports including Sub-trees
 - Can easily create custom Composites, Decorators, Tasks
 - Behaviour trees are ScriptableObjects, so it integrates perfectly with the Unity Editor.
@@ -33,13 +33,13 @@ Behaviour tree running.
 
 ![Behaviour tree running](http://i.imgur.com/aUe8neD.png)
 
-### Run-time Editor Features and Limitations
+### Editor Features and Limitations
 
-During run-time you can view how the a tree executes and see which nodes are running, the statuses returned (success/failure) or if the nodes were aborted/interrupted.
+During Play mode you can view how the a tree executes and see which nodes are running, the statuses returned (success/failure) or if the nodes were aborted/interrupted.
 
 You can also edit certain properties of a node, like changing the abort type, or setting a new waiting time for the wait task via the Unity Inspector.
 
-Things that cannot be currently edited in run-time are (this may change in the future):
+Things that cannot be currently edited in Play mode:
 - Adding/deleting nodes
 - Changing the root
 - Changing connections between nodes
@@ -62,7 +62,6 @@ Things that cannot be currently edited in run-time are (this may change in the f
 - Multiple behaviour tree editors can be opened at once.
 - Viewing a running behaviour tree just requires clicking on a game object with behaviour tree component.
 - Behaviour tree assets can be opened by double clicking on the asset file.
-- The UNDO is still not implemented.
 
 ### API and Custom Tasks
 There are four main categories of nodes which you can extend from to add functionality:
@@ -128,7 +127,6 @@ Example of a simple, custom Wait task:
         }
     }
 ```
-The trickier nodes to extend are composite nodes since they require knowing how to manipulate the "Iterator" in order to traverse nodes. The iterator can be manipulated to dictate how to traverse the tree.
 
 ### Performance
 
@@ -136,27 +134,16 @@ This is a benchmark running 5000 trees. No GC after startup. The tree in the ima
 
 ![Performance Benchmark](http://i.imgur.com/hm0yHM1.png)
 
-I also ran the same benchmark on a Linux laptop. Intel i5-6200U @ 2.30 GHz. The "Time ms" was on average 4 ms.
+The same benchmark was run on a Linux laptop. Intel i5-6200U @ 2.30 GHz. The "Time ms" was on average 4 ms.
 
 ### Limitations
 
-Since I was aiming for a lightweight system, I decided not to provide complete, built-in functionality for serialization (data persistence is not available between running  game build sessions). The tree and blackboard structure is saved as an asset, but changing data values will not be persistent between game runs. For example, if you have a blackboard variable ["timer", 0.0f] and during the game run, the value goes up to say 10.0, you would need to save and load that value manually so its persistent between game saves.
-
-I might add a simple system to serialize basic variable types in the blackboard such as int, string, Vector, structs...etc, the difficult, tricky part would be saving persistent object references or very complex objects like dictionaries with objects.
+Since the goal of this project was a lightweight system, a complete, built-in functionality for serialization is not provided. The tree and blackboard structure is saved as an asset, but changing data values will not be persistent between game runs. For example, if you have a blackboard variable ["timer", 0.0f] and during the game run, the value goes up to say 10.0, you would need to save and load that value manually so its persistent between game saves.
 
 ### Upcoming Features
-
 - Undo functionality. Any modification to the tree will be undo-able.
-- Run-time tree editing. This will allow you to (when the game/tree is running):
-  - Add and delete nodes
-  - Add children and re-parent nodes
-  - Change connections between nodes
-  - Change the child execution order
-  - Change the root
-  - Change the type of node, for example switching a Sequence to a Selector. The more complex version for this would changing a node to a Parallel node.
-  - Change node references (changing linked interrupts or guards)
-  - Plus more
-- Extendable friendly editor. I want plugin creation to be simple to implement. There would be an Editor API that allows you to add custom behavior to the editor or allow you to completely change the look of the editor.
+- Show relevant information on Node visual.
+- View node property during Play. (e.g. View time left on Wait Task)
 
 ### Screenshots
 

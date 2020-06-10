@@ -45,20 +45,20 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Gets the maximum priority for the traversed branch.
+    /// Gets the maximum maximum for the traversed branch.
     /// </summary>
     /// <param name="root"></param>
     /// <param name="initial"></param>
     /// <note>int.MinValue is used because that is lowest possible pre order priority value.</note>
     /// <returns></returns>
-    public float MaxPriority(BehaviourNode root, float initial = int.MinValue)
+    public float MaxUtility(BehaviourNode root, float initial = int.MinValue)
     {
       _traversal.Push(root);
 
       while (HasNext())
       {
         var node = Next();
-        initial = Math.Max(initial, node.Priority());
+        initial = Math.Max(initial, node.UtilityValue());
       }
 
       _traversal.ResetCount();

@@ -233,9 +233,9 @@ namespace Bonsai.Core
     /// <summary>
     /// The game object associated with the tree of this node.
     /// </summary>
-    protected GameObject GameObjectParent
+    protected GameObject Actor
     {
-      get { return _parentTree.parentGameObject; }
+      get { return _parentTree.actor; }
     }
 
     /// <summary>

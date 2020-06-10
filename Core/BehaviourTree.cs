@@ -27,7 +27,7 @@ namespace Bonsai.Core
     /// The game object binded to the tree.
     /// This is assigned at runtime when the tree instance starts.
     /// </summary>
-    public GameObject parentGameObject;
+    public GameObject actor;
 
     /// <summary>
     /// Gets and sets the tree root.

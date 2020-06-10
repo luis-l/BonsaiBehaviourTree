@@ -57,7 +57,7 @@ namespace Bonsai.Core
         {
 
           var tree = BehaviourTree.Clone(blueprint);
-          tree.parentGameObject = btc.gameObject;
+          tree.actor = btc.gameObject;
           btc.bt = tree;
 
           _trees.Add(tree);

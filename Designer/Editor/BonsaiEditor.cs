@@ -574,13 +574,18 @@ namespace Bonsai.Designer
       {
 
         var aborter = node.behaviour as ConditionalAbort;
-        BehaviourNode currentNode = window.tree.GetNode(itr.CurrentIndex);
-
-        // Only highlight the abort if the current running node can be aborted by it.
-        if (aborter && ConditionalAbort.IsAbortable(aborter, currentNode))
+        int index = itr.CurrentIndex;
+        if (index != -1)
         {
-          backgroundStyle.normal.background = _reevaluateHighlightTex;
+          BehaviourNode currentNode = window.tree.GetNode(index);
+
+          // Only highlight the abort if the current running node can be aborted by it.
+          if (aborter && ConditionalAbort.IsAbortable(aborter, currentNode))
+          {
+            backgroundStyle.normal.background = _reevaluateHighlightTex;
+          }
         }
+
       }
     }
 

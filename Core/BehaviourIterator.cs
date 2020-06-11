@@ -147,7 +147,7 @@ namespace Bonsai.Core
       // If an abort node is the root, then we need to empty the entire traversal.
       // We can achieve this by setting the terminating index to the invalid index, which is an invalid index
       // and will empty the traversal.
-      while (_traversal.Peek() != terminatingIndex && _traversal.Count != 0)
+      while (_traversal.Count != 0 && _traversal.Peek() != terminatingIndex)
       {
         StepBackAbort();
       }
@@ -263,7 +263,10 @@ namespace Bonsai.Core
       BehaviourNode node = _tree.allNodes[index];
       node.OnExit();
 
-      if (node.CanTickOnBranch())
+      // Guard against empty branch tick pop.
+      // This could occur if a node was aborted then interrupted in succession.
+      // TODO: Test this further.
+      if (_branchTicks.Count != 0 && node.CanTickOnBranch())
       {
         _branchTicks.Pop();
       }

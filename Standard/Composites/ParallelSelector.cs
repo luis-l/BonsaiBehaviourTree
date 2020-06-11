@@ -21,10 +21,10 @@ namespace Bonsai.Standard
       }
 
       // Process the sub-iterators.
-      for (int i = 0; i < _subIterators.Count; ++i)
+      for (int i = 0; i < subIterators.Count; ++i)
       {
         // Keep updating the iterators that are not done.
-        BehaviourIterator itr = _subIterators[i];
+        BehaviourIterator itr = subIterators[i];
         if (itr.IsRunning)
         {
           itr.Update();

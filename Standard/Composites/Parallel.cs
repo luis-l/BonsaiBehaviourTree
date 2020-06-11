@@ -1,4 +1,5 @@
 ﻿
+using System.Linq;
 using System.Collections.Generic;
 
 using Bonsai.Core;
@@ -13,7 +14,7 @@ namespace Bonsai.Standard
   public class Parallel : Composite
   {
     // The iterators to run the children in sequential "parallel".
-    protected List<BehaviourIterator> _subIterators = new List<BehaviourIterator>();
+    protected List<BehaviourIterator> subIterators = new List<BehaviourIterator>();
 
     protected Status[] ChildStatuses { get; private set; }
 
@@ -25,22 +26,18 @@ namespace Bonsai.Standard
     public override void OnEnter()
     {
       // Traverse children at the same time.
-      for (int childIndex = 0; childIndex < _children.Count; ++childIndex)
+      for (int i = 0; i < _children.Count; ++i)
       {
-        ChildStatuses[childIndex] = Status.Running;
-        var child = _children[childIndex];
-        _subIterators[childIndex].Traverse(child);
+        ChildStatuses[i] = Status.Running;
+        subIterators[i].Traverse(_children[i]);
       }
     }
 
     public override void OnExit()
     {
-      for (int i = 0; i < _subIterators.Count; ++i)
+      for (int i = 0; i < subIterators.Count; ++i)
       {
-
-        BehaviourIterator itr = _subIterators[i];
-
-        if (itr.IsRunning)
+        if (subIterators[i].IsRunning)
         {
           Tree.Interrupt(_children[i], true);
         }
@@ -60,11 +57,10 @@ namespace Bonsai.Standard
       }
 
       // Process the sub-iterators.
-      for (int i = 0; i < _subIterators.Count; ++i)
+      for (int i = 0; i < subIterators.Count; ++i)
       {
-
         // Keep updating the iterators that are not done.
-        BehaviourIterator itr = _subIterators[i];
+        BehaviourIterator itr = subIterators[i];
         if (itr.IsRunning)
         {
           itr.Update();
@@ -78,6 +74,11 @@ namespace Bonsai.Standard
     public override void OnChildExit(int childIndex, Status childStatus)
     {
       ChildStatuses[childIndex] = childStatus;
+    }
+
+    public override void OnAbort(ConditionalAbort child)
+    {
+      // Do nothing. Parallel branches have same priority.
     }
 
     protected bool IsAnyChildWithStatus(Status expected)
@@ -100,6 +101,7 @@ namespace Bonsai.Standard
         if (status != expected)
         {
           return false;
+
         }
       }
 
@@ -111,27 +113,23 @@ namespace Bonsai.Standard
     /// </summary>
     public void SyncSubIterators()
     {
-      _subIterators = new List<BehaviourIterator>(_children.Count);
-
       // Set the new iterators. All of the sub-iterators have this parallel node as the root.
-      foreach (var child in _children)
-      {
-
-        // Offset the level order by +1 since the parallel parent is not included
-        // in the subtree child iterator traversal stack.
-        var sub = new BehaviourIterator(Tree, levelOrder + 1);
-        _subIterators.Add(sub);
-      }
+      // Offset the level order by +1 since the parallel parent is not included
+      // in the subtree child iterator traversal stack.
+      subIterators = Enumerable
+        .Range(0, _children.Count)
+        .Select(i => new BehaviourIterator(Tree, levelOrder + 1))
+        .ToList();
     }
 
     public IEnumerable<BehaviourIterator> SubIterators
     {
-      get { return _subIterators; }
+      get { return subIterators; }
     }
 
     public BehaviourIterator GetIterator(int index)
     {
-      return _subIterators[index];
+      return subIterators[index];
     }
   }
 }

@@ -14,8 +14,8 @@ namespace Bonsai.Standard
   public class TimeLimit : ConditionalAbort
   {
     public float timeLimit = 1f;
-    private float _counter = 0f;
-    private bool _bChildRunning = false;
+
+    private float counter = 0f;
 
     protected override void OnEnable()
     {
@@ -25,45 +25,24 @@ namespace Bonsai.Standard
 
     public override void OnEnter()
     {
-      _counter = 0f;
-      _bChildRunning = false;
+      counter = 0f;
       base.OnEnter();
     }
 
     public override bool Condition()
     {
-      if (_counter >= timeLimit)
-      {
-        return false;
-      }
+      return counter < timeLimit;
+    }
 
+    public override void OnBranchTick()
+    {
+      counter += Time.deltaTime;
+    }
+
+    public override bool CanTickOnBranch()
+    {
+      // Enable branch ticking so we can update the timer.
       return true;
-    }
-
-    /// <summary>
-    /// Constatly ticks, so we can update the timer here only if the child is running.
-    /// </summary>
-    /// <returns></returns>
-    protected override bool Reevaluate()
-    {
-      if (_bChildRunning)
-      {
-
-        _counter += Time.deltaTime;
-        return base.Reevaluate();
-      }
-
-      return false;
-    }
-
-    public override void OnChildEnter(int childIndex)
-    {
-      _bChildRunning = true;
-    }
-
-    public override void OnChildExit(int childIndex, Status childStatus)
-    {
-      _bChildRunning = false;
     }
   }
 }

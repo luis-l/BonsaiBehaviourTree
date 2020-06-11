@@ -1,15 +1,10 @@
 ﻿
-using System;
 using UnityEngine;
-
-using Bonsai.Core;
 
 namespace Bonsai.Designer
 {
   public abstract class BonsaiKnob
   {
-    internal Texture2D background;
-
     public static readonly Vector2 kMinSize = new Vector2(40, 10f);
 
     /// <summary>

@@ -47,12 +47,7 @@ namespace Bonsai.Designer
       LoadTexture("Log");
       LoadTexture("Hourglass");
 
-      LoadTexture("Mouse");
-      LoadTexture("Keyboard");
-
       LoadTexture("GrayGradient");
-      LoadTexture("DarkGray");
-      LoadTexture("LightGray");
       LoadTexture("Grid");
       LoadTexture("AbortHighlightGradient");
       LoadTexture("ReferenceHighlightGradient");
@@ -69,6 +64,8 @@ namespace Bonsai.Designer
       LoadTexture("DoubleChevron");
 
       LoadTexture("TreeIcon");
+
+      LoadTexture("PortTexture");
     }
 
     public static void LoadTexture(string name, TexType type = TexType.PNG)

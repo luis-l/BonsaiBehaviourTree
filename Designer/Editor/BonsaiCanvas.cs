@@ -3,7 +3,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEditor;
 
 namespace Bonsai.Designer
 {
@@ -20,10 +19,10 @@ namespace Bonsai.Designer
     internal Vector2 zoom = Vector2.one;
     internal Vector2 panOffset = Vector2.zero;
 
-    private List<BonsaiNode> _nodes = new List<BonsaiNode>();
+    private readonly List<BonsaiNode> nodes = new List<BonsaiNode>();
     internal IEnumerable<BonsaiNode> Nodes
     {
-      get { return _nodes; }
+      get { return nodes; }
     }
 
     /// <summary>
@@ -45,7 +44,7 @@ namespace Bonsai.Designer
     /// <returns></returns>
     internal BonsaiNode CreateNode(Core.BehaviourNode behaviour)
     {
-      var node = createEditorNode(behaviour.GetType());
+      var node = CreateEditorNode(behaviour.GetType());
       node.behaviour = behaviour;
 
       // Setup the style with the updated properties such as name and texture.
@@ -55,14 +54,12 @@ namespace Bonsai.Designer
     }
 
     // Creates an editor node.
-    private BonsaiNode createEditorNode(Type behaviourType)
+    private BonsaiNode CreateEditorNode(Type behaviourType)
     {
-      string texName = null;
-
       var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
-      var node = addEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren);
+      var node = AddEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren);
 
-      texName = prop.texName;
+      string texName = prop.texName;
       var tex = BonsaiResources.GetTexture(texName);
 
       // Failed to find texture, set default.
@@ -71,32 +68,32 @@ namespace Bonsai.Designer
         tex = BonsaiResources.GetTexture("Play");
       }
 
-      node.iconTex = BonsaiResources.GetTexture(texName);
+      node.iconTex = tex;
 
       return node;
     }
 
     // Creates and adds an editor node to the canvas.
-    private BonsaiNode addEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren)
+    private BonsaiNode AddEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren)
     {
-      var node = new BonsaiNode(this, bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
+      var node = new BonsaiNode(bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
 
-      _nodes.Add(node);
+      nodes.Add(node);
       return node;
     }
 
     internal void PushToEnd(BonsaiNode node)
     {
-      bool bRemoved = _nodes.Remove(node);
+      bool bRemoved = nodes.Remove(node);
       if (bRemoved)
       {
-        _nodes.Add(node);
+        nodes.Add(node);
       }
     }
 
     internal void Remove(BonsaiNode node)
     {
-      if (_nodes.Remove(node))
+      if (nodes.Remove(node))
       {
         node.Destroy();
       }
@@ -116,7 +113,7 @@ namespace Bonsai.Designer
         return bRemove;
       };
 
-      _nodes.RemoveAll(match);
+      nodes.RemoveAll(match);
     }
 
     public float ZoomScale
@@ -130,7 +127,7 @@ namespace Bonsai.Designer
     /// </summary>
     public IEnumerable<BonsaiNode> NodesInDrawOrder
     {
-      get { return _nodes; }
+      get { return nodes; }
     }
 
     /// <summary>
@@ -140,9 +137,9 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public IEnumerator<BonsaiNode> GetEnumerator()
     {
-      for (int i = _nodes.Count - 1; i >= 0; --i)
+      for (int i = nodes.Count - 1; i >= 0; --i)
       {
-        yield return _nodes[i];
+        yield return nodes[i];
       }
     }
 

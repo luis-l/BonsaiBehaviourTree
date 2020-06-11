@@ -11,11 +11,6 @@ namespace Bonsai.Designer
     /// </summary>
     internal BonsaiOutputKnob outputConnection;
 
-    public BonsaiInputKnob()
-    {
-      background = BonsaiResources.GetTexture("LightGray");
-    }
-
     public void OnDestroy()
     {
       // Since this input node got deleted, we need to notify

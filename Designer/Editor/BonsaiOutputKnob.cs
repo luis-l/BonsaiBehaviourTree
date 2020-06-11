@@ -8,21 +8,16 @@ namespace Bonsai.Designer
 {
   public class BonsaiOutputKnob : BonsaiKnob
   {
-    private List<BonsaiInputKnob> _inputs = new List<BonsaiInputKnob>();
+    private readonly List<BonsaiInputKnob> inputs = new List<BonsaiInputKnob>();
 
     public IEnumerable<BonsaiInputKnob> InputConnections
     {
-      get { return _inputs; }
-    }
-
-    public BonsaiOutputKnob()
-    {
-      background = BonsaiResources.GetTexture("DarkGray");
+      get { return inputs; }
     }
 
     public bool Contains(BonsaiInputKnob input)
     {
-      return _inputs.Contains(input);
+      return inputs.Contains(input);
     }
 
     public void Add(BonsaiInputKnob input)
@@ -42,7 +37,7 @@ namespace Bonsai.Designer
       }
 
       // Avoid cycles.
-      if (cycleDetected(input))
+      if (CycleDetected(input))
       {
         Debug.LogWarning("Cycle detected.");
         return;
@@ -62,13 +57,13 @@ namespace Bonsai.Designer
         RemoveAllInputs();
       }
 
-      _inputs.Add(input);
+      inputs.Add(input);
 
       // Notify the parent that there was a new input.
       parentNode.OnNewInputConnection(input);
     }
 
-    private bool cycleDetected(BonsaiInputKnob input)
+    private bool CycleDetected(BonsaiInputKnob input)
     {
       var currentNode = this.parentNode;
 
@@ -100,7 +95,7 @@ namespace Bonsai.Designer
 
     internal void RemoveInputConnection(BonsaiInputKnob input)
     {
-      if (_inputs.Remove(input))
+      if (inputs.Remove(input))
       {
         parentNode.OnInputConnectionRemoved(input);
         input.outputConnection = null;
@@ -109,13 +104,13 @@ namespace Bonsai.Designer
 
     internal void RemoveAllInputs()
     {
-      foreach (var i in _inputs)
+      foreach (var i in inputs)
       {
         parentNode.OnInputConnectionRemoved(i);
         i.outputConnection = null;
       }
 
-      _inputs.Clear();
+      inputs.Clear();
     }
 
     /// <summary>
@@ -125,7 +120,7 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public BonsaiInputKnob GetInput(int index)
     {
-      return _inputs[index];
+      return inputs[index];
     }
 
     /// <summary>
@@ -134,25 +129,25 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public int InputCount()
     {
-      return _inputs.Count;
+      return inputs.Count;
     }
 
     /// <summary>
     /// Syncs the ordering of the inputs with the internal tree structure.
     /// </summary>
-    internal void SyncOrdering()
+    public void SyncOrdering()
     {
       var composite = parentNode.behaviour as Composite;
 
       if (!composite) return;
 
       // This will make sure that the input knob orders are in sync with the child orders.
-      _inputs.Sort();
+      inputs.Sort();
 
-      for (int i = 0; i < _inputs.Count; ++i)
+      for (int i = 0; i < inputs.Count; ++i)
       {
 
-        BehaviourNode b = _inputs[i].parentNode.behaviour;
+        BehaviourNode b = inputs[i].parentNode.behaviour;
 
         // We can do this without destroying the association between parent and children nodes
         // since all we are doing is modifying the ordering of the child nodes in the children array.
@@ -167,12 +162,12 @@ namespace Bonsai.Designer
     /// Returns the y coordinate of the nearest input knob on the y axis.
     /// </summary>
     /// <returns></returns>
-    internal float GetNearestInputY()
+    public float GetNearestInputY()
     {
       float nearestY = float.MaxValue;
       float nearestDist = float.MaxValue;
 
-      foreach (BonsaiInputKnob input in _inputs)
+      foreach (BonsaiInputKnob input in inputs)
       {
 
         Vector2 toChild = input.bodyRect.position - parentNode.bodyRect.position;
@@ -194,12 +189,12 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="minX"></param>
     /// <param name="maxX"></param>
-    internal void GetBoundsX(out float minX, out float maxX)
+    public void GetBoundsX(out float minX, out float maxX)
     {
       minX = parentNode.bodyRect.center.x;
       maxX = parentNode.bodyRect.center.x;
 
-      foreach (BonsaiInputKnob input in _inputs)
+      foreach (BonsaiInputKnob input in inputs)
       {
 
         float x = input.parentNode.bodyRect.center.x;

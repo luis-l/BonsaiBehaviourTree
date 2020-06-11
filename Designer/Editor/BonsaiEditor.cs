@@ -1,13 +1,14 @@
 ﻿
 using System;
-using System.Reflection;
-using System.Linq;
 using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
 using Bonsai.Core;
 using Bonsai.Standard;
+using UnityEditor;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace Bonsai.Designer
 {
@@ -39,6 +40,8 @@ namespace Bonsai.Designer
     private Texture2D _referenceHighlightTex;
     private Texture2D _reevaluateHighlightTex;
 
+    private Texture2D _portTexture;
+
     private Color _rootSymbolColor;
     private Color _runningStatusColor;
     private Color _successColor;
@@ -52,21 +55,6 @@ namespace Bonsai.Designer
 
     private Vector2 _abortIconOffset = new Vector2(2f, 4f);
     private Vector2 _abortIconSize = Vector2.one * 20f;
-
-    private GUIStyle _backgroundStyle;
-    private GUIStyle backgroundStyle
-    {
-      get
-      {
-        if (_backgroundStyle == null)
-        {
-          _backgroundStyle = new GUIStyle(GUI.skin.box);
-          _backgroundStyle.normal.background = BonsaiResources.GetTexture("GrayGradient");
-        }
-
-        return _backgroundStyle;
-      }
-    }
 
     // Remembers which nodes are currently being referenced by another node.
     private HashSet<BehaviourNode> _referencedNodes = new HashSet<BehaviourNode>();
@@ -108,11 +96,11 @@ namespace Bonsai.Designer
 
       if (Event.current.type == EventType.Repaint)
       {
-        drawGrid();
+        DrawGrid();
         DrawMode();
       }
 
-      drawCanvasContents();
+      DrawCanvasContents();
     }
 
     public void CacheTextures()
@@ -133,6 +121,8 @@ namespace Bonsai.Designer
       _abortHighlightTex = BonsaiResources.GetTexture("AbortHighlightGradient");
       _referenceHighlightTex = BonsaiResources.GetTexture("ReferenceHighlightGradient");
       _reevaluateHighlightTex = BonsaiResources.GetTexture("ReevaluateHighlightGradient");
+
+      _portTexture = BonsaiResources.GetTexture("PortTexture");
     }
 
     #region Node/Canvas Editing and Modification
@@ -260,7 +250,7 @@ namespace Bonsai.Designer
       GUI.DrawTextureWithTexCoords(backRect, _backgroundTex, new Rect(tileOffset, tileAmount));
     }
 
-    private void drawGrid()
+    private void DrawGrid()
     {
       var size = window.CanvasRect.size;
       var center = size / 2f;
@@ -283,42 +273,41 @@ namespace Bonsai.Designer
       GUI.DrawTextureWithTexCoords(window.CanvasRect, _backgroundTex, new Rect(tileOffset, tileAmount));
     }
 
-    private void drawCanvasContents()
+    private void DrawCanvasContents()
     {
       ScaleUtility.BeginScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
 
-      drawConnectionPreview();
-      drawKnobConnections();
-      drawNodes();
+      DrawConnectionPreview();
+      DrawKnobConnections();
+      DrawNodes();
 
       ScaleUtility.EndScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
 
       // Selection overlays and independent of zoom.
-      drawAreaSelection();
+      DrawAreaSelection();
     }
 
-    private void drawNodes()
+    private void DrawNodes()
     {
       foreach (var node in canvas.NodesInDrawOrder)
       {
-        drawKnobs(node);
-        drawNode(node);
+        DrawNode(node);
+        DrawKnobs(node);
       }
     }
 
-    private void drawKnobConnections()
+    private void DrawKnobConnections()
     {
       foreach (var node in canvas.NodesInDrawOrder)
       {
-
         if (node.Output != null)
         {
-          drawDefaultKnobConnections(node);
+          DrawDefaultKnobConnections(node);
         }
       }
     }
 
-    private void drawDefaultKnobConnections(BonsaiNode node)
+    private void DrawDefaultKnobConnections(BonsaiNode node)
     {
       Color connectionColor = _defaultConnectionColor;
       float connectionWidth = _defaultConnectionWidth;
@@ -337,11 +326,9 @@ namespace Bonsai.Designer
       float anchorY = (yoffset + node.Output.GetNearestInputY()) / 2f;
 
       // Anchor line, between the first and last child.
-      float anchorLineStartX;
-      float anchorLineEndX;
 
       // Find the min and max X coords between the children and the parent.
-      node.Output.GetBoundsX(out anchorLineStartX, out anchorLineEndX);
+      node.Output.GetBoundsX(out float anchorLineStartX, out float anchorLineEndX);
 
       // Get start and end positions of the anchor line (The common line where the parent and children connect).
       var anchorLineStart = new Vector2(anchorLineStartX, anchorY);
@@ -359,7 +346,6 @@ namespace Bonsai.Designer
 
       foreach (var input in node.Output.InputConnections)
       {
-
         // Get the positions to draw a line between the node and the anchor line.
         Vector2 center = input.bodyRect.center;
         var anchorLineConnection = new Vector2(center.x, anchorY);
@@ -367,16 +353,14 @@ namespace Bonsai.Designer
         // The node is running, hightlight the connection.
         if (input.parentNode.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
         {
-
           DrawLineCanvasSpace(center, anchorLineConnection, _runningStatusColor, _runningConnectionWidth);
 
           // Hightlight the portion of the anchorline between the running child and parent node.
           DrawLineCanvasSpace(anchorLineConnection, parentAnchorLineConnection, _runningStatusColor, _runningConnectionWidth);
         }
-
-        // The node is not running, draw a default connection.
         else
         {
+          // The node is not running, draw a default connection.
           DrawLineCanvasSpace(center, anchorLineConnection, _defaultConnectionColor, _defaultConnectionWidth);
         }
       }
@@ -386,7 +370,7 @@ namespace Bonsai.Designer
 
     #region Canvas Unit Drawing Methods (Node, Knobs, ... etc)
 
-    private void drawNode(BonsaiNode node)
+    private void DrawNode(BonsaiNode node)
     {
       // Convert the node rect from canvas to screen space.
       Rect screenRect = node.bodyRect;
@@ -395,32 +379,25 @@ namespace Bonsai.Designer
       // Remember the original color that way it is reset when the function exits.
       Color originalColor = GUI.color;
 
-      // Set the default background.
-      backgroundStyle.normal.background = _defaultBackgroundTex;
-
-      highlightAsAbortable(node);
-      highlightAsReferenced(node);
-      highlightAsSelected(node);
-      highlightAsRunning(node);
-      highlightAsReevaluated(node);
+      DrawNodeBackground(node, screenRect);
 
       // The node contents are grouped together within the node body.
-      GUI.BeginGroup(screenRect, backgroundStyle);
+      GUI.BeginGroup(screenRect);
 
       // Make the body of node local to the group coordinate space.
       Rect localRect = node.bodyRect;
       localRect.position = Vector2.zero;
 
       // Add root symbol if applicable
-      drawRootSymbol(localRect, node);
+      DrawRootSymbol(localRect, node);
 
       // Draw the status the node exited with if applicable.
-      drawExitStatus(localRect, node);
+      DrawExitStatus(localRect, node);
 
       // Draw the conditional abort of the node if applicable.
-      drawAbortPriorityIcon(localRect, node);
+      DrawAbortPriorityIcon(localRect, node);
 
-      // Draw the contents inside the node body, automatically laidout.
+      // Draw the contents inside the node body, automatically laid out.
       GUILayout.BeginArea(localRect, GUIStyle.none);
 
       GUILayout.Box(node.IconNameContent, node.IconNameStyle);
@@ -430,7 +407,7 @@ namespace Bonsai.Designer
       GUI.color = originalColor;
     }
 
-    private void drawRootSymbol(Rect localRect, BonsaiNode node)
+    private void DrawRootSymbol(Rect localRect, BonsaiNode node)
     {
       if (window.tree.Root == node.behaviour)
       {
@@ -438,45 +415,42 @@ namespace Bonsai.Designer
         // Shift the symbol so it is not in the center.
         localRect.x -= localRect.width / 2f - 20f;
 
-        drawTexture(localRect, _rootSymbol, _rootSymbolColor);
+        DrawTexture(localRect, _rootSymbol, _rootSymbolColor);
       }
     }
 
-    private void highlightAsRunning(BonsaiNode node)
+    private void DrawNodeBackground(BonsaiNode node, Rect screenRect)
     {
-      // Set the color to show that the node is running.
-      if (node.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
-      {
-        backgroundStyle.normal.background = _runningBackgroundTex;
-      }
+      NodeBackground(node, out Texture2D backgroundTexture);
+      GUI.DrawTexture(screenRect, backgroundTexture, ScaleMode.StretchToFill, true, 0, Color.white, 0, 5f);
     }
 
-    private void drawExitStatus(Rect localRect, BonsaiNode node)
+    private void DrawExitStatus(Rect localRect, BonsaiNode node)
     {
       var status = node.behaviour.GetStatusEditor();
 
       if (status == BehaviourNode.StatusEditor.Success)
       {
-        drawTexture(localRect, _successSymbol, _successColor);
+        DrawTexture(localRect, _successSymbol, _successColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Failure)
       {
-        drawTexture(localRect, _failureSymbol, _failureColor);
+        DrawTexture(localRect, _failureSymbol, _failureColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Aborted)
       {
-        drawTexture(localRect, _failureSymbol, _abortedColor);
+        DrawTexture(localRect, _failureSymbol, _abortedColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Interruption)
       {
-        drawTexture(localRect, _failureSymbol, _interruptedColor);
+        DrawTexture(localRect, _failureSymbol, _interruptedColor);
       }
     }
 
-    private void drawAbortPriorityIcon(Rect localRect, BonsaiNode node)
+    private void DrawAbortPriorityIcon(Rect localRect, BonsaiNode node)
     {
       var abortNode = node.behaviour as ConditionalAbort;
 
@@ -513,84 +487,108 @@ namespace Bonsai.Designer
       }
     }
 
+    private void NodeBackground(BonsaiNode node, out Texture2D tex)
+    {
+      tex = _defaultBackgroundTex;
+
+      if (IsNodeEvaluating(node))
+      {
+        tex = _reevaluateHighlightTex;
+      }
+      else if (IsNodeRunning(node))
+      {
+        tex = _runningBackgroundTex;
+      }
+      else if (IsNodeSelected(node))
+      {
+        tex = _selectedHighlightTex;
+      }
+      else if (IsNodeReferenced(node))
+      {
+        tex = _referenceHighlightTex;
+      }
+      else if (IsNodeAbortable(node))
+      {
+        tex = _abortHighlightTex;
+      }
+    }
+
+    [Pure]
+    private bool IsNodeRunning(BonsaiNode node)
+    {
+      return node.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running;
+    }
+
     // Highlights nodes that can be aborted by the currently selected node.
-    private void highlightAsAbortable(BonsaiNode node)
+    [Pure]
+    private bool IsNodeAbortable(BonsaiNode node)
     {
       // Root must exist.
-      if (!window.tree.Root) return;
+      if (!window.tree.Root)
+      {
+        return false;
+      }
 
       BonsaiNode selected = window.inputHandler.SelectedNode;
 
       // A node must be selected.
-      if (selected == null) return;
-
-      var aborter = selected.behaviour as ConditionalAbort;
+      if (selected == null)
+      {
+        return false;
+      }
 
       // The selected node must be a conditional abort.
-      if (aborter)
-      {
+      var aborter = selected.behaviour as ConditionalAbort;
 
-        // Highlight this node if it can be aborted by the selected aborter.
-        if (ConditionalAbort.IsAbortable(aborter, node.behaviour))
-        {
-          backgroundStyle.normal.background = _abortHighlightTex;
-        }
-      }
+      // Node can be aborted by the selected aborter.
+      return aborter && ConditionalAbort.IsAbortable(aborter, node.behaviour);
     }
 
     // Nodes that are being referenced are highlighted.
-    private void highlightAsReferenced(BonsaiNode node)
+    [Pure]
+    private bool IsNodeReferenced(BonsaiNode node)
     {
-      if (_referencedNodes.Contains(node.behaviour))
-      {
-        backgroundStyle.normal.background = _referenceHighlightTex;
-      }
+      return _referencedNodes.Contains(node.behaviour);
     }
 
-    private void highlightAsSelected(BonsaiNode node)
+    [Pure]
+    private bool IsNodeSelected(BonsaiNode node)
     {
-      // Highlight if node is selected.
-      if (node.behaviour == Selection.activeObject || node.bAreaSelectionFlag)
-      {
-        backgroundStyle.normal.background = _selectedHighlightTex;
-      }
+      return node.behaviour == Selection.activeObject || node.bAreaSelectionFlag;
     }
 
     /// <summary>
-    /// Highlights nodes that are being re-evaluated, like abort nodes or
-    /// children under reactive parents.
+    /// Highlights nodes that are being re-evaluated, like abort nodes.
     /// </summary>
     /// <param name="node"></param>
-    private void highlightAsReevaluated(BonsaiNode node)
+    [Pure]
+    private bool IsNodeEvaluating(BonsaiNode node)
     {
       if (!EditorApplication.isPlaying)
       {
-        return;
+        return false;
       }
 
       BehaviourIterator itr = node.behaviour.Iterator;
 
       if (itr != null && itr.IsRunning)
       {
-
         var aborter = node.behaviour as ConditionalAbort;
         int index = itr.CurrentIndex;
         if (index != -1)
         {
           BehaviourNode currentNode = window.tree.GetNode(index);
 
-          // Only highlight the abort if the current running node can be aborted by it.
-          if (aborter && ConditionalAbort.IsAbortable(aborter, currentNode))
-          {
-            backgroundStyle.normal.background = _reevaluateHighlightTex;
-          }
+          // The current running node can be aborted by it.
+          return aborter && ConditionalAbort.IsAbortable(aborter, currentNode);
         }
-
       }
+
+      return false;
     }
 
     // Helper method to draw textures with color tint.
-    private static void drawTexture(Rect r, Texture2D tex, Color c)
+    private static void DrawTexture(Rect r, Texture2D tex, Color c)
     {
       var originalColor = GUI.color;
 
@@ -600,7 +598,7 @@ namespace Bonsai.Designer
       GUI.color = originalColor;
     }
 
-    private void drawKnobs(BonsaiNode node)
+    private void DrawKnobs(BonsaiNode node)
     {
       var bodyRect = node.bodyRect;
       var output = node.Output;
@@ -608,41 +606,35 @@ namespace Bonsai.Designer
 
       if (input != null)
       {
-
         float x = bodyRect.x + (bodyRect.width - input.bodyRect.width) / 2f;
         float y = bodyRect.y - input.bodyRect.height;
 
         input.bodyRect.position = new Vector2(x, y);
-        drawKnob(input);
+        DrawKnob(input);
       }
 
       if (output != null)
       {
-
         float x = bodyRect.x + (bodyRect.width - output.bodyRect.width) / 2f;
         float y = bodyRect.y + bodyRect.height;
 
         output.bodyRect.position = new Vector2(x, y);
-        drawKnob(output);
+        DrawKnob(output);
       }
     }
 
-    private void drawKnob(BonsaiKnob knob)
+    private void DrawKnob(BonsaiKnob knob)
     {
       // Convert the body rect from canvas to screen space.
       var screenRect = knob.bodyRect;
       screenRect.position = CanvasToScreenSpace(screenRect.position);
-
-      if (knob.background)
-      {
-        GUI.DrawTexture(screenRect, knob.background);
-      }
+      GUI.DrawTexture(screenRect, _portTexture, ScaleMode.StretchToFill, true, 0f, Color.white, 0f, 4f);
     }
 
     /// <summary>
     /// Draws the preview connection from the selected output knob and the mouse.
     /// </summary>
-    private void drawConnectionPreview()
+    private void DrawConnectionPreview()
     {
       // Draw connection between mouse and the knob.
       if (window.inputHandler.IsMakingConnection)
@@ -747,11 +739,10 @@ namespace Bonsai.Designer
       Handles.color = originalColor;
     }
 
-    private void drawAreaSelection()
+    private void DrawAreaSelection()
     {
       if (window.inputHandler.IsAreaSelecting)
       {
-
         // Construct and display the rect.
         Rect selectionRect = window.inputHandler.SelectionScreenSpace();
         Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
@@ -983,8 +974,8 @@ namespace Bonsai.Designer
     /// </summary>
     public void ConstructNodesFromTree()
     {
-      var nodeMap = reconstructEditorNodes();
-      reconstructEditorConnections(nodeMap);
+      var nodeMap = ReconstructEditorNodes();
+      ReconstructEditorConnections(nodeMap);
     }
 
     /// <summary>
@@ -1003,12 +994,12 @@ namespace Bonsai.Designer
 
       // This is for the node editor to use to place the nodes.
       var positions = new Dictionary<BehaviourNode, Vector2>();
-      var levels = calculateLevels();
+      var levels = CalculateLevels();
       var posParams = new PositioningParameters();
 
       Action<BehaviourNode> positionInPlace = (node) =>
       {
-        positionNode(node, positions, levels, posParams);
+        PositionNode(node, positions, levels, posParams);
       };
 
       TreeIterator<BehaviourNode>.Traverse(bt.Root, positionInPlace, Traversal.PostOrder);
@@ -1028,7 +1019,7 @@ namespace Bonsai.Designer
     }
 
     // Reconstruct editor nodes from the tree.
-    private Dictionary<BehaviourNode, BonsaiNode> reconstructEditorNodes()
+    private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes()
     {
       var nodeMap = new Dictionary<BehaviourNode, BonsaiNode>();
 
@@ -1046,7 +1037,7 @@ namespace Bonsai.Designer
     }
 
     // Reconstruct the editor connections from the tree.
-    private void reconstructEditorConnections(Dictionary<BehaviourNode, BonsaiNode> nodeMap)
+    private void ReconstructEditorConnections(Dictionary<BehaviourNode, BonsaiNode> nodeMap)
     {
       // Create the connections
       foreach (var bonsaiNode in canvas.Nodes)
@@ -1063,7 +1054,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private void positionNode(
+    private void PositionNode(
         BehaviourNode node,
         Dictionary<BehaviourNode, Vector2> positions,
         Dictionary<BehaviourNode, int> levels,
@@ -1106,7 +1097,7 @@ namespace Bonsai.Designer
 
         posParams.xIntermediate = posParams.xLeaf;
 
-        float width = calculateNameWidth(node);
+        float width = CalculateNameWidth(node);
 
         // Offset the x leaf position for the next leaf node.
         if (width > BonsaiNode.kDefaultSize.x)
@@ -1124,7 +1115,7 @@ namespace Bonsai.Designer
     }
 
     // Does a quick calculation to see how many pixels the type name takes up.
-    private static float calculateNameWidth(BehaviourNode node)
+    private static float CalculateNameWidth(BehaviourNode node)
     {
       string typename = node.GetType().Name;
       string niceName = ObjectNames.NicifyVariableName(typename);
@@ -1137,7 +1128,7 @@ namespace Bonsai.Designer
 
     // To do this, we do a regular DFS and just check the current
     // path length at a given node to determine its level.
-    private Dictionary<BehaviourNode, int> calculateLevels()
+    private Dictionary<BehaviourNode, int> CalculateLevels()
     {
       var bt = window.tree;
 

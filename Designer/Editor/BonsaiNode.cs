@@ -13,11 +13,11 @@ namespace Bonsai.Designer
     /// </summary>
     public Rect bodyRect;
 
-    private GUIStyle _iconNameStyle;
-    private GUIContent _iconNameContent;
+    private GUIStyle iconNameStyle;
+    private GUIContent iconNameContent;
 
-    protected BonsaiInputKnob _inputKnob;
-    protected BonsaiOutputKnob _outputKnob;
+    protected BonsaiInputKnob inputKnob;
+    protected BonsaiOutputKnob outputKnob;
 
     internal Texture iconTex;
 
@@ -42,23 +42,20 @@ namespace Bonsai.Designer
     /// <summary>
     /// Create a new node for the first time.
     /// </summary>
-    /// <param name="parentCanvas">The canvas that the node belongs to.</param>
     /// <param name="bCreateInput">If the node should have an input.</param>
     /// <param name="bCreateOuput">If the node should have an output.</param>
-    public BonsaiNode(BonsaiCanvas parentCanvas, bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren)
+    public BonsaiNode(bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren)
     {
       bodyRect = new Rect(Vector2.zero, kDefaultSize);
 
       if (bCreateInput)
       {
-        _inputKnob = new BonsaiInputKnob();
-        _inputKnob.parentNode = this;
+        inputKnob = new BonsaiInputKnob { parentNode = this };
       }
 
       if (bCreateOuput)
       {
-        _outputKnob = new BonsaiOutputKnob();
-        _outputKnob.parentNode = this;
+        outputKnob = new BonsaiOutputKnob { parentNode = this };
       }
 
       this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
@@ -71,7 +68,7 @@ namespace Bonsai.Designer
     public void OnInputConnectionRemoved(BonsaiInputKnob removedInputConnection)
     {
       var disconnectedNode = removedInputConnection.parentNode;
-      removeChild(disconnectedNode.behaviour);
+      RemoveChild(disconnectedNode.behaviour);
     }
 
     /// <summary>
@@ -84,61 +81,61 @@ namespace Bonsai.Designer
 
       // If already connected, this occurs when 
       // building canvas from a loaded tree.
-      if (containsChild(newChild))
+      if (ContainsChild(newChild))
       {
         return;
       }
 
-      if (!canAddChild(newChild))
+      if (!CanAddChild(newChild))
       {
-        unparent(newChild);
+        Unparent(newChild);
       }
 
-      addChild(newChild);
+      AddChild(newChild);
     }
 
     public void NotifyParentOfPostionalReordering()
     {
       if (!behaviour.Parent) return;
 
-      _inputKnob.outputConnection.SyncOrdering();
+      inputKnob.outputConnection.SyncOrdering();
     }
 
     public void Destroy()
     {
-      removeAllChildren();
-      unparent(behaviour);
+      RemoveAllChildren();
+      Unparent(behaviour);
       Object.DestroyImmediate(behaviour, true);
 
-      if (_inputKnob != null)
+      if (inputKnob != null)
       {
-        _inputKnob.OnDestroy();
+        inputKnob.OnDestroy();
       }
     }
 
     public BonsaiInputKnob Input
     {
-      get { return _inputKnob; }
+      get { return inputKnob; }
     }
 
     public BonsaiOutputKnob Output
     {
-      get { return _outputKnob; }
+      get { return outputKnob; }
     }
 
     public BonsaiNode GetChildAt(int index)
     {
-      return _outputKnob == null ? null : _outputKnob.GetInput(index).parentNode;
+      return outputKnob?.GetInput(index).parentNode;
     }
 
     public int ChildCount()
     {
-      return _outputKnob == null ? 0 : _outputKnob.InputCount();
+      return outputKnob == null ? 0 : outputKnob.InputCount();
     }
 
     #region Behaviour Node Operations
 
-    private bool canAddChild(Core.BehaviourNode child)
+    private bool CanAddChild(BehaviourNode child)
     {
       if (behaviour && child)
       {
@@ -148,7 +145,7 @@ namespace Bonsai.Designer
       return false;
     }
 
-    private bool containsChild(Core.BehaviourNode child)
+    private bool ContainsChild(BehaviourNode child)
     {
       return child.Parent == behaviour;
     }
@@ -158,7 +155,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="child"></param>
-    private void addChild(Core.BehaviourNode child)
+    private void AddChild(BehaviourNode child)
     {
       if (behaviour && child)
       {
@@ -171,7 +168,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="child"></param>
-    private void unparent(Core.BehaviourNode child)
+    private void Unparent(BehaviourNode child)
     {
       if (child && child.Parent)
       {
@@ -186,7 +183,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="parent"></param>
     /// <param name="child"></param>
-    private void removeChild(Core.BehaviourNode child)
+    private void RemoveChild(BehaviourNode child)
     {
       if (behaviour && child)
       {
@@ -194,7 +191,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private void removeAllChildren()
+    private void RemoveAllChildren()
     {
       if (behaviour && behaviour.ChildCount() > 0)
       {
@@ -216,11 +213,11 @@ namespace Bonsai.Designer
     {
       get
       {
-        if (_iconNameContent == null)
+        if (iconNameContent == null)
         {
-          _iconNameContent = new GUIContent(NiceName, iconTex);
+          iconNameContent = new GUIContent(NiceName, iconTex);
         }
-        return _iconNameContent;
+        return iconNameContent;
       }
     }
 
@@ -228,12 +225,12 @@ namespace Bonsai.Designer
     {
       get
       {
-        if (_iconNameStyle == null)
+        if (iconNameStyle == null)
         {
           SetupStyle();
         }
 
-        return _iconNameStyle;
+        return iconNameStyle;
       }
     }
 
@@ -242,19 +239,18 @@ namespace Bonsai.Designer
     /// </summary>
     public void SetupStyle()
     {
-      _iconNameStyle = new GUIStyle();
-      _iconNameStyle.normal.textColor = Color.white;
-      _iconNameStyle.alignment = TextAnchor.LowerCenter;
+      iconNameStyle = new GUIStyle();
+      iconNameStyle.normal.textColor = Color.white;
+      iconNameStyle.alignment = TextAnchor.LowerCenter;
 
-      _iconNameStyle.imagePosition = ImagePosition.ImageAbove;
+      iconNameStyle.imagePosition = ImagePosition.ImageAbove;
 
       // Test if the name fits
-      Vector2 contentSize = _iconNameStyle.CalcSize(new GUIContent(NiceName));
+      Vector2 contentSize = iconNameStyle.CalcSize(new GUIContent(NiceName));
 
       // Resize width of the node body.
       if (contentSize.x > bodyRect.width - resizePaddingX)
       {
-
         bodyRect.width = contentSize.x + resizePaddingX;
 
         // Make sure width is even for best results.
@@ -269,18 +265,17 @@ namespace Bonsai.Designer
         // Cannot be evenly divided by the snap step.
         if (stepUnits % 2 != 0)
         {
-
           // Add enough width so it can be evenly divided.
           bodyRect.width += BonsaiEditor.snapStep / 2f;
 
           // Round it to the nearest multiple of the snap-step size.
           bodyRect.width = Mathf.Round(bodyRect.width / BonsaiEditor.snapStep) * BonsaiEditor.snapStep;
         }
-
       }
 
-      _iconNameStyle.fixedHeight = bodyRect.height - 5f;
-      _iconNameStyle.fixedWidth = bodyRect.width;
+      iconNameStyle.fixedHeight = bodyRect.height - 5f;
+      iconNameStyle.fixedWidth = bodyRect.width;
+
     }
 
     #endregion

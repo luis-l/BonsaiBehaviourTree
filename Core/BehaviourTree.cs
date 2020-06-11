@@ -18,6 +18,11 @@ namespace Bonsai.Core
     private Parallel[] _parallelNodes;
     private int _parallelNodeCount = 0;
 
+    /// <summary>
+    /// Nodes that are allowed to update on tree tick.
+    /// </summary>
+    private BehaviourNode[] treeTickNodes;
+
     [SerializeField, HideInInspector]
     private BehaviourNode _root;
 
@@ -104,6 +109,12 @@ namespace Bonsai.Core
     {
       if (_bTreeInitialized && _mainIterator.IsRunning)
       {
+
+        if (treeTickNodes.Length != 0)
+        {
+          NodeTreeTick();
+        }
+
         if (_observerAborts.Count != 0)
         {
           TickObservers();
@@ -134,6 +145,7 @@ namespace Bonsai.Core
       _observerAborts = new List<ConditionalAbort>();
 
       CacheObservers();
+      CacheTreeTickNodes();
       SyncIterators();
     }
 
@@ -148,6 +160,11 @@ namespace Bonsai.Core
           _observerAborts.Add(conditional);
         }
       }
+    }
+
+    private void CacheTreeTickNodes()
+    {
+      treeTickNodes = allNodes.Where(node => node.CanTickOnTree()).ToArray();
     }
 
     private void SyncIterators()
@@ -360,6 +377,14 @@ namespace Bonsai.Core
         {
           node.Iterator.OnAbort(node);
         }
+      }
+    }
+
+    private void NodeTreeTick()
+    {
+      for (int i = 0; i < treeTickNodes.Length; i++)
+      {
+        treeTickNodes[i].OnTreeTick();
       }
     }
 

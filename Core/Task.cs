@@ -70,9 +70,11 @@ namespace Bonsai.Core
       return null;
     }
 
-    // Tasks cannot concurrently execute on branch update.
+    // Tasks cannot concurrently execute on branch or tree update.
     public sealed override void OnBranchTick() { }
     public sealed override bool CanTickOnBranch() { return false; }
+    public sealed override void OnTreeTick() { }
+    public sealed override bool CanTickOnTree() { return false; }
 
   }
 }

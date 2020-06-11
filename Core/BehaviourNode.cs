@@ -1,5 +1,4 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bonsai.Core
 {
@@ -87,6 +86,18 @@ namespace Bonsai.Core
     /// Default behaviour is to not run OnBranchTick.
     /// </summary>
     public virtual bool CanTickOnBranch() { return false; }
+
+
+    /// <summary>
+    /// Exectues every tick when the tree is active.
+    /// Can be used to tick concurrent behaviour in the background. e.g. Cooldown timers.
+    /// </summary>
+    public virtual void OnTreeTick() { }
+
+    /// <summary>
+    /// Default behaviour is to not run OnTreeTick.
+    /// </summary>
+    public virtual bool CanTickOnTree() { return false; }
 
     /// <summary>
     /// The priority value of the node.

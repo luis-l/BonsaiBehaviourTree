@@ -35,6 +35,8 @@ namespace Bonsai.Utility
     }
 
     public bool IsDone { get { return TimeLeft <= 0f; } }
+
+    public bool IsRunning { get { return !IsDone; } }
   }
 
 }

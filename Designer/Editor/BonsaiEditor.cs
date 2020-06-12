@@ -16,8 +16,9 @@ namespace Bonsai.Designer
   /// </summary>
   internal class BonsaiEditor
   {
-    public BonsaiWindow window;
-    internal BonsaiCanvas canvas;
+    private readonly BonsaiWindow window;
+    public BonsaiCanvas Canvas { get; private set; }
+    public Coord Coordinates { get; private set; }
 
     private static Dictionary<Type, NodeTypeProperties> _behaviourNodes;
 
@@ -77,8 +78,9 @@ namespace Bonsai.Designer
     /// </summary>
     public static float snapStep = kGridSize;
 
-    public BonsaiEditor()
+    public BonsaiEditor(BonsaiWindow window)
     {
+      this.window = window;
       CacheTextures();
 
       _rootSymbolColor = new Color(0.3f, 0.3f, 0.3f, 1f);
@@ -92,6 +94,11 @@ namespace Bonsai.Designer
       referenceContainerTypes.Add(typeof(Guard));
     }
 
+    public void SetBehaviourTree(BehaviourTree tree)
+    {
+      Canvas = new BonsaiCanvas(tree);
+      Coordinates = new Coord(Canvas, window);
+    }
 
     public void Draw()
     {
@@ -135,11 +142,11 @@ namespace Bonsai.Designer
     /// <param name="delta">The amount to translate the canvas.</param>
     public void Pan(Vector2 delta)
     {
-      canvas.panOffset += delta * canvas.ZoomScale * BonsaiCanvas.panSpeed;
+      Canvas.panOffset += delta * Canvas.ZoomScale * BonsaiCanvas.panSpeed;
 
       // Round to keep panning sharp.
-      canvas.panOffset.x = Mathf.Round(canvas.panOffset.x);
-      canvas.panOffset.y = Mathf.Round(canvas.panOffset.y);
+      Canvas.panOffset.x = Mathf.Round(Canvas.panOffset.x);
+      Canvas.panOffset.y = Mathf.Round(Canvas.panOffset.y);
     }
 
     /// <summary>
@@ -149,10 +156,10 @@ namespace Bonsai.Designer
     public void Zoom(float zoomDirection)
     {
       float scale = (zoomDirection < 0f) ? (1f - BonsaiCanvas.zoomDelta) : (1f + BonsaiCanvas.zoomDelta);
-      canvas.zoom *= scale;
+      Canvas.zoom *= scale;
 
-      float cap = Mathf.Clamp(canvas.zoom.x, BonsaiCanvas.minZoom, BonsaiCanvas.maxZoom);
-      canvas.zoom.Set(cap, cap);
+      float cap = Mathf.Clamp(Canvas.zoom.x, BonsaiCanvas.minZoom, BonsaiCanvas.maxZoom);
+      Canvas.zoom.Set(cap, cap);
     }
 
     /// <summary>
@@ -186,7 +193,7 @@ namespace Bonsai.Designer
       Vector2 diff = pos - offset;
       diff.y = Mathf.Clamp(diff.y, min, float.MaxValue);
 
-      Vector2 rounded = SnapPosition(diff);
+      Vector2 rounded = Coord.SnapPosition(diff, snapStep);
       root.bodyRect.center = rounded;
 
       // Calculate the change of position of the root.
@@ -197,7 +204,7 @@ namespace Bonsai.Designer
       {
         // For all children, pan by the same amount that the parent changed by.
         if (node != root)
-          node.bodyRect.center += SnapPosition(pan);
+          node.bodyRect.center += Coord.SnapPosition(pan, snapStep);
       };
 
       TreeIterator<BonsaiNode>.Traverse(root, subtreeDrag);
@@ -236,64 +243,20 @@ namespace Bonsai.Designer
       Drawer.DrawStaticGrid(window.CanvasRect, _backgroundTex);
     }
 
-
-    /// <summary>
-    /// Draws a static grid that is unaffected by zoom and pan.
-    /// </summary>
-    //public void DrawStaticGrid()
-    //{
-    //  var size = window.CanvasRect.size;
-    //  var center = size / 2f;
-
-    //  float xOffset = -center.x / _backgroundTex.width;
-    //  float yOffset = (center.y - size.y) / _backgroundTex.height;
-
-    //  // Offset from origin in tile units
-    //  Vector2 tileOffset = new Vector2(xOffset, yOffset);
-
-    //  float tileAmountX = Mathf.Round(size.x) / _backgroundTex.width;
-    //  float tileAmountY = Mathf.Round(size.y) / _backgroundTex.height;
-
-    //  // Amount of tiles
-    //  Vector2 tileAmount = new Vector2(tileAmountX, tileAmountY);
-
-    //  // Draw tiled background
-    //  var backRect = window.CanvasRect;
-    //  GUI.DrawTextureWithTexCoords(backRect, _backgroundTex, new Rect(tileOffset, tileAmount));
-    //}
-
     private void DrawGrid()
     {
-      var size = window.CanvasRect.size;
-      var center = size / 2f;
-
-      float zoom = canvas.ZoomScale;
-
-      // Offset from origin in tile units
-      float xOffset = -(center.x * zoom + canvas.panOffset.x) / _backgroundTex.width;
-      float yOffset = ((center.y - size.y) * zoom + canvas.panOffset.y) / _backgroundTex.height;
-
-      Vector2 tileOffset = new Vector2(xOffset, yOffset);
-
-      // Amount of tiles
-      float tileAmountX = Mathf.Round(size.x * zoom) / _backgroundTex.width;
-      float tileAmountY = Mathf.Round(size.y * zoom) / _backgroundTex.height;
-
-      Vector2 tileAmount = new Vector2(tileAmountX, tileAmountY);
-
-      // Draw tiled background
-      GUI.DrawTextureWithTexCoords(window.CanvasRect, _backgroundTex, new Rect(tileOffset, tileAmount));
+      Drawer.DrawGrid(window.CanvasRect, _backgroundTex, Canvas.ZoomScale, Canvas.panOffset);
     }
 
     private void DrawCanvasContents()
     {
-      ScaleUtility.BeginScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
+      ScaleUtility.BeginScale(window.CanvasRect, Canvas.ZoomScale, window.toolbarHeight);
 
       DrawConnectionPreview();
       DrawPortConnections();
       DrawNodes();
 
-      ScaleUtility.EndScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
+      ScaleUtility.EndScale(window.CanvasRect, Canvas.ZoomScale, window.toolbarHeight);
 
       // Selection overlays and independent of zoom.
       DrawAreaSelection();
@@ -301,7 +264,7 @@ namespace Bonsai.Designer
 
     private void DrawNodes()
     {
-      foreach (var node in canvas.NodesInDrawOrder)
+      foreach (var node in Canvas.NodesInDrawOrder)
       {
         DrawNode(node);
         DrawPorts(node);
@@ -310,7 +273,7 @@ namespace Bonsai.Designer
 
     private void DrawPortConnections()
     {
-      foreach (var node in canvas.NodesInDrawOrder)
+      foreach (var node in Canvas.NodesInDrawOrder)
       {
         if (node.Output != null)
         {
@@ -386,7 +349,7 @@ namespace Bonsai.Designer
     {
       // Convert the node rect from canvas to screen space.
       Rect screenRect = node.bodyRect;
-      screenRect.position = CanvasToScreenSpace(screenRect.position);
+      screenRect.position = Coordinates.CanvasToScreenSpace(screenRect.position);
 
       // Remember the original color that way it is reset when the function exits.
       Color originalColor = GUI.color;
@@ -684,7 +647,7 @@ namespace Bonsai.Designer
     private void DrawPort(Rect portRect)
     {
       // Convert the body rect from canvas to screen space.
-      portRect.position = CanvasToScreenSpace(portRect.position);
+      portRect.position = Coordinates.CanvasToScreenSpace(portRect.position);
       GUI.DrawTexture(portRect, portTexture, ScaleMode.StretchToFill);
     }
 
@@ -696,7 +659,7 @@ namespace Bonsai.Designer
       // Draw connection between mouse and the port.
       if (window.inputHandler.IsMakingConnection)
       {
-        var start = CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
+        var start = Coordinates.CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
         var end = Event.current.mousePosition;
         DrawRectConnectionScreenSpace(start, end, Color.white);
         window.Repaint();
@@ -710,8 +673,8 @@ namespace Bonsai.Designer
     /// <param name="end"></param>
     public void DrawRectConnectionCanvasSpace(Vector2 start, Vector2 end, Color color)
     {
-      start = CanvasToScreenSpace(start);
-      end = CanvasToScreenSpace(end);
+      start = Coordinates.CanvasToScreenSpace(start);
+      end = Coordinates.CanvasToScreenSpace(end);
 
       DrawRectConnectionScreenSpace(start, end, color);
     }
@@ -762,8 +725,8 @@ namespace Bonsai.Designer
 
     public void DrawLineCanvasSpace(Vector2 start, Vector2 end, Color color)
     {
-      start = CanvasToScreenSpace(start);
-      end = CanvasToScreenSpace(end);
+      start = Coordinates.CanvasToScreenSpace(start);
+      end = Coordinates.CanvasToScreenSpace(end);
 
       DrawLineScreenSpace(start, end, color);
     }
@@ -780,8 +743,8 @@ namespace Bonsai.Designer
 
     public void DrawLineCanvasSpace(Vector2 start, Vector2 end, Color color, float width)
     {
-      start = CanvasToScreenSpace(start);
-      end = CanvasToScreenSpace(end);
+      start = Coordinates.CanvasToScreenSpace(start);
+      end = Coordinates.CanvasToScreenSpace(end);
 
       DrawLineScreenSpace(start, end, color, width);
     }
@@ -838,194 +801,11 @@ namespace Bonsai.Designer
 
     #endregion
 
-    #region Space Transformations and Mouse Utilities
-
-    /// <summary>
-    /// Rounds the position to the nearest grid coordinate.
-    /// </summary>
-    /// <param name="p"></param>
-    /// <returns></returns>
-    public Vector2 SnapPosition(Vector2 p)
-    {
-      return SnapPosition(p.x, p.y);
-    }
-
-    /// <summary>
-    /// Rounds the position to the nearest grid coordinate.
-    /// </summary>
-    /// <param name="x"></param>
-    /// <param name="y"></param>
-    /// <returns></returns>
-    public Vector2 SnapPosition(float x, float y)
-    {
-      x = Mathf.Round(x / snapStep) * snapStep;
-      y = Mathf.Round(y / snapStep) * snapStep;
-
-      return new Vector2(x, y);
-    }
-
-    /// <summary>
-    /// Returns the mouse position in canvas space.
-    /// </summary>
-    /// <returns></returns>
-    public Vector2 MousePosition()
-    {
-      return ScreenToCanvasSpace(Event.current.mousePosition);
-    }
-
-    /// <summary>
-    /// Tests if the rect is under the mouse.
-    /// </summary>
-    /// <param name="r"></param>
-    /// <returns></returns>
-    public bool IsUnderMouse(Rect r)
-    {
-      return r.Contains(MousePosition());
-    }
-
-    /// <summary>
-    /// Converts the canvas position to screen space.
-    /// This only works for geometry inside the ScaleUtility.BeginScale()
-    /// </summary>
-    /// <param name="canvasPos"></param>
-    /// <returns></returns>
-    public Vector2 CanvasToScreenSpace(Vector2 canvasPos)
-    {
-      return (0.5f * window.CanvasRect.size * canvas.ZoomScale) + canvas.panOffset + canvasPos;
-    }
-
-    /// <summary>
-    /// Convertes the screen position to canvas space.
-    /// </summary>
-    public Vector2 ScreenToCanvasSpace(Vector2 screenPos)
-    {
-      return (screenPos - 0.5f * window.CanvasRect.size) * canvas.ZoomScale - canvas.panOffset;
-    }
-
-    /// <summary>
-    /// Converts the canvas position to screen space.
-    /// This works for geometry NOT inside the ScaleUtility.BeginScale().
-    /// </summary>
-    /// <param name="canvasPos"></param>
-    //public void CanvasToScreenSpaceZoomAdj(ref Vector2 canvasPos)
-    //{
-    //  canvasPos = CanvasToScreenSpace(canvasPos) / canvas.ZoomScale;
-    //}
-
-    /// <summary>
-    /// Executes the callback on the first node that is detected under the mouse.
-    /// </summary>
-    /// <param name="callback"></param>
-    public bool OnMouseOverNode(Action<BonsaiNode> callback)
-    {
-      foreach (var node in canvas)
-      {
-        if (IsUnderMouse(node.bodyRect) && !IsMouseOverNodePorts(node))
-        {
-          callback(node);
-          return true;
-        }
-      }
-
-      // No node under mouse.
-      return false;
-    }
-
-    /// <summary>
-    /// Test if the mouse in over the input or output ports for the node.
-    /// </summary>
-    /// <returns></returns>
-    public bool IsMouseOverNodePorts(BonsaiNode node)
-    {
-      if (node.Output != null && IsUnderMouse(node.Output.bodyRect))
-      {
-        return true;
-      }
-
-      if (node.Input != null && IsUnderMouse(node.Input.bodyRect))
-      {
-        return true;
-      }
-
-      return false;
-    }
-
-    /// <summary>
-    /// Tests if the mouse is over an output.
-    /// </summary>
-    /// <param name="callback"></param>
-    /// <returns></returns>
-    public bool OnMouseOverOutput(Action<BonsaiOutputPort> callback)
-    {
-      foreach (var node in canvas)
-      {
-        if (node.Output == null)
-        {
-          continue;
-        }
-
-        if (IsUnderMouse(node.Output.bodyRect))
-        {
-          callback(node.Output);
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    /// <summary>
-    /// Tests if the mouse is over an input.
-    /// </summary>
-    /// <param name="callback"></param>
-    /// <returns></returns>
-    public bool OnMouseOverInput(Action<BonsaiInputPort> callback)
-    {
-      foreach (var node in canvas)
-      {
-        if (node.Input == null)
-        {
-          continue;
-        }
-
-        if (IsUnderMouse(node.Input.bodyRect))
-        {
-          callback(node.Input);
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    /// <summary>
-    /// Tests if the mouse is over the node or the input.
-    /// </summary>
-    /// <param name="callback"></param>
-    /// <returns></returns>
-    public bool OnMouseOverNodeOrInput(Action<BonsaiNode> callback)
-    {
-      foreach (var node in canvas)
-      {
-        bool bCondition = IsUnderMouse(node.bodyRect) ||
-            (node.Input != null && IsUnderMouse(node.Input.bodyRect));
-
-        if (bCondition)
-        {
-          callback(node);
-          return true;
-        }
-      }
-
-      // No node under mouse.
-      return false;
-    }
-
     private void HandleNewNodeToPositionUnderMouse()
     {
       if (_nodeToPositionUnderMouse != null)
       {
-        _nodeToPositionUnderMouse.bodyRect.position = MousePosition();
+        _nodeToPositionUnderMouse.bodyRect.position = Coordinates.MousePosition();
         _nodeToPositionUnderMouse = null;
       }
     }
@@ -1035,20 +815,7 @@ namespace Bonsai.Designer
       _nodeToPositionUnderMouse = node;
     }
 
-    #endregion
-
     #region Node Construction
-
-    /// <summary>
-    /// Constructs the nodes for the first time.
-    /// This should be used when a canvas is first loaded up
-    /// to visualize the tree.
-    /// </summary>
-    public void ConstructNodesFromTree()
-    {
-      var nodeMap = ReconstructEditorNodes();
-      ReconstructEditorConnections(nodeMap);
-    }
 
     /// <summary>
     /// Formats the tree to look nicely.
@@ -1076,7 +843,7 @@ namespace Bonsai.Designer
 
       TreeIterator<BehaviourNode>.Traverse(bt.Root, positionInPlace, Traversal.PostOrder);
 
-      foreach (var editorNode in canvas.Nodes)
+      foreach (var editorNode in Canvas.Nodes)
       {
         var behaviour = editorNode.Behaviour;
 
@@ -1084,39 +851,6 @@ namespace Bonsai.Designer
         {
           Vector2 pos = positions[behaviour];
           editorNode.bodyRect.position = pos;
-        }
-      }
-    }
-
-    // Reconstruct editor nodes from the tree.
-    private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes()
-    {
-      var nodeMap = new Dictionary<BehaviourNode, BonsaiNode>();
-
-      foreach (var behaviour in window.tree.AllNodes)
-      {
-
-        var editorNode = canvas.CreateNode(behaviour);
-        editorNode.Behaviour = behaviour;
-        editorNode.bodyRect.position = behaviour.bonsaiNodePosition;
-
-        nodeMap.Add(behaviour, editorNode);
-      }
-
-      return nodeMap;
-    }
-
-    // Reconstruct the editor connections from the tree.
-    private void ReconstructEditorConnections(Dictionary<BehaviourNode, BonsaiNode> nodeMap)
-    {
-      // Create the connections
-      foreach (var bonsaiNode in canvas.Nodes)
-      {
-        for (int i = 0; i < bonsaiNode.Behaviour.ChildCount(); ++i)
-        {
-          BehaviourNode child = bonsaiNode.Behaviour.GetChildAt(i);
-          BonsaiInputPort input = nodeMap[child].Input;
-          bonsaiNode.Output.Add(input);
         }
       }
     }

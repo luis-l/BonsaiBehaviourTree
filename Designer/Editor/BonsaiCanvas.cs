@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Bonsai.Core;
 using UnityEngine;
 
 namespace Bonsai.Designer
@@ -16,25 +17,36 @@ namespace Bonsai.Designer
     public static float maxZoom = 5f;
     public static float panSpeed = 1.2f;
 
-    internal Vector2 zoom = Vector2.one;
-    internal Vector2 panOffset = Vector2.zero;
+    public Vector2 zoom = Vector2.one;
+    public Vector2 panOffset = Vector2.zero;
 
     private readonly List<BonsaiNode> nodes = new List<BonsaiNode>();
-    internal IEnumerable<BonsaiNode> Nodes
+
+    public IEnumerable<BonsaiNode> Nodes
     {
       get { return nodes; }
+    }
+
+    /// <summary>
+    /// Builds the canvas given the behaviour tree.
+    /// </summary>
+    /// <param name="treeBehaviours"></param>
+    public BonsaiCanvas(BehaviourTree tree)
+    {
+      var nodeMap = ReconstructEditorNodes(tree.AllNodes);
+      ReconstructEditorConnections(nodeMap);
+      zoom = tree.zoomPosition;
+      panOffset = tree.panPosition;
     }
 
     /// <summary>
     /// Create a node and its behaviour from the type.
     /// </summary>
     /// <param name="nodeTypename"></param>
-    internal BonsaiNode CreateNode(Type behaviourType, Core.BehaviourTree bt)
+    public BonsaiNode CreateNode(Type behaviourType, BehaviourTree bt)
     {
       var behaviour = BonsaiSaveManager.CreateBehaviourNode(behaviourType, bt);
-      var node = CreateNode(behaviour);
-
-      return node;
+      return CreateNode(behaviour);
     }
 
     /// <summary>
@@ -42,7 +54,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="behaviour"></param>
     /// <returns></returns>
-    internal BonsaiNode CreateNode(Core.BehaviourNode behaviour)
+    public BonsaiNode CreateNode(BehaviourNode behaviour)
     {
       var node = CreateEditorNode(behaviour.GetType());
       node.Behaviour = behaviour;
@@ -67,7 +79,7 @@ namespace Bonsai.Designer
       return node;
     }
 
-    internal void PushToEnd(BonsaiNode node)
+    public void PushToEnd(BonsaiNode node)
     {
       bool bRemoved = nodes.Remove(node);
       if (bRemoved)
@@ -76,7 +88,7 @@ namespace Bonsai.Designer
       }
     }
 
-    internal void Remove(BonsaiNode node)
+    public void Remove(BonsaiNode node)
     {
       if (nodes.Remove(node))
       {
@@ -84,7 +96,7 @@ namespace Bonsai.Designer
       }
     }
 
-    internal void RemoveSelected()
+    public void RemoveSelected()
     {
       Predicate<BonsaiNode> match = (node) =>
       {
@@ -132,5 +144,38 @@ namespace Bonsai.Designer
     {
       return GetEnumerator();
     }
+
+    // Reconstruct editor nodes from the tree.
+    private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes(IEnumerable<BehaviourNode> treeBehaviours)
+    {
+      var nodeMap = new Dictionary<BehaviourNode, BonsaiNode>();
+
+      foreach (BehaviourNode behaviour in treeBehaviours)
+      {
+        BonsaiNode node = CreateNode(behaviour);
+        node.Behaviour = behaviour;
+        node.bodyRect.position = behaviour.bonsaiNodePosition;
+
+        nodeMap.Add(behaviour, node);
+      }
+
+      return nodeMap;
+    }
+
+    // Reconstruct the editor connections from the tree.
+    private void ReconstructEditorConnections(Dictionary<BehaviourNode, BonsaiNode> nodeMap)
+    {
+      // Create the connections
+      foreach (BonsaiNode node in Nodes)
+      {
+        for (int i = 0; i < node.Behaviour.ChildCount(); ++i)
+        {
+          BehaviourNode child = node.Behaviour.GetChildAt(i);
+          BonsaiInputPort input = nodeMap[child].Input;
+          node.Output.Add(input);
+        }
+      }
+    }
+
   }
 }

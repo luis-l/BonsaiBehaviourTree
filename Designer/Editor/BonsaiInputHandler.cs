@@ -102,7 +102,7 @@ namespace Bonsai.Designer
           clearAreaSelection();
 
           SelectedNode = node;
-          _window.editor.canvas.PushToEnd(SelectedNode);
+          _window.editor.Canvas.PushToEnd(SelectedNode);
           Selection.activeObject = node.Behaviour;
 
           handleOnAborterSelected(node);
@@ -179,7 +179,7 @@ namespace Bonsai.Designer
       if (e.type == EventType.MouseDown && e.button == 0)
       {
 
-        bool bNodeSelected = _window.editor.OnMouseOverNode(onSingleSelected);
+        bool bNodeSelected = _window.editor.Coordinates.OnMouseOverNode(onSingleSelected);
 
         // Select tree
         if (!bNodeSelected && (Selection.activeObject != _window.tree))
@@ -205,7 +205,7 @@ namespace Bonsai.Designer
         };
 
         // Check to see if we are making connection starting from output port.
-        bool bResult = _window.editor.OnMouseOverOutput(outputCallback);
+        bool bResult = _window.editor.Coordinates.OnMouseOverOutput(outputCallback);
 
         // Check if we are making connection starting from input
         if (!bResult)
@@ -227,7 +227,7 @@ namespace Bonsai.Designer
             }
           };
 
-          _window.editor.OnMouseOverInput(inputCallback);
+          _window.editor.Coordinates.OnMouseOverInput(inputCallback);
         }
       }
 
@@ -244,7 +244,7 @@ namespace Bonsai.Designer
           node.NotifyParentOfPostionalReordering();
         };
 
-        _window.editor.OnMouseOverNodeOrInput(callback);
+        _window.editor.Coordinates.OnMouseOverNodeOrInput(callback);
 
         IsMakingConnection = false;
         OutputToConnect = null;
@@ -257,7 +257,7 @@ namespace Bonsai.Designer
     /// <param name="o">The typename as a string.</param>
     private void onNodeCreateCallback(object o)
     {
-      var node = _window.editor.canvas.CreateNode(o as Type, _window.tree);
+      var node = _window.editor.Canvas.CreateNode(o as Type, _window.tree);
       _window.editor.SetNewNodeToPositionUnderMouse(node);
 
       // Make the created node the current focus of selection.
@@ -309,7 +309,7 @@ namespace Bonsai.Designer
           }
         };
 
-        bool bResult = _window.editor.OnMouseOverNode(collectRefLinks);
+        bool bResult = _window.editor.Coordinates.OnMouseOverNode(collectRefLinks);
 
         // Abort linking
         if (!bResult)
@@ -369,7 +369,7 @@ namespace Bonsai.Designer
       };
 
       // Context click over the node.
-      bool bClickedNode = _window.editor.OnMouseOverNode(callback);
+      bool bClickedNode = _window.editor.Coordinates.OnMouseOverNode(callback);
 
       if (!bClickedNode)
       {
@@ -407,7 +407,7 @@ namespace Bonsai.Designer
           break;
 
         case NodeContext.Delete:
-          _window.editor.canvas.Remove(SelectedNode);
+          _window.editor.Canvas.Remove(SelectedNode);
           break;
       }
     }
@@ -421,7 +421,7 @@ namespace Bonsai.Designer
 
         case NodeContext.DuplicateSelection:
 
-          BonsaiCanvas canvas = _window.editor.canvas;
+          BonsaiCanvas canvas = _window.editor.Canvas;
           BehaviourTree bt = _window.tree;
 
           for (int i = 0; i < _selectedNodes.Count; ++i)
@@ -450,7 +450,7 @@ namespace Bonsai.Designer
 
         case NodeContext.DeleteSelection:
 
-          _window.editor.canvas.RemoveSelected();
+          _window.editor.Canvas.RemoveSelected();
           clearAreaSelection();
           setTreeAsSelected();
           break;
@@ -501,11 +501,11 @@ namespace Bonsai.Designer
         _draggingNode = node;
 
         // Calculate the relative mouse position from the node for dragging.
-        Vector2 mpos = _window.editor.MousePosition();
+        Vector2 mpos = _window.editor.Coordinates.MousePosition();
         _singleDragOffset = mpos - _draggingNode.bodyRect.center;
       };
 
-      _window.editor.OnMouseOverNode(callback);
+      _window.editor.Coordinates.OnMouseOverNode(callback);
     }
 
     private void endSingleDrag()
@@ -522,7 +522,7 @@ namespace Bonsai.Designer
     private void onSingleDrag()
     {
       // Have the node and its subtree follow the mouse.
-      Vector2 mpos = _window.editor.MousePosition();
+      Vector2 mpos = _window.editor.Coordinates.MousePosition();
       _window.editor.SetSubtreePosition(mpos, _singleDragOffset, _draggingNode);
     }
 
@@ -533,7 +533,7 @@ namespace Bonsai.Designer
 
       foreach (BonsaiNode node in _selectedNodes)
       {
-        if (_window.editor.IsUnderMouse(node.bodyRect))
+        if (_window.editor.Coordinates.IsUnderMouse(node.bodyRect))
         {
           bStartDrag = true;
           break;
@@ -569,7 +569,7 @@ namespace Bonsai.Designer
         }
       }
 
-      Vector2 mpos = _window.editor.MousePosition();
+      Vector2 mpos = _window.editor.Coordinates.MousePosition();
 
       foreach (BonsaiNode root in _draggingSubroots)
       {
@@ -597,7 +597,7 @@ namespace Bonsai.Designer
 
     private void onMultiDrag()
     {
-      Vector2 mpos = _window.editor.MousePosition();
+      Vector2 mpos = _window.editor.Coordinates.MousePosition();
 
       int i = 0;
       foreach (BonsaiNode root in _draggingSubroots)
@@ -679,7 +679,7 @@ namespace Bonsai.Designer
       Rect selectRect = SelectionCanvasSpace();
 
       // Mark nodes as selected if they overlap the selection area.
-      foreach (BonsaiNode node in _window.editor.canvas.Nodes)
+      foreach (BonsaiNode node in _window.editor.Canvas)
       {
         if (node.bodyRect.Overlaps(selectRect))
         {
@@ -699,7 +699,7 @@ namespace Bonsai.Designer
       Rect selectionRect = SelectionCanvasSpace();
 
       // Collect all nodes overlapping the selection rect.
-      foreach (BonsaiNode node in _window.editor.canvas.Nodes)
+      foreach (BonsaiNode node in _window.editor.Canvas)
       {
         if (node.bodyRect.Overlaps(selectionRect))
         {
@@ -771,8 +771,8 @@ namespace Bonsai.Designer
     {
       Rect screenRect = SelectionScreenSpace();
 
-      Vector2 min = _window.editor.ScreenToCanvasSpace(screenRect.min);
-      Vector2 max = _window.editor.ScreenToCanvasSpace(screenRect.max);
+      Vector2 min = _window.editor.Coordinates.ScreenToCanvasSpace(screenRect.min);
+      Vector2 max = _window.editor.Coordinates.ScreenToCanvasSpace(screenRect.max);
 
       return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
     }

@@ -40,8 +40,7 @@ namespace Bonsai.Designer
 
     void OnEnable()
     {
-      editor = new BonsaiEditor();
-      editor.window = this;
+      editor = new BonsaiEditor(this);
       BonsaiEditor.FetchBehaviourNodes();
 
       inputHandler = new BonsaiInputHandler(this);
@@ -83,7 +82,7 @@ namespace Bonsai.Designer
       {
 
         // Make sure to build a canvas for an active tree.
-        if (editor.canvas == null)
+        if (editor.Canvas == null)
         {
           buildCanvas();
         }
@@ -171,20 +170,14 @@ namespace Bonsai.Designer
     {
       if (tree)
       {
-
-        editor.canvas = new BonsaiCanvas();
-
-        editor.canvas.panOffset = tree.panPosition;
-        editor.canvas.zoom = tree.zoomPosition;
-
-        editor.ConstructNodesFromTree();
+        editor.SetBehaviourTree(tree);
         Repaint();
       }
     }
 
     private void nicifyTree()
     {
-      if (tree && editor.canvas != null)
+      if (tree && editor.Canvas != null)
       {
         editor.PositionNodesNicely();
       }

@@ -284,12 +284,10 @@ namespace Bonsai.Designer
       LogNotImplemented("Home Zoom");
     }
 
-    // Loads the textures for the editor.
     private void refreshEditor()
     {
       BonsaiResources.LoadStandardTextures();
-      editor.CacheTextures();
-
+      editor.preferences = new BonsaiPreferences();
       buildCanvas();
     }
 

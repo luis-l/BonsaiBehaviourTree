@@ -59,10 +59,6 @@ namespace Bonsai.Designer
       LoadTexture("Cross");
       LoadTexture("Checkmark");
 
-      LoadTexture("RightChevron");
-      LoadTexture("BottomChevron");
-      LoadTexture("DoubleChevron");
-
       LoadTexture("TreeIcon");
 
       LoadTexture("NodeBackground");

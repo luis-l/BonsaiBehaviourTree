@@ -29,10 +29,6 @@ namespace Bonsai.Designer
     private Texture2D _failureSymbol;
     private Texture2D _successSymbol;
 
-    private Texture2D _lowerPrioritySymbol;
-    private Texture2D _selfPrioritySymbol;
-    private Texture2D _bothPrioritySymbol;
-
     private Texture2D _selectedHighlightTex;
     private Texture2D _runningBackgroundTex;
     private Texture2D _abortHighlightTex;
@@ -121,10 +117,6 @@ namespace Bonsai.Designer
       _rootSymbol = BonsaiResources.GetTexture("RootSymbol");
       _successSymbol = BonsaiResources.GetTexture("Checkmark");
       _failureSymbol = BonsaiResources.GetTexture("Cross");
-
-      _lowerPrioritySymbol = BonsaiResources.GetTexture("RightChevron");
-      _selfPrioritySymbol = BonsaiResources.GetTexture("BottomChevron");
-      _bothPrioritySymbol = BonsaiResources.GetTexture("DoubleChevron");
 
       _selectedHighlightTex = BonsaiResources.GetTexture("SelectionHighlight");
       _runningBackgroundTex = BonsaiResources.GetTexture("GreenGradient");
@@ -369,9 +361,6 @@ namespace Bonsai.Designer
       // Draw the status the node exited with if applicable.
       DrawExitStatus(localRect, node);
 
-      // Draw the conditional abort of the node if applicable.
-      DrawAbortPriorityIcon(localRect, node);
-
       // Draw the contents inside the node body, automatically laid out.
       GUILayout.BeginArea(localRect, GUIStyle.none);
 
@@ -442,43 +431,6 @@ namespace Bonsai.Designer
       else if (status == BehaviourNode.StatusEditor.Interruption)
       {
         DrawTexture(localRect, _failureSymbol, _interruptedColor);
-      }
-    }
-
-    private void DrawAbortPriorityIcon(Rect localRect, BonsaiNode node)
-    {
-      var abortNode = node.Behaviour as ConditionalAbort;
-
-      // Can only show icon for abort nodes.
-      if (abortNode && abortNode.abortType != AbortType.None)
-      {
-
-        localRect.position = _abortIconOffset;
-        localRect.size = _abortIconSize;
-
-        Texture2D tex = null;
-
-        switch (abortNode.abortType)
-        {
-
-          case AbortType.LowerPriority:
-            tex = _lowerPrioritySymbol;
-            break;
-
-          case AbortType.Self:
-
-            // Offset a bit so it is not too close to left edge.
-            localRect.x += 2f;
-            tex = _selfPrioritySymbol;
-            break;
-
-          case AbortType.Both:
-            tex = _bothPrioritySymbol;
-            break;
-        }
-
-        GUILayout.BeginArea(localRect, tex);
-        GUILayout.EndArea();
       }
     }
 

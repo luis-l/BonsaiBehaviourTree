@@ -46,7 +46,7 @@ namespace Bonsai.Standard
       }
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
       if (infiniteLoop)
       {

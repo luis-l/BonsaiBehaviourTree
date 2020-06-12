@@ -74,9 +74,9 @@ namespace Bonsai.Standard
       }
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
-      base.StaticDescription(builder);
+      base.Description(builder);
       builder.AppendLine();
 
       if (key == null || key.Length == 0)

@@ -31,7 +31,7 @@ namespace Bonsai.Standard
       return Status.Running;
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
       builder.AppendFormat("Wait for {0:0.00}s", waitTime);
     }

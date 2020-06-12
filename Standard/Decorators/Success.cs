@@ -16,7 +16,7 @@ namespace Bonsai.Standard
       return Status.Success;
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
       builder.Append("Always succeed");
     }

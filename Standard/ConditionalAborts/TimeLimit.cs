@@ -45,9 +45,9 @@ namespace Bonsai.Standard
       return true;
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
-      base.StaticDescription(builder);
+      base.Description(builder);
       builder.AppendLine();
       builder.AppendFormat("Abort and fail after {0:0.00}s", timeLimit);
     }

@@ -291,7 +291,7 @@ namespace Bonsai.Core
 
     public abstract int MaxChildCount();
 
-    public virtual void StaticDescription(StringBuilder builder)
+    public virtual void Description(StringBuilder builder)
     {
       // Default adds no description;
     }
@@ -337,7 +337,7 @@ namespace Bonsai.Core
     [HideInInspector]
     public Vector2 bonsaiNodePosition;
 
-    public string brief;
+    public string title;
 
     protected void OnDestroy()
     {

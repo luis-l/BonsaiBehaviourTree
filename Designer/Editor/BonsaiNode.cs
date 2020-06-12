@@ -275,7 +275,7 @@ namespace Bonsai.Designer
 
     private GUIContent CreateHeaderContent()
     {
-      string header = behaviour.brief;
+      string header = behaviour.title;
 
       // Fall back to node name if there is no brief supplied.
       if (header == null || header.Length == 0)
@@ -296,7 +296,7 @@ namespace Bonsai.Designer
     private GUIContent CreateBodyContent()
     {
       var body = new StringBuilder();
-      behaviour.StaticDescription(body);
+      behaviour.Description(body);
 
       if (body.Length == 0)
       {

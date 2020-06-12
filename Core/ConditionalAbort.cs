@@ -198,7 +198,7 @@ namespace Bonsai.Core
       return sub;
     }
 
-    public override void StaticDescription(StringBuilder builder)
+    public override void Description(StringBuilder builder)
     {
       builder.AppendFormat("Aborts {0}", abortType.ToString());
     }

@@ -392,6 +392,11 @@ namespace Bonsai.Designer
         return preferences.serviceBackground;
       }
 
+      else if (node.Behaviour is ConditionalAbort)
+      {
+        return preferences.conditionalTexture;
+      }
+
       else if (node.Behaviour is Decorator)
       {
         return preferences.decoratorTexture;

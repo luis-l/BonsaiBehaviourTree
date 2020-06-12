@@ -65,6 +65,7 @@ namespace Bonsai.Designer
       LoadTexture("CompositeBackground");
       LoadTexture("TaskBackground");
       LoadTexture("DecoratorBackground");
+      LoadTexture("ConditionalBackground");
       LoadTexture("ServiceBackground");
       LoadTexture("PortTexture");
     }

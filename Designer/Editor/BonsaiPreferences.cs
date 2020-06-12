@@ -20,6 +20,7 @@ namespace Bonsai.Designer
     public Texture2D compositeTexture;
     public Texture2D taskTexture;
     public Texture2D decoratorTexture;
+    public Texture2D conditionalTexture;
     public Texture2D serviceBackground;
 
     public Color rootSymbolColor;
@@ -59,6 +60,7 @@ namespace Bonsai.Designer
       compositeTexture = BonsaiResources.GetTexture("CompositeBackground");
       taskTexture = BonsaiResources.GetTexture("TaskBackground");
       decoratorTexture = BonsaiResources.GetTexture("DecoratorBackground");
+      conditionalTexture = BonsaiResources.GetTexture("ConditionalBackground");
       serviceBackground = BonsaiResources.GetTexture("ServiceBackground");
     }
   }

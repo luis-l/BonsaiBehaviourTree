@@ -6,6 +6,7 @@ using UnityEditor;
 using UnityEditor.Callbacks;
 
 using Bonsai.Core;
+using UnityEditor.PackageManager.UI;
 
 namespace Bonsai.Designer
 {
@@ -179,7 +180,7 @@ namespace Bonsai.Designer
     {
       if (tree && editor.Canvas != null)
       {
-        editor.PositionNodesNicely();
+        Formatter.PositionNodesNicely(tree, editor.Canvas);
       }
     }
 

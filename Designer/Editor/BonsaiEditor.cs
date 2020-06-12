@@ -867,8 +867,6 @@ namespace Bonsai.Designer
     }
     #endregion
 
-    #region Content and Styles
-
     private GUIStyle _modeStatusStyle;
 
     private Rect _modeStatusRect = new Rect(20f, 20f, 250f, 150f);
@@ -879,17 +877,17 @@ namespace Bonsai.Designer
       {
         if (_modeStatusStyle == null)
         {
-          _modeStatusStyle = new GUIStyle();
-          _modeStatusStyle.fontSize = 36;
-          _modeStatusStyle.fontStyle = FontStyle.Bold;
+          _modeStatusStyle = new GUIStyle
+          {
+            fontSize = 36,
+            fontStyle = FontStyle.Bold
+          };
           _modeStatusStyle.normal.textColor = new Color(1f, 1f, 1f, 0.2f);
         }
 
         return _modeStatusStyle;
       }
     }
-
-    #endregion
 
     #region Node Type Properties
 

@@ -4,6 +4,7 @@ using UnityEngine;
 
 using Bonsai.Core;
 using Bonsai.Designer;
+using System.Text;
 
 namespace Bonsai.Standard
 {
@@ -70,6 +71,21 @@ namespace Bonsai.Standard
           _bIsValueType = true;
           _defaultValue = Activator.CreateInstance(t);
         }
+      }
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      base.StaticDescription(builder);
+      builder.AppendLine();
+
+      if (key == null || key.Length == 0)
+      {
+        builder.Append("No key is set to check");
+      }
+      else
+      {
+        builder.AppendFormat("Check blackboard key: {0}", key);
       }
     }
   }

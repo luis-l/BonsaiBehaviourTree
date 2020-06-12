@@ -1,4 +1,5 @@
 ﻿
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
 
@@ -13,6 +14,11 @@ namespace Bonsai.Standard
     public override Status Run()
     {
       return Status.Failure;
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      builder.Append("Always fail");
     }
   }
 }

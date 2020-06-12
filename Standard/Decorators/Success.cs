@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Always returns success.
   /// </summary>
-  [NodeEditorProperties("Decorators/", "SmallCheckmark")]
+  [BonsaiNode("Decorators/", "SmallCheckmark")]
   public class Success : Decorator
   {
     public override Status Run()

@@ -315,7 +315,7 @@ namespace Bonsai.Designer
         // Rename subassets such that they are lexicographically after the main asset.
         foreach (var node in _window.editor.canvas)
         {
-          node.behaviour.name = _window.tree.name + node.behaviour.GetType().Name;
+          node.Behaviour.name = _window.tree.name + node.Behaviour.GetType().Name;
         }
 
         AssetDatabase.CopyAsset(getCurrentTreePath(), path);
@@ -340,7 +340,7 @@ namespace Bonsai.Designer
     {
       foreach (var editorNode in _window.editor.canvas)
       {
-        editorNode.behaviour.bonsaiNodePosition = editorNode.bodyRect.position;
+        editorNode.Behaviour.bonsaiNodePosition = editorNode.bodyRect.position;
       }
 
       _window.tree.panPosition = _window.editor.canvas.panOffset;

@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Returns success if one child returns success.
   /// </summary>
-  [NodeEditorProperties("Composites/", "Question")]
+  [BonsaiNode("Composites/", "Question")]
   public class Selector : Composite
   {
     public override Status Run()

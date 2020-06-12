@@ -1,8 +1,8 @@
 ﻿
-using UnityEngine;
-
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   /// Sets a time limit for the child to finish executing.
   /// If the time is up, the decorator returns failure.
   /// </summary>
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class TimeLimit : ConditionalAbort
   {
     public float timeLimit = 1f;
@@ -43,6 +43,13 @@ namespace Bonsai.Standard
     {
       // Enable branch ticking so we can update the timer.
       return true;
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      base.StaticDescription(builder);
+      builder.AppendLine();
+      builder.AppendFormat("Abort and fail after {0:0.00}s", timeLimit);
     }
   }
 }

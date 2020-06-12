@@ -5,7 +5,7 @@ using Bonsai.Designer;
 /// <summary>
 /// Always returns running.
 /// </summary>
-[NodeEditorProperties("Tasks/", "Hourglass")]
+[BonsaiNode("Tasks/", "Hourglass")]
 public class Idle : Task
 {
 

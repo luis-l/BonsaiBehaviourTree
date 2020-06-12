@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Keep re-traversing children until the child return success.
   /// </summary>
-  [NodeEditorProperties("Decorators/", "RepeatCheckmark")]
+  [BonsaiNode("Decorators/", "RepeatCheckmark")]
   public class UntilSuccess : Decorator
   {
     public override Status Run()

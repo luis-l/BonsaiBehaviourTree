@@ -3,10 +3,11 @@ using UnityEngine;
 
 using Bonsai.Designer;
 using Bonsai.Core;
+using System.Text;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Tasks/", "Timer")]
+  [BonsaiNode("Tasks/", "Timer")]
   public class Wait : Task
   {
     private float _timer = 0f;
@@ -28,6 +29,11 @@ namespace Bonsai.Standard
       }
 
       return Status.Running;
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      builder.AppendFormat("Wait for {0:0.00}s", waitTime);
     }
   }
 }

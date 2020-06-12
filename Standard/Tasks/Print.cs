@@ -8,7 +8,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Displays a message.
   /// </summary>
-  [NodeEditorProperties("Tasks/", "Log")]
+  [BonsaiNode("Tasks/", "Log")]
   public class Print : Task
   {
     public enum LogType { Normal, Warning, Error };

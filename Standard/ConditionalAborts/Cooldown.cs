@@ -3,19 +3,25 @@ using UnityEngine;
 
 using Bonsai.Core;
 using Bonsai.Designer;
+using System.Text;
 
 namespace Bonsai.Standard
 {
   /// <summary>
   /// Locks the tree execution for a certain amount of time.
   /// </summary>
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class Cooldown : ConditionalAbort
   {
     [Tooltip("The amount of time to wait at the cooldown decorator.")]
     public float cooldownTime = 1f;
 
     private readonly Utility.Timer timer = new Utility.Timer();
+
+    public override void OnStart()
+    {
+      timer.OnTimeout += ResetConditionCache;
+    }
 
     public override void OnEnter()
     {
@@ -61,6 +67,13 @@ namespace Bonsai.Standard
     public override bool CanTickOnTree()
     {
       return true;
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      base.StaticDescription(builder);
+      builder.AppendLine();
+      builder.AppendFormat("Lock execution for {0:0.00}s", cooldownTime);
     }
   }
 }

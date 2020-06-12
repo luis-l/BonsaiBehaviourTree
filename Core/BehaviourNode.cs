@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 
 namespace Bonsai.Core
 {
@@ -289,6 +291,11 @@ namespace Bonsai.Core
 
     public abstract int MaxChildCount();
 
+    public virtual void StaticDescription(StringBuilder builder)
+    {
+      // Default adds no description;
+    }
+
     #region Node Editor Meta Data
 
 #if UNITY_EDITOR
@@ -330,7 +337,7 @@ namespace Bonsai.Core
     [HideInInspector]
     public Vector2 bonsaiNodePosition;
 
-    public string comment;
+    public string brief;
 
     protected void OnDestroy()
     {

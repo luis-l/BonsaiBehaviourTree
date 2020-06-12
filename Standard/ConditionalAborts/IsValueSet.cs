@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Tests if the value at a given key is not set to its default value.
   /// </summary>
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class IsValueSet : ConditionalAbort
   {
     [Tooltip("The key of the value to test if it's not set to its default value.")]

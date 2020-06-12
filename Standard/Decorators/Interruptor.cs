@@ -7,7 +7,7 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Tasks/", "Interruptor")]
+  [BonsaiNode("Tasks/", "Interruptor")]
   public class Interruptor : Task
   {
     [Tooltip("If true, then the interruptable node return success else failure.")]

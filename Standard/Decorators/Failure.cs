@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Alaways returns failure.
   /// </summary>
-  [NodeEditorProperties("Decorators/", "SmallCross")]
+  [BonsaiNode("Decorators/", "SmallCross")]
   public class Failure : Decorator
   {
     public override Status Run()

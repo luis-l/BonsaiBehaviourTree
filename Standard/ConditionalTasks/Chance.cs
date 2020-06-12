@@ -6,7 +6,7 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class Chance : ConditionalTask
   {
     [Tooltip("The probability that the condition succeeds.")]

@@ -200,13 +200,11 @@ namespace Bonsai.Core
 
       while (parallelRoots.Count != 0)
       {
-
         BehaviourNode parallel = parallelRoots.Pop();
 
         // Do passes for each child, using the sub iterator associated with that child.
         for (int i = 0; i < parallel.ChildCount(); ++i)
         {
-
           itr = (parallel as Parallel).GetIterator(i);
           TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), nothing, skipAndAssign);
         }

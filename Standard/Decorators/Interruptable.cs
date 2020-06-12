@@ -4,7 +4,7 @@ using Bonsai.Core;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Decorators/", "Interruptable")]
+  [BonsaiNode("Decorators/", "Interruptable")]
   public class Interruptable : Decorator
   {
     public bool _bIsRunning = false;

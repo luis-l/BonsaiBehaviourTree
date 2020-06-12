@@ -6,7 +6,7 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Tasks/", "TreeIcon")]
+  [BonsaiNode("Tasks/", "TreeIcon")]
   public class Include : Task
   {
     [Tooltip("The tree asset to include in this tree.")]

@@ -7,7 +7,7 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Decorators/", "Shield")]
+  [BonsaiNode("Decorators/", "Shield")]
   public class Guard : Decorator
   {
     public int maxActiveGuards = 1;

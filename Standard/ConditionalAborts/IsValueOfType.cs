@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Tests if the value at the given key is a certain type.
   /// </summary>
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class IsValueOfType : ConditionalAbort, ISerializationCallbackReceiver
   {
     [Tooltip("The key of the value to test its type.")]

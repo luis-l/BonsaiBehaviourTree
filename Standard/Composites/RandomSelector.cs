@@ -1,12 +1,10 @@
 ﻿
-using UnityEngine;
-
 using Bonsai.Core;
 using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Composites/", "ShuffleQuestion")]
+  [BonsaiNode("Composites/", "ShuffleQuestion")]
   public class RandomSelector : Selector
   {
     private int[] _childrenOrder;

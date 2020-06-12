@@ -9,7 +9,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Compares two values from the blackboard.
   /// </summary>
-  [NodeEditorProperties("Conditional/", "Condition")]
+  [BonsaiNode("Conditional/", "Condition")]
   public class CompareEntries : ConditionalAbort
   {
     public string key1;

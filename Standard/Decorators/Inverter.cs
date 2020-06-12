@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Negates the status of the child.
   /// </summary>
-  [NodeEditorProperties("Decorators/", "Exclamation")]
+  [BonsaiNode("Decorators/", "Exclamation")]
   public class Inverter : Decorator
   {
     public override Status Run()

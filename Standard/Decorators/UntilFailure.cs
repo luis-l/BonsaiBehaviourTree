@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Re-traversing the child until it returns failure.
   /// </summary>
-  [NodeEditorProperties("Decorators/", "RepeatCross")]
+  [BonsaiNode("Decorators/", "RepeatCross")]
   public class UntilFailure : Decorator
   {
     public override Status Run()

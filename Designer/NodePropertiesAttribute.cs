@@ -1,18 +1,17 @@
 ﻿
 using System;
-using UnityEngine;
 
 namespace Bonsai.Designer
 {
   [AttributeUsage(AttributeTargets.Class)]
-  public class NodeEditorPropertiesAttribute : Attribute
+  public class BonsaiNodeAttribute : Attribute
   {
-    public readonly string menuPath, textureName;
+    public readonly string menuPath, texturePath;
 
-    public NodeEditorPropertiesAttribute(string menuPath, string texturePath)
+    public BonsaiNodeAttribute(string menuPath, string texturePath)
     {
       this.menuPath = menuPath;
-      this.textureName = texturePath;
+      this.texturePath = texturePath;
     }
   }
 }

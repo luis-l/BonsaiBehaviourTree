@@ -1,11 +1,17 @@
 ﻿
-using UnityEngine;
-using UnityEditor;
-
+using System.Text;
 using Bonsai.Core;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
+  public class StyledContent
+  {
+    public GUIContent content;
+    public GUIStyle style;
+  }
+
   public class BonsaiNode : IIterableNode<BonsaiNode>
   {
     /// <summary>
@@ -13,16 +19,49 @@ namespace Bonsai.Designer
     /// </summary>
     public Rect bodyRect;
 
-    private GUIStyle iconNameStyle;
-    private GUIContent iconNameContent;
+    private Rect contentRect;
+    public Rect ContentRect
+    {
+      get { return contentRect; }
+    }
 
-    protected BonsaiInputKnob inputKnob;
-    protected BonsaiOutputKnob outputKnob;
+    private StyledContent header;
+    private StyledContent body;
 
-    internal Texture iconTex;
+    public StyledContent Header
+    {
+      get
+      {
+        if (header == null)
+        {
+          header = new StyledContent { content = CreateHeaderContent() };
+          header.style = CreateHeaderStyle(header.content);
+        }
+        return header;
+      }
+    }
+
+    public StyledContent Body
+    {
+      get
+      {
+        if (body == null)
+        {
+          body = new StyledContent { content = CreateBodyContent() };
+          body.style = CreateBodyStyle(body.content);
+        }
+        return body;
+      }
+    }
+
+    protected BonsaiInputPort inputPort;
+    protected BonsaiOutputPort outputPort;
+
+    private readonly Texture icon;
 
     // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
-    public static readonly Vector2 kDefaultSize = new Vector2(BonsaiEditor.snapStep * 8f, 70);
+    public static readonly Vector2 kDefaultSize = Vector2.one * BonsaiEditor.snapStep * 8f;
+    public static readonly Vector2 kContentOffset = new Vector2(20f, 5f);
 
     public readonly bool bCanHaveMultipleChildren = true;
 
@@ -37,45 +76,56 @@ namespace Bonsai.Designer
     internal bool bAreaSelectionFlag = false;
 
     [SerializeField]
-    internal BehaviourNode behaviour;
+    private BehaviourNode behaviour;
+
+    public BehaviourNode Behaviour
+    {
+      get { return behaviour; }
+      set
+      {
+        behaviour = value;
+        UpdateGui();
+      }
+    }
 
     /// <summary>
     /// Create a new node for the first time.
     /// </summary>
     /// <param name="bCreateInput">If the node should have an input.</param>
     /// <param name="bCreateOuput">If the node should have an output.</param>
-    public BonsaiNode(bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren)
+    public BonsaiNode(bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren, Texture icon = null)
     {
       bodyRect = new Rect(Vector2.zero, kDefaultSize);
 
       if (bCreateInput)
       {
-        inputKnob = new BonsaiInputKnob { parentNode = this };
+        inputPort = new BonsaiInputPort { parentNode = this };
       }
 
       if (bCreateOuput)
       {
-        outputKnob = new BonsaiOutputKnob { parentNode = this };
+        outputPort = new BonsaiOutputPort { parentNode = this };
       }
 
       this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
+      this.icon = icon;
     }
 
     /// <summary>
-    /// Called when the output knob had an input connection removed.
+    /// Called when the output port had an input connection removed.
     /// </summary>
     /// <param name="removedInputConnection"></param>
-    public void OnInputConnectionRemoved(BonsaiInputKnob removedInputConnection)
+    public void OnInputConnectionRemoved(BonsaiInputPort removedInputConnection)
     {
       var disconnectedNode = removedInputConnection.parentNode;
       RemoveChild(disconnectedNode.behaviour);
     }
 
     /// <summary>
-    /// Called when the output knob made a connection to an input knob.
+    /// Called when the output port made a connection to an input port.
     /// </summary>
     /// <param name="newInput"></param>
-    public void OnNewInputConnection(BonsaiInputKnob newInput)
+    public void OnNewInputConnection(BonsaiInputPort newInput)
     {
       var newChild = newInput.parentNode.behaviour;
 
@@ -98,7 +148,7 @@ namespace Bonsai.Designer
     {
       if (!behaviour.Parent) return;
 
-      inputKnob.outputConnection.SyncOrdering();
+      inputPort.outputConnection.SyncOrdering();
     }
 
     public void Destroy()
@@ -107,30 +157,30 @@ namespace Bonsai.Designer
       Unparent(behaviour);
       Object.DestroyImmediate(behaviour, true);
 
-      if (inputKnob != null)
+      if (inputPort != null)
       {
-        inputKnob.OnDestroy();
+        inputPort.OnDestroy();
       }
     }
 
-    public BonsaiInputKnob Input
+    public BonsaiInputPort Input
     {
-      get { return inputKnob; }
+      get { return inputPort; }
     }
 
-    public BonsaiOutputKnob Output
+    public BonsaiOutputPort Output
     {
-      get { return outputKnob; }
+      get { return outputPort; }
     }
 
     public BonsaiNode GetChildAt(int index)
     {
-      return outputKnob?.GetInput(index).parentNode;
+      return outputPort?.GetInput(index).parentNode;
     }
 
     public int ChildCount()
     {
-      return outputKnob == null ? 0 : outputKnob.InputCount();
+      return outputPort == null ? 0 : outputPort.InputCount();
     }
 
     #region Behaviour Node Operations
@@ -204,78 +254,103 @@ namespace Bonsai.Designer
 
     #region Styles and Contents
 
-    public string NiceName
+    public void UpdateGui()
     {
-      get { return ObjectNames.NicifyVariableName(behaviour.GetType().Name); }
+      if (header == null)
+      {
+        header = new StyledContent();
+      }
+
+      if (body == null)
+      {
+        body = new StyledContent();
+      }
+
+      header.content = CreateHeaderContent();
+      header.style = CreateHeaderStyle(header.content);
+
+      body.content = CreateBodyContent();
+      body.style = CreateBodyStyle(body.content);
     }
 
-    public GUIContent IconNameContent
+    private GUIContent CreateHeaderContent()
     {
-      get
+      string header = behaviour.brief;
+
+      // Fall back to node name if there is no brief supplied.
+      if (header == null || header.Length == 0)
       {
-        if (iconNameContent == null)
-        {
-          iconNameContent = new GUIContent(NiceName, iconTex);
-        }
-        return iconNameContent;
+        header = NiceName();
+      }
+
+      if (icon)
+      {
+        return new GUIContent(header, icon);
+      }
+      else
+      {
+        return new GUIContent(header);
       }
     }
 
-    public GUIStyle IconNameStyle
+    private GUIContent CreateBodyContent()
     {
-      get
-      {
-        if (iconNameStyle == null)
-        {
-          SetupStyle();
-        }
+      var body = new StringBuilder();
+      behaviour.StaticDescription(body);
 
-        return iconNameStyle;
+      if (body.Length == 0)
+      {
+        body.Append(NiceName());
       }
+
+      return new GUIContent(body.ToString());
     }
 
-    /// <summary>
-    /// Sets up the style to render the node.
-    /// </summary>
-    public void SetupStyle()
+    private GUIStyle CreateHeaderStyle(GUIContent content)
     {
-      iconNameStyle = new GUIStyle();
-      iconNameStyle.normal.textColor = Color.white;
-      iconNameStyle.alignment = TextAnchor.LowerCenter;
+      var style = new GUIStyle();
+      style.normal.textColor = Color.white;
+      style.fontSize = 15;
+      style.fontStyle = FontStyle.Bold;
+      style.imagePosition = ImagePosition.ImageLeft;
+      style.contentOffset = kContentOffset;
 
-      iconNameStyle.imagePosition = ImagePosition.ImageAbove;
+      // Do not consider icon size. Manually set a size from text.
+      // Round for sharp GUI content.
+      Vector2 contentSize = style.CalcSize(new GUIContent(content.text));
+      contentSize.x = Mathf.Round(contentSize.x);
+      contentSize.y = Mathf.Round(contentSize.y);
 
-      // Test if the name fits
-      Vector2 contentSize = iconNameStyle.CalcSize(new GUIContent(NiceName));
+      bodyRect.width = contentSize.x + 80f + kContentOffset.x;
+      bodyRect.height = contentSize.y + 50f + kContentOffset.y;
 
-      // Resize width of the node body.
-      if (contentSize.x > bodyRect.width - resizePaddingX)
-      {
-        bodyRect.width = contentSize.x + resizePaddingX;
+      style.fixedWidth = contentSize.x + 60f;
+      style.fixedHeight = contentSize.y + 10f;
 
-        // Make sure width is even for best results.
-        bodyRect.width = Mathf.Ceil(bodyRect.width / 2f) * 2f;
+      contentRect.x = kContentOffset.x / 2f;
+      contentRect.y = BonsaiPort.kMinSize.y;
+      contentRect.width = bodyRect.width - kContentOffset.x;
+      contentRect.height = bodyRect.height - BonsaiPort.kMinSize.y * 2f;
 
-        // Round it to the nearest multiple of the snap-step size.
-        bodyRect.width = Mathf.Round(bodyRect.width / BonsaiEditor.snapStep) * BonsaiEditor.snapStep;
+      return style;
+    }
 
-        // Should be whole number after rounding.
-        int stepUnits = (int)(bodyRect.width / BonsaiEditor.snapStep);
+    private GUIStyle CreateBodyStyle(GUIContent content)
+    {
+      var style = new GUIStyle();
+      style.normal.textColor = Color.white;
+      style.contentOffset = kContentOffset;
+      Vector2 contentSize = style.CalcSize(content);
+      bodyRect.height += contentSize.y;
 
-        // Cannot be evenly divided by the snap step.
-        if (stepUnits % 2 != 0)
-        {
-          // Add enough width so it can be evenly divided.
-          bodyRect.width += BonsaiEditor.snapStep / 2f;
+      contentRect.height += contentSize.y;
 
-          // Round it to the nearest multiple of the snap-step size.
-          bodyRect.width = Mathf.Round(bodyRect.width / BonsaiEditor.snapStep) * BonsaiEditor.snapStep;
-        }
-      }
+      return style;
+    }
 
-      iconNameStyle.fixedHeight = bodyRect.height - 5f;
-      iconNameStyle.fixedWidth = bodyRect.width;
-
+    private string NiceName()
+    {
+      return ObjectNames.NicifyVariableName(behaviour.GetType().Name);
     }
 
     #endregion

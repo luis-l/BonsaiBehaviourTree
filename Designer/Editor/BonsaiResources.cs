@@ -10,7 +10,7 @@ namespace Bonsai.Designer
     public const string kStandardAssetPath = "Assets/Plugins/Bonsai/Designer/Textures/";
     public enum TexType { PNG, JPEG };
 
-    private static Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
+    private readonly static Dictionary<string, Texture2D> _textures = new Dictionary<string, Texture2D>();
 
     static BonsaiResources()
     {
@@ -51,7 +51,7 @@ namespace Bonsai.Designer
       LoadTexture("Grid");
       LoadTexture("AbortHighlightGradient");
       LoadTexture("ReferenceHighlightGradient");
-      LoadTexture("GrayGradientFresnel");
+      LoadTexture("SelectionHighlight");
       LoadTexture("GreenGradient");
       LoadTexture("ReevaluateHighlightGradient");
 
@@ -65,6 +65,11 @@ namespace Bonsai.Designer
 
       LoadTexture("TreeIcon");
 
+      LoadTexture("NodeBackground");
+      LoadTexture("CompositeBackground");
+      LoadTexture("TaskBackground");
+      LoadTexture("DecoratorBackground");
+      LoadTexture("ServiceBackground");
       LoadTexture("PortTexture");
     }
 
@@ -97,9 +102,8 @@ namespace Bonsai.Designer
 
     public static Texture2D GetTexture(string name)
     {
-      if (name == null)
+      if (name == null || name.Length == 0)
       {
-        Debug.LogError("The texture: " + name + " is not loaded in the Bonsai Resources texture library.");
         return null;
       }
 
@@ -107,8 +111,11 @@ namespace Bonsai.Designer
       {
         return _textures[name];
       }
-
-      return null;
+      else
+      {
+        Debug.LogError("The texture: " + name + " is not loaded in the Bonsai Resources texture library.");
+        return null;
+      }
     }
   }
 }

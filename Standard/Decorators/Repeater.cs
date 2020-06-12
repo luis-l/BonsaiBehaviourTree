@@ -1,10 +1,11 @@
 ﻿
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Decorators/", "RepeatArrow")]
+  [BonsaiNode("Decorators/", "RepeatArrow")]
   public sealed class Repeater : Decorator
   {
     public int loopCount = 1;
@@ -44,5 +45,28 @@ namespace Bonsai.Standard
         }
       }
     }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      if (infiniteLoop)
+      {
+        builder.Append("Loop infinitely");
+      }
+
+
+      if (loopCount < 1)
+      {
+        builder.Append("Don't loop");
+      }
+      else if (loopCount > 1)
+      {
+        builder.AppendFormat("Loop {0} times", loopCount);
+      }
+      else
+      {
+        builder.Append("Loop once");
+      }
+    }
+
   }
 }

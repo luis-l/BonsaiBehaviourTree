@@ -6,24 +6,24 @@ using Bonsai.Core;
 
 namespace Bonsai.Designer
 {
-  public class BonsaiOutputKnob : BonsaiKnob
+  public class BonsaiOutputPort : BonsaiPort
   {
-    private readonly List<BonsaiInputKnob> inputs = new List<BonsaiInputKnob>();
+    private readonly List<BonsaiInputPort> inputs = new List<BonsaiInputPort>();
 
-    public IEnumerable<BonsaiInputKnob> InputConnections
+    public IEnumerable<BonsaiInputPort> InputConnections
     {
       get { return inputs; }
     }
 
-    public bool Contains(BonsaiInputKnob input)
+    public bool Contains(BonsaiInputPort input)
     {
       return inputs.Contains(input);
     }
 
-    public void Add(BonsaiInputKnob input)
+    public void Add(BonsaiInputPort input)
     {
       // Avoid connecting it to a root.
-      if (input.parentNode.behaviour == input.parentNode.behaviour.Tree.Root)
+      if (input.parentNode.Behaviour == input.parentNode.Behaviour.Tree.Root)
       {
         Debug.LogWarning("A root cannot be a child.");
         return;
@@ -63,7 +63,7 @@ namespace Bonsai.Designer
       parentNode.OnNewInputConnection(input);
     }
 
-    private bool CycleDetected(BonsaiInputKnob input)
+    private bool CycleDetected(BonsaiInputPort input)
     {
       var currentNode = this.parentNode;
 
@@ -93,7 +93,7 @@ namespace Bonsai.Designer
       return false;
     }
 
-    internal void RemoveInputConnection(BonsaiInputKnob input)
+    internal void RemoveInputConnection(BonsaiInputPort input)
     {
       if (inputs.Remove(input))
       {
@@ -118,7 +118,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="index"></param>
     /// <returns></returns>
-    public BonsaiInputKnob GetInput(int index)
+    public BonsaiInputPort GetInput(int index)
     {
       return inputs[index];
     }
@@ -137,17 +137,17 @@ namespace Bonsai.Designer
     /// </summary>
     public void SyncOrdering()
     {
-      var composite = parentNode.behaviour as Composite;
+      var composite = parentNode.Behaviour as Composite;
 
       if (!composite) return;
 
-      // This will make sure that the input knob orders are in sync with the child orders.
+      // This will make sure that the input port orders are in sync with the child orders.
       inputs.Sort();
 
       for (int i = 0; i < inputs.Count; ++i)
       {
 
-        BehaviourNode b = inputs[i].parentNode.behaviour;
+        BehaviourNode b = inputs[i].parentNode.Behaviour;
 
         // We can do this without destroying the association between parent and children nodes
         // since all we are doing is modifying the ordering of the child nodes in the children array.
@@ -159,7 +159,7 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
-    /// Returns the y coordinate of the nearest input knob on the y axis.
+    /// Returns the y coordinate of the nearest input port on the y axis.
     /// </summary>
     /// <returns></returns>
     public float GetNearestInputY()
@@ -167,7 +167,7 @@ namespace Bonsai.Designer
       float nearestY = float.MaxValue;
       float nearestDist = float.MaxValue;
 
-      foreach (BonsaiInputKnob input in inputs)
+      foreach (BonsaiInputPort input in inputs)
       {
 
         Vector2 toChild = input.bodyRect.position - parentNode.bodyRect.position;
@@ -194,7 +194,7 @@ namespace Bonsai.Designer
       minX = parentNode.bodyRect.center.x;
       maxX = parentNode.bodyRect.center.x;
 
-      foreach (BonsaiInputKnob input in inputs)
+      foreach (BonsaiInputPort input in inputs)
       {
 
         float x = input.parentNode.bodyRect.center.x;

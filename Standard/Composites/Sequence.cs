@@ -7,7 +7,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Returns success if all children return success.
   /// </summary>
-  [NodeEditorProperties("Composites/", "Arrow")]
+  [BonsaiNode("Composites/", "Arrow")]
   public class Sequence : Composite
   {
     public override Status Run()

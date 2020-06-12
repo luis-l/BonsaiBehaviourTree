@@ -11,9 +11,9 @@ namespace Bonsai.Designer
   /// </summary>
   public class BonsaiCanvas : IEnumerable<BonsaiNode>
   {
-    public static float zoomDelta = 0.1f;
+    public static float zoomDelta = 0.2f;
     public static float minZoom = 1f;
-    public static float maxZoom = 4f;
+    public static float maxZoom = 5f;
     public static float panSpeed = 1.2f;
 
     internal Vector2 zoom = Vector2.one;
@@ -45,11 +45,7 @@ namespace Bonsai.Designer
     internal BonsaiNode CreateNode(Core.BehaviourNode behaviour)
     {
       var node = CreateEditorNode(behaviour.GetType());
-      node.behaviour = behaviour;
-
-      // Setup the style with the updated properties such as name and texture.
-      node.SetupStyle();
-
+      node.Behaviour = behaviour;
       return node;
     }
 
@@ -57,26 +53,15 @@ namespace Bonsai.Designer
     private BonsaiNode CreateEditorNode(Type behaviourType)
     {
       var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
-      var node = AddEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren);
-
-      string texName = prop.texName;
-      var tex = BonsaiResources.GetTexture(texName);
-
-      // Failed to find texture, set default.
-      if (tex == null)
-      {
-        tex = BonsaiResources.GetTexture("Play");
-      }
-
-      node.iconTex = tex;
-
+      var tex = BonsaiResources.GetTexture(prop.texName);
+      var node = AddEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren, tex);
       return node;
     }
 
     // Creates and adds an editor node to the canvas.
-    private BonsaiNode AddEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren)
+    private BonsaiNode AddEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren, Texture icon = null)
     {
-      var node = new BonsaiNode(bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
+      var node = new BonsaiNode(bCreateInput, bCreateOutput, bCanHaveMultipleChildren, icon);
 
       nodes.Add(node);
       return node;

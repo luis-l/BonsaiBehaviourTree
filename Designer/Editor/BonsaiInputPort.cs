@@ -4,12 +4,12 @@ using UnityEngine;
 
 namespace Bonsai.Designer
 {
-  public class BonsaiInputKnob : BonsaiKnob, IComparable<BonsaiInputKnob>
+  public class BonsaiInputPort : BonsaiPort, IComparable<BonsaiInputPort>
   {
     /// <summary>
     /// The output connected to the input.
     /// </summary>
-    internal BonsaiOutputKnob outputConnection;
+    internal BonsaiOutputPort outputConnection;
 
     public void OnDestroy()
     {
@@ -27,7 +27,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="other"></param>
     /// <returns></returns>
-    public int CompareTo(BonsaiInputKnob other)
+    public int CompareTo(BonsaiInputPort other)
     {
       bool bIsLesser = parentNode.bodyRect.center.x < other.parentNode.bodyRect.center.x;
 

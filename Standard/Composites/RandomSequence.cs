@@ -1,12 +1,10 @@
 ﻿
-using UnityEngine;
-
 using Bonsai.Core;
 using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Composites/", "Shuffle")]
+  [BonsaiNode("Composites/", "Shuffle")]
   public class RandomSequence : Sequence
   {
     private int[] _childrenOrder;

@@ -8,7 +8,6 @@ using Bonsai.Core;
 using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Bonsai.Designer
 {
@@ -33,14 +32,18 @@ namespace Bonsai.Designer
     private Texture2D _selfPrioritySymbol;
     private Texture2D _bothPrioritySymbol;
 
-    private Texture2D _defaultBackgroundTex;
     private Texture2D _selectedHighlightTex;
     private Texture2D _runningBackgroundTex;
     private Texture2D _abortHighlightTex;
     private Texture2D _referenceHighlightTex;
     private Texture2D _reevaluateHighlightTex;
 
-    private Texture2D _portTexture;
+    private readonly Texture2D portTexture = BonsaiResources.GetTexture("PortTexture");
+    private readonly Texture2D nodeBackgroundTexture = BonsaiResources.GetTexture("NodeBackground");
+    private readonly Texture2D compositeTexture = BonsaiResources.GetTexture("CompositeBackground");
+    private readonly Texture2D taskTexture = BonsaiResources.GetTexture("TaskBackground");
+    private readonly Texture2D decoratorTexture = BonsaiResources.GetTexture("DecoratorBackground");
+    private readonly Texture2D serviceBackground = BonsaiResources.GetTexture("ServiceBackground");
 
     private Color _rootSymbolColor;
     private Color _runningStatusColor;
@@ -50,8 +53,8 @@ namespace Bonsai.Designer
     private Color _interruptedColor;
 
     private Color _defaultConnectionColor = Color.white;
-    private float _defaultConnectionWidth = 3f;
-    private float _runningConnectionWidth = 5f;
+    private float _defaultConnectionWidth = 4f;
+    private float _runningConnectionWidth = 4f;
 
     private Vector2 _abortIconOffset = new Vector2(2f, 4f);
     private Vector2 _abortIconSize = Vector2.one * 20f;
@@ -64,8 +67,9 @@ namespace Bonsai.Designer
 
     /// <summary>
     /// The unit length of the grid in pixels.
+    /// Note: Grid Texture has 12.8 as length, fix texture to be even.
     /// </summary>
-    public const float kGridSize = 12.8f;
+    public const float kGridSize = 12f;
 
     /// <summary>
     /// The multiple that grid snapping rounds to.
@@ -88,11 +92,12 @@ namespace Bonsai.Designer
       referenceContainerTypes.Add(typeof(Guard));
     }
 
+
     public void Draw()
     {
       // We need to wait for the generic menu to finish
       // in order to get a valid mouse position.
-      handleNewNodeToPositionUnderMouse();
+      HandleNewNodeToPositionUnderMouse();
 
       if (Event.current.type == EventType.Repaint)
       {
@@ -114,15 +119,12 @@ namespace Bonsai.Designer
       _selfPrioritySymbol = BonsaiResources.GetTexture("BottomChevron");
       _bothPrioritySymbol = BonsaiResources.GetTexture("DoubleChevron");
 
-      _defaultBackgroundTex = BonsaiResources.GetTexture("GrayGradient");
-      _selectedHighlightTex = BonsaiResources.GetTexture("GrayGradientFresnel");
+      _selectedHighlightTex = BonsaiResources.GetTexture("SelectionHighlight");
       _runningBackgroundTex = BonsaiResources.GetTexture("GreenGradient");
 
       _abortHighlightTex = BonsaiResources.GetTexture("AbortHighlightGradient");
       _referenceHighlightTex = BonsaiResources.GetTexture("ReferenceHighlightGradient");
       _reevaluateHighlightTex = BonsaiResources.GetTexture("ReevaluateHighlightGradient");
-
-      _portTexture = BonsaiResources.GetTexture("PortTexture");
     }
 
     #region Node/Canvas Editing and Modification
@@ -134,12 +136,16 @@ namespace Bonsai.Designer
     public void Pan(Vector2 delta)
     {
       canvas.panOffset += delta * canvas.ZoomScale * BonsaiCanvas.panSpeed;
+
+      // Round to keep panning sharp.
+      canvas.panOffset.x = Mathf.Round(canvas.panOffset.x);
+      canvas.panOffset.y = Mathf.Round(canvas.panOffset.y);
     }
 
     /// <summary>
     /// Scales the canvas.
     /// </summary>
-    /// <param name="zoomDirection">+1 if you want to zoom in and -1 if you want to zoom out.</param>
+    /// <param name="zoomDirection">+1 to zoom in and -1 to zoom out.</param>
     public void Zoom(float zoomDirection)
     {
       float scale = (zoomDirection < 0f) ? (1f - BonsaiCanvas.zoomDelta) : (1f + BonsaiCanvas.zoomDelta);
@@ -174,24 +180,24 @@ namespace Bonsai.Designer
 
       // Record the old position so we can know by how much the root moved
       // so all children can be shifted by the pan delta.
-      Vector2 oldPos = root.bodyRect.position;
+      Vector2 oldPos = root.bodyRect.center;
 
       // Clamp the position so it does not go above the parent.
       Vector2 diff = pos - offset;
       diff.y = Mathf.Clamp(diff.y, min, float.MaxValue);
 
       Vector2 rounded = SnapPosition(diff);
-      root.bodyRect.position = rounded;
+      root.bodyRect.center = rounded;
 
       // Calculate the change of position of the root.
-      Vector2 pan = root.bodyRect.position - oldPos;
+      Vector2 pan = root.bodyRect.center - oldPos;
 
       // Move the entire subtree of the root.
       Action<BonsaiNode> subtreeDrag = (node) =>
       {
         // For all children, pan by the same amount that the parent changed by.
         if (node != root)
-          node.bodyRect.position += SnapPosition(pan);
+          node.bodyRect.center += SnapPosition(pan);
       };
 
       TreeIterator<BonsaiNode>.Traverse(root, subtreeDrag);
@@ -223,32 +229,38 @@ namespace Bonsai.Designer
 
     #endregion
 
-    #region Aggregate Drawing Methods (Draw all nodes, all knobs, ...etc)
+    #region Aggregate Drawing Methods (Draw all nodes, all ports, ...etc)
+
+    public void DrawStaticGrid()
+    {
+      Drawer.DrawStaticGrid(window.CanvasRect, _backgroundTex);
+    }
+
 
     /// <summary>
     /// Draws a static grid that is unaffected by zoom and pan.
     /// </summary>
-    public void DrawStaticGrid()
-    {
-      var size = window.CanvasRect.size;
-      var center = size / 2f;
+    //public void DrawStaticGrid()
+    //{
+    //  var size = window.CanvasRect.size;
+    //  var center = size / 2f;
 
-      float xOffset = -center.x / _backgroundTex.width;
-      float yOffset = (center.y - size.y) / _backgroundTex.height;
+    //  float xOffset = -center.x / _backgroundTex.width;
+    //  float yOffset = (center.y - size.y) / _backgroundTex.height;
 
-      // Offset from origin in tile units
-      Vector2 tileOffset = new Vector2(xOffset, yOffset);
+    //  // Offset from origin in tile units
+    //  Vector2 tileOffset = new Vector2(xOffset, yOffset);
 
-      float tileAmountX = Mathf.Round(size.x) / _backgroundTex.width;
-      float tileAmountY = Mathf.Round(size.y) / _backgroundTex.height;
+    //  float tileAmountX = Mathf.Round(size.x) / _backgroundTex.width;
+    //  float tileAmountY = Mathf.Round(size.y) / _backgroundTex.height;
 
-      // Amount of tiles
-      Vector2 tileAmount = new Vector2(tileAmountX, tileAmountY);
+    //  // Amount of tiles
+    //  Vector2 tileAmount = new Vector2(tileAmountX, tileAmountY);
 
-      // Draw tiled background
-      var backRect = window.CanvasRect;
-      GUI.DrawTextureWithTexCoords(backRect, _backgroundTex, new Rect(tileOffset, tileAmount));
-    }
+    //  // Draw tiled background
+    //  var backRect = window.CanvasRect;
+    //  GUI.DrawTextureWithTexCoords(backRect, _backgroundTex, new Rect(tileOffset, tileAmount));
+    //}
 
     private void DrawGrid()
     {
@@ -278,7 +290,7 @@ namespace Bonsai.Designer
       ScaleUtility.BeginScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
 
       DrawConnectionPreview();
-      DrawKnobConnections();
+      DrawPortConnections();
       DrawNodes();
 
       ScaleUtility.EndScale(window.CanvasRect, canvas.ZoomScale, window.toolbarHeight);
@@ -292,34 +304,34 @@ namespace Bonsai.Designer
       foreach (var node in canvas.NodesInDrawOrder)
       {
         DrawNode(node);
-        DrawKnobs(node);
+        DrawPorts(node);
       }
     }
 
-    private void DrawKnobConnections()
+    private void DrawPortConnections()
     {
       foreach (var node in canvas.NodesInDrawOrder)
       {
         if (node.Output != null)
         {
-          DrawDefaultKnobConnections(node);
+          DrawDefaultPortConnections(node);
         }
       }
     }
 
-    private void DrawDefaultKnobConnections(BonsaiNode node)
+    private void DrawDefaultPortConnections(BonsaiNode node)
     {
       Color connectionColor = _defaultConnectionColor;
       float connectionWidth = _defaultConnectionWidth;
 
-      if (node.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
+      if (node.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
       {
         connectionColor = _runningStatusColor;
         connectionWidth = _runningConnectionWidth;
       }
 
-      // Start the Y anchor coord at the tip of the Output knob.
-      float yoffset = node.bodyRect.yMax + BonsaiKnob.kMinSize.y;
+      // Start the Y anchor coord at the tip of the Output port.
+      float yoffset = node.bodyRect.yMax;
 
       // Calculate the anchor position.
       float anchorX = node.bodyRect.center.x;
@@ -351,7 +363,7 @@ namespace Bonsai.Designer
         var anchorLineConnection = new Vector2(center.x, anchorY);
 
         // The node is running, hightlight the connection.
-        if (input.parentNode.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
+        if (input.parentNode.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
         {
           DrawLineCanvasSpace(center, anchorLineConnection, _runningStatusColor, _runningConnectionWidth);
 
@@ -368,7 +380,7 @@ namespace Bonsai.Designer
 
     #endregion
 
-    #region Canvas Unit Drawing Methods (Node, Knobs, ... etc)
+    #region Canvas Unit Drawing Methods (Node, Ports, ... etc)
 
     private void DrawNode(BonsaiNode node)
     {
@@ -400,18 +412,19 @@ namespace Bonsai.Designer
       // Draw the contents inside the node body, automatically laid out.
       GUILayout.BeginArea(localRect, GUIStyle.none);
 
-      GUILayout.Box(node.IconNameContent, node.IconNameStyle);
+      DrawNodeTypeBackground(node);
+      DrawNodeContent(node);
 
       GUILayout.EndArea();
+
       GUI.EndGroup();
       GUI.color = originalColor;
     }
 
     private void DrawRootSymbol(Rect localRect, BonsaiNode node)
     {
-      if (window.tree.Root == node.behaviour)
+      if (window.tree.Root == node.Behaviour)
       {
-
         // Shift the symbol so it is not in the center.
         localRect.x -= localRect.width / 2f - 20f;
 
@@ -425,9 +438,28 @@ namespace Bonsai.Designer
       GUI.DrawTexture(screenRect, backgroundTexture, ScaleMode.StretchToFill, true, 0, Color.white, 0, 5f);
     }
 
+    // Render the background color scheme for the node type.
+    private void DrawNodeTypeBackground(BonsaiNode node)
+    {
+      GUI.DrawTexture(node.ContentRect, NodeTypeTexture(node), ScaleMode.StretchToFill, true, 0f, Color.white, 0f, 4f);
+    }
+
+    // Render the node body contents.
+    private void DrawNodeContent(BonsaiNode node)
+    {
+      // Spacing for input.
+      if (node.Input != null)
+      {
+        GUILayout.Space(node.Input.bodyRect.height);
+      }
+
+      GUILayout.Box(node.Header.content, node.Header.style);
+      GUILayout.Box(node.Body.content, node.Body.style);
+    }
+
     private void DrawExitStatus(Rect localRect, BonsaiNode node)
     {
-      var status = node.behaviour.GetStatusEditor();
+      var status = node.Behaviour.GetStatusEditor();
 
       if (status == BehaviourNode.StatusEditor.Success)
       {
@@ -452,7 +484,7 @@ namespace Bonsai.Designer
 
     private void DrawAbortPriorityIcon(Rect localRect, BonsaiNode node)
     {
-      var abortNode = node.behaviour as ConditionalAbort;
+      var abortNode = node.Behaviour as ConditionalAbort;
 
       // Can only show icon for abort nodes.
       if (abortNode && abortNode.abortType != AbortType.None)
@@ -487,9 +519,29 @@ namespace Bonsai.Designer
       }
     }
 
+    private Texture2D NodeTypeTexture(BonsaiNode node)
+    {
+      if (node.Behaviour is Task)
+      {
+        return taskTexture;
+      }
+
+      else if (node.Behaviour is Service)
+      {
+        return serviceBackground;
+      }
+
+      else if (node.Behaviour is Decorator)
+      {
+        return decoratorTexture;
+      }
+
+      return compositeTexture;
+    }
+
     private void NodeBackground(BonsaiNode node, out Texture2D tex)
     {
-      tex = _defaultBackgroundTex;
+      tex = nodeBackgroundTexture;
 
       if (IsNodeEvaluating(node))
       {
@@ -516,7 +568,7 @@ namespace Bonsai.Designer
     [Pure]
     private bool IsNodeRunning(BonsaiNode node)
     {
-      return node.behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running;
+      return node.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running;
     }
 
     // Highlights nodes that can be aborted by the currently selected node.
@@ -538,23 +590,23 @@ namespace Bonsai.Designer
       }
 
       // The selected node must be a conditional abort.
-      var aborter = selected.behaviour as ConditionalAbort;
+      var aborter = selected.Behaviour as ConditionalAbort;
 
       // Node can be aborted by the selected aborter.
-      return aborter && ConditionalAbort.IsAbortable(aborter, node.behaviour);
+      return aborter && ConditionalAbort.IsAbortable(aborter, node.Behaviour);
     }
 
     // Nodes that are being referenced are highlighted.
     [Pure]
     private bool IsNodeReferenced(BonsaiNode node)
     {
-      return _referencedNodes.Contains(node.behaviour);
+      return _referencedNodes.Contains(node.Behaviour);
     }
 
     [Pure]
     private bool IsNodeSelected(BonsaiNode node)
     {
-      return node.behaviour == Selection.activeObject || node.bAreaSelectionFlag;
+      return node.Behaviour == Selection.activeObject || node.bAreaSelectionFlag;
     }
 
     /// <summary>
@@ -569,11 +621,11 @@ namespace Bonsai.Designer
         return false;
       }
 
-      BehaviourIterator itr = node.behaviour.Iterator;
+      BehaviourIterator itr = node.Behaviour.Iterator;
 
       if (itr != null && itr.IsRunning)
       {
-        var aborter = node.behaviour as ConditionalAbort;
+        var aborter = node.Behaviour as ConditionalAbort;
         int index = itr.CurrentIndex;
         if (index != -1)
         {
@@ -598,45 +650,50 @@ namespace Bonsai.Designer
       GUI.color = originalColor;
     }
 
-    private void DrawKnobs(BonsaiNode node)
+    private void DrawPorts(BonsaiNode node)
     {
-      var bodyRect = node.bodyRect;
-      var output = node.Output;
-      var input = node.Input;
+      Rect nodeRect = node.bodyRect;
+      BonsaiOutputPort output = node.Output;
+      BonsaiInputPort input = node.Input;
 
       if (input != null)
       {
-        float x = bodyRect.x + (bodyRect.width - input.bodyRect.width) / 2f;
-        float y = bodyRect.y - input.bodyRect.height;
+        input.bodyRect.width = nodeRect.width - BonsaiNode.kContentOffset.x * 2f;
 
+        // Place the port above the node
+        float x = nodeRect.x + (nodeRect.width - input.bodyRect.width) / 2f;
+        float y = nodeRect.yMin;
         input.bodyRect.position = new Vector2(x, y);
-        DrawKnob(input);
+
+        DrawPort(input.bodyRect);
       }
 
       if (output != null)
       {
-        float x = bodyRect.x + (bodyRect.width - output.bodyRect.width) / 2f;
-        float y = bodyRect.y + bodyRect.height;
+        output.bodyRect.width = nodeRect.width - BonsaiNode.kContentOffset.x * 2f;
 
+        // Place the port below the node.
+        float x = nodeRect.x + (nodeRect.width - output.bodyRect.width) / 2f;
+        float y = nodeRect.yMax - output.bodyRect.height;
         output.bodyRect.position = new Vector2(x, y);
-        DrawKnob(output);
+
+        DrawPort(output.bodyRect);
       }
     }
 
-    private void DrawKnob(BonsaiKnob knob)
+    private void DrawPort(Rect portRect)
     {
       // Convert the body rect from canvas to screen space.
-      var screenRect = knob.bodyRect;
-      screenRect.position = CanvasToScreenSpace(screenRect.position);
-      GUI.DrawTexture(screenRect, _portTexture, ScaleMode.StretchToFill, true, 0f, Color.white, 0f, 4f);
+      portRect.position = CanvasToScreenSpace(portRect.position);
+      GUI.DrawTexture(portRect, portTexture, ScaleMode.StretchToFill);
     }
 
     /// <summary>
-    /// Draws the preview connection from the selected output knob and the mouse.
+    /// Draws the preview connection from the selected output port and the mouse.
     /// </summary>
     private void DrawConnectionPreview()
     {
-      // Draw connection between mouse and the knob.
+      // Draw connection between mouse and the port.
       if (window.inputHandler.IsMakingConnection)
       {
         var start = CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
@@ -863,8 +920,7 @@ namespace Bonsai.Designer
     {
       foreach (var node in canvas)
       {
-
-        if (IsUnderMouse(node.bodyRect))
+        if (IsUnderMouse(node.bodyRect) && !IsMouseOverNodePorts(node))
         {
           callback(node);
           return true;
@@ -876,15 +932,33 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
+    /// Test if the mouse in over the input or output ports for the node.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsMouseOverNodePorts(BonsaiNode node)
+    {
+      if (node.Output != null && IsUnderMouse(node.Output.bodyRect))
+      {
+        return true;
+      }
+
+      if (node.Input != null && IsUnderMouse(node.Input.bodyRect))
+      {
+        return true;
+      }
+
+      return false;
+    }
+
+    /// <summary>
     /// Tests if the mouse is over an output.
     /// </summary>
     /// <param name="callback"></param>
     /// <returns></returns>
-    public bool OnMouseOverOutput(Action<BonsaiOutputKnob> callback)
+    public bool OnMouseOverOutput(Action<BonsaiOutputPort> callback)
     {
       foreach (var node in canvas)
       {
-
         if (node.Output == null)
         {
           continue;
@@ -905,11 +979,10 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="callback"></param>
     /// <returns></returns>
-    public bool OnMouseOverInput(Action<BonsaiInputKnob> callback)
+    public bool OnMouseOverInput(Action<BonsaiInputPort> callback)
     {
       foreach (var node in canvas)
       {
-
         if (node.Input == null)
         {
           continue;
@@ -930,11 +1003,10 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="callback"></param>
     /// <returns></returns>
-    public bool OnMouseOverNode_OrInput(Action<BonsaiNode> callback)
+    public bool OnMouseOverNodeOrInput(Action<BonsaiNode> callback)
     {
       foreach (var node in canvas)
       {
-
         bool bCondition = IsUnderMouse(node.bodyRect) ||
             (node.Input != null && IsUnderMouse(node.Input.bodyRect));
 
@@ -949,7 +1021,7 @@ namespace Bonsai.Designer
       return false;
     }
 
-    private void handleNewNodeToPositionUnderMouse()
+    private void HandleNewNodeToPositionUnderMouse()
     {
       if (_nodeToPositionUnderMouse != null)
       {
@@ -1006,12 +1078,10 @@ namespace Bonsai.Designer
 
       foreach (var editorNode in canvas.Nodes)
       {
-
-        var behaviour = editorNode.behaviour;
+        var behaviour = editorNode.Behaviour;
 
         if (positions.ContainsKey(behaviour))
         {
-
           Vector2 pos = positions[behaviour];
           editorNode.bodyRect.position = pos;
         }
@@ -1027,7 +1097,7 @@ namespace Bonsai.Designer
       {
 
         var editorNode = canvas.CreateNode(behaviour);
-        editorNode.behaviour = behaviour;
+        editorNode.Behaviour = behaviour;
         editorNode.bodyRect.position = behaviour.bonsaiNodePosition;
 
         nodeMap.Add(behaviour, editorNode);
@@ -1042,13 +1112,10 @@ namespace Bonsai.Designer
       // Create the connections
       foreach (var bonsaiNode in canvas.Nodes)
       {
-
-        for (int i = 0; i < bonsaiNode.behaviour.ChildCount(); ++i)
+        for (int i = 0; i < bonsaiNode.Behaviour.ChildCount(); ++i)
         {
-
-          BehaviourNode child = bonsaiNode.behaviour.GetChildAt(i);
-          BonsaiInputKnob input = nodeMap[child].Input;
-
+          BehaviourNode child = bonsaiNode.Behaviour.GetChildAt(i);
+          BonsaiInputPort input = nodeMap[child].Input;
           bonsaiNode.Output.Add(input);
         }
       }
@@ -1058,8 +1125,7 @@ namespace Bonsai.Designer
         BehaviourNode node,
         Dictionary<BehaviourNode, Vector2> positions,
         Dictionary<BehaviourNode, int> levels,
-        PositioningParameters posParams
-        )
+        PositioningParameters posParams)
     {
       // Obtained from level order of tree.
       float yLevel = levels[node] * posParams.yLevelOffset;
@@ -1069,7 +1135,6 @@ namespace Bonsai.Designer
       // If it is a parent of 2 or more children then center in between the children.
       if (childCount > 1)
       {
-
         BehaviourNode firstChild = node.GetChildAt(0);
         BehaviourNode lastChild = node.GetChildAt(childCount - 1);
 
@@ -1092,7 +1157,6 @@ namespace Bonsai.Designer
       // A leaf node
       else
       {
-
         Vector2 position = new Vector2(posParams.xLeaf, yLevel);
 
         posParams.xIntermediate = posParams.xLeaf;
@@ -1114,7 +1178,7 @@ namespace Bonsai.Designer
       }
     }
 
-    // Does a quick calculation to see how many pixels the type name takes up.
+    // Calculate how many pixels the type name takes up.
     private static float CalculateNameWidth(BehaviourNode node)
     {
       string typename = node.GetType().Name;
@@ -1216,14 +1280,14 @@ namespace Bonsai.Designer
             T.IsSubclassOf(targetType)))
         {
 
-          object[] nodeProperties = type.GetCustomAttributes(typeof(NodeEditorPropertiesAttribute), false);
+          object[] nodeProperties = type.GetCustomAttributes(typeof(BonsaiNodeAttribute), false);
 
           // The attribute is to simply get custom data about the node.
           // Like menu path and texture.
-          NodeEditorPropertiesAttribute attrib = null;
+          BonsaiNodeAttribute attrib = null;
           if (nodeProperties.Length > 0)
           {
-            attrib = nodeProperties[0] as NodeEditorPropertiesAttribute;
+            attrib = nodeProperties[0] as BonsaiNodeAttribute;
           }
 
           string menuPath = "Uncategorized/";
@@ -1232,7 +1296,7 @@ namespace Bonsai.Designer
           if (attrib != null)
           {
             menuPath = attrib.menuPath;
-            texName = attrib.textureName;
+            texName = attrib.texturePath;
           }
 
           bool bCreateInput = false;

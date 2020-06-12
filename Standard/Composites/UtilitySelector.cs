@@ -1,17 +1,15 @@
 ﻿
 using System.Collections.Generic;
-
-using UnityEngine;
-
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
   /// <summary>
   /// Runs the branch that has the highest utility.
   /// </summary>
-  [NodeEditorProperties("Composites/", "Reactive")]
+  [BonsaiNode("Composites/", "Reactive")]
   public class UtilitySelector : Selector
   {
     /// <summary>

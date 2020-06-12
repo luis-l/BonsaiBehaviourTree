@@ -45,7 +45,7 @@ namespace Bonsai.Designer
 
     public bool IsMakingConnection { get; private set; } = false;
 
-    public BonsaiOutputKnob OutputToConnect { get; private set; } = null;
+    public BonsaiOutputPort OutputToConnect { get; private set; } = null;
 
     public bool IsAreaSelecting { get; private set; } = false;
 
@@ -103,7 +103,7 @@ namespace Bonsai.Designer
 
           SelectedNode = node;
           _window.editor.canvas.PushToEnd(SelectedNode);
-          Selection.activeObject = node.behaviour;
+          Selection.activeObject = node.Behaviour;
 
           handleOnAborterSelected(node);
           handleOnReferenceContainerSelected(node);
@@ -129,7 +129,6 @@ namespace Bonsai.Designer
 
       if (_window.GetMode() == BonsaiWindow.Mode.Edit)
       {
-
         handleEditorShortcuts(e);
         handleContextInput(e);
         handleNodeDragging(e);
@@ -198,21 +197,21 @@ namespace Bonsai.Designer
       if (e.type == EventType.MouseDown && e.button == 0)
       {
 
-        Action<BonsaiOutputKnob> outputCallback = (output) =>
+        Action<BonsaiOutputPort> outputCallback = (output) =>
         {
           e.Use();
           IsMakingConnection = true;
           OutputToConnect = output;
         };
 
-        // Check to see if we are making connection starting from output knob.
+        // Check to see if we are making connection starting from output port.
         bool bResult = _window.editor.OnMouseOverOutput(outputCallback);
 
         // Check if we are making connection starting from input
         if (!bResult)
         {
 
-          Action<BonsaiInputKnob> inputCallback = (input) =>
+          Action<BonsaiInputPort> inputCallback = (input) =>
           {
             // Starting a connection from input means that its connected
             // output will change its input.
@@ -245,7 +244,7 @@ namespace Bonsai.Designer
           node.NotifyParentOfPostionalReordering();
         };
 
-        _window.editor.OnMouseOverNode_OrInput(callback);
+        _window.editor.OnMouseOverNodeOrInput(callback);
 
         IsMakingConnection = false;
         OutputToConnect = null;
@@ -262,7 +261,7 @@ namespace Bonsai.Designer
       _window.editor.SetNewNodeToPositionUnderMouse(node);
 
       // Make the created node the current focus of selection.
-      Selection.activeObject = node.behaviour;
+      Selection.activeObject = node.Behaviour;
     }
 
     private void handleOnAborterSelected(BonsaiNode node)
@@ -271,7 +270,7 @@ namespace Bonsai.Designer
       // so we can get feed back about the abort.
       // We only do it when clicking on an aborter for efficiency
       // purposes.
-      var aborter = node.behaviour as ConditionalAbort;
+      var aborter = node.Behaviour as ConditionalAbort;
       if (aborter && aborter.abortType != AbortType.None)
       {
         _window.editor.UpdateOrderIndices();
@@ -280,7 +279,7 @@ namespace Bonsai.Designer
 
     private void handleOnReferenceContainerSelected(BonsaiNode node)
     {
-      Type type = node.behaviour.GetType();
+      Type type = node.Behaviour.GetType();
 
       bool bIsRefContainer = _window.editor.referenceContainerTypes.Contains(type);
 
@@ -288,7 +287,7 @@ namespace Bonsai.Designer
       if (bIsRefContainer)
       {
 
-        var refNodes = node.behaviour.GetReferencedNodes();
+        var refNodes = node.Behaviour.GetReferencedNodes();
         _window.editor.SetReferencedNodes(refNodes);
       }
     }
@@ -304,9 +303,9 @@ namespace Bonsai.Designer
 
         Action<BonsaiNode> collectRefLinks = (node) =>
         {
-          if (node.behaviour.GetType() == _referenceLinkType)
+          if (node.Behaviour.GetType() == _referenceLinkType)
           {
-            onSelectedForLinking(node.behaviour);
+            onSelectedForLinking(node.Behaviour);
           }
         };
 
@@ -390,12 +389,12 @@ namespace Bonsai.Designer
     {
       NodeContext context = (NodeContext)o;
 
-      Type nodeType = SelectedNode.behaviour.GetType();
+      Type nodeType = SelectedNode.Behaviour.GetType();
 
       switch (context)
       {
         case NodeContext.SetAsRoot:
-          _window.tree.Root = SelectedNode.behaviour;
+          _window.tree.Root = SelectedNode.Behaviour;
           break;
 
         case NodeContext.Duplicate:
@@ -432,7 +431,7 @@ namespace Bonsai.Designer
             BonsaiNode node = _selectedNodes[i];
             node.bAreaSelectionFlag = false;
 
-            Type t = node.behaviour.GetType();
+            Type t = node.Behaviour.GetType();
 
             // Duplicate nodes become selected and are spawned
             // at offset from their original.
@@ -503,7 +502,7 @@ namespace Bonsai.Designer
 
         // Calculate the relative mouse position from the node for dragging.
         Vector2 mpos = _window.editor.MousePosition();
-        _singleDragOffset = mpos - _draggingNode.bodyRect.position;
+        _singleDragOffset = mpos - _draggingNode.bodyRect.center;
       };
 
       _window.editor.OnMouseOverNode(callback);
@@ -576,7 +575,7 @@ namespace Bonsai.Designer
       {
 
         // Calculate the relative mouse position from the node for dragging.
-        Vector2 offset = mpos - root.bodyRect.position;
+        Vector2 offset = mpos - root.bodyRect.center;
 
         _multiDragOffsets.Add(offset);
       }
@@ -666,7 +665,7 @@ namespace Bonsai.Designer
       int i = 0;
       foreach (BonsaiNode node in _selectedNodes)
       {
-        selectedBehaviours[i++] = node.behaviour;
+        selectedBehaviours[i++] = node.Behaviour;
       }
 
       if (selectedBehaviours.Length > 0)
@@ -682,7 +681,6 @@ namespace Bonsai.Designer
       // Mark nodes as selected if they overlap the selection area.
       foreach (BonsaiNode node in _window.editor.canvas.Nodes)
       {
-
         if (node.bodyRect.Overlaps(selectRect))
         {
           node.bAreaSelectionFlag = true;
@@ -703,10 +701,8 @@ namespace Bonsai.Designer
       // Collect all nodes overlapping the selection rect.
       foreach (BonsaiNode node in _window.editor.canvas.Nodes)
       {
-
         if (node.bodyRect.Overlaps(selectionRect))
         {
-
           node.bAreaSelectionFlag = true;
           _selectedNodes.Add(node);
         }

@@ -1,11 +1,10 @@
 ﻿
-using System.Linq;
 using Bonsai.Core;
 using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [NodeEditorProperties("Composites/", "ParallelQuestion")]
+  [BonsaiNode("Composites/", "ParallelQuestion")]
   public class ParallelSelector : Parallel
   {
     public override Status Run()

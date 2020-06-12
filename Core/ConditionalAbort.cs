@@ -1,4 +1,5 @@
 ﻿
+using System.Text;
 using Bonsai.Standard;
 
 namespace Bonsai.Core
@@ -96,6 +97,11 @@ namespace Bonsai.Core
     /// </summary>
     public override void OnExit()
     {
+      ResetConditionCache();
+    }
+
+    protected void ResetConditionCache()
+    {
       _bConditionResult = false;
       _bLastReevaluationResult = false;
     }
@@ -155,12 +161,9 @@ namespace Bonsai.Core
       }
 
       // Parallel subtrees cannot abort each other.
-      if (aborter.Parent)
+      if (aborter.Parent && aborter.Parent is Parallel)
       {
-        if (typeof(Parallel).IsAssignableFrom(aborter.Parent.GetType()))
-        {
-          return false;
-        }
+        return false;
       }
 
       switch (aborter.abortType)
@@ -193,6 +196,11 @@ namespace Bonsai.Core
         sub = sub.Parent;
       }
       return sub;
+    }
+
+    public override void StaticDescription(StringBuilder builder)
+    {
+      builder.AppendFormat("Aborts {0}", abortType.ToString());
     }
   }
 }

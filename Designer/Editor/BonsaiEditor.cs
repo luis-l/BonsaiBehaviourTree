@@ -352,16 +352,6 @@ namespace Bonsai.Designer
         nodeTypeColor(node),
         0f,
         4f);
-
-      GUI.DrawTexture(
-        node.ContentRect,
-        BonsaiPreferences.Instance.nodeGradient,
-        ScaleMode.StretchToFill,
-        true,
-        0f,
-        nodeTypeColor(node),
-        0f,
-        4f);
     }
 
     // Render the node body contents.

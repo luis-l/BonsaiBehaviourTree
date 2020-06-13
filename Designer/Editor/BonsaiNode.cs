@@ -298,15 +298,15 @@ namespace Bonsai.Designer
 
       bodyRect.size = contentSize + prefs.nodeBodyPadding + prefs.nodeContentOffset;
 
-      // Set the fixed width and height so icons are contrained and do not expand.
-      Vector2 styleSize = headerSize + prefs.nodeContentPadding;
-      HeaderStyle.fixedWidth = styleSize.x;
-      HeaderStyle.fixedHeight = styleSize.y;
-
       contentRect.x = kContentOffset.x / 2f;
       contentRect.y = prefs.portHeight;
       contentRect.width = bodyRect.width - kContentOffset.x;
       contentRect.height = bodyRect.height - prefs.portHeight * 2f;
+
+      // Set the fixed width and height so icons are contrained and do not expand.
+      Vector2 headerFixedSize = headerSize + prefs.nodeContentPadding;
+      HeaderStyle.fixedWidth = headerFixedSize.x;
+      HeaderStyle.fixedHeight = headerFixedSize.y;
     }
 
     private Vector2 HeaderContentSize()

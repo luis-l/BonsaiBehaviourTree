@@ -363,8 +363,8 @@ namespace Bonsai.Designer
         GUILayout.Space(node.Input.bodyRect.height);
       }
 
-      GUILayout.Box(node.Header.content, node.Header.style);
-      GUILayout.Box(node.Body.content, node.Body.style);
+      GUILayout.Box(node.HeaderContent, node.HeaderStyle);
+      GUILayout.Box(node.BodyContent, node.BodyStyle);
     }
 
     private void DrawExitStatus(Rect localRect, BonsaiNode node)

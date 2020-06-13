@@ -6,12 +6,6 @@ using UnityEngine;
 
 namespace Bonsai.Designer
 {
-  public class StyledContent
-  {
-    public GUIContent content;
-    public GUIStyle style;
-  }
-
   public class BonsaiNode : IIterableNode<BonsaiNode>
   {
     /// <summary>
@@ -25,34 +19,11 @@ namespace Bonsai.Designer
       get { return contentRect; }
     }
 
-    private StyledContent header;
-    private StyledContent body;
+    public GUIStyle HeaderStyle { get; } = CreateHeaderStyle();
+    public GUIStyle BodyStyle { get; } = CreateBodyStyle();
 
-    public StyledContent Header
-    {
-      get
-      {
-        if (header == null)
-        {
-          header = new StyledContent { content = CreateHeaderContent() };
-          header.style = CreateHeaderStyle(header.content);
-        }
-        return header;
-      }
-    }
-
-    public StyledContent Body
-    {
-      get
-      {
-        if (body == null)
-        {
-          body = new StyledContent { content = CreateBodyContent() };
-          body.style = CreateBodyStyle(body.content);
-        }
-        return body;
-      }
-    }
+    public GUIContent HeaderContent { get; } = new GUIContent();
+    public GUIContent BodyContent { get; } = new GUIContent();
 
     protected BonsaiInputPort inputPort;
     protected BonsaiOutputPort outputPort;
@@ -256,57 +227,44 @@ namespace Bonsai.Designer
 
     public void UpdateGui()
     {
-      if (header == null)
-      {
-        header = new StyledContent();
-      }
-
-      if (body == null)
-      {
-        body = new StyledContent();
-      }
-
-      header.content = CreateHeaderContent();
-      header.style = CreateHeaderStyle(header.content);
-
-      body.content = CreateBodyContent();
-      body.style = CreateBodyStyle(body.content);
-    }
-
-    private GUIContent CreateHeaderContent()
-    {
-      string header = behaviour.title;
-
-      // Fall back to node name if there is no brief supplied.
-      if (header == null || header.Length == 0)
-      {
-        header = NiceName();
-      }
+      HeaderContent.text = HeaderText();
+      BodyContent.text = BodyText();
 
       if (icon)
       {
-        return new GUIContent(header, icon);
+        HeaderContent.image = icon;
       }
-      else
-      {
-        return new GUIContent(header);
-      }
+
+      ResizeToFitContent();
     }
 
-    private GUIContent CreateBodyContent()
+    private string HeaderText()
     {
-      var body = new StringBuilder();
-      behaviour.Description(body);
+      string text = behaviour.title;
 
-      if (body.Length == 0)
+      // Fall back to node name if there is no brief supplied.
+      if (text == null || text.Length == 0)
       {
-        body.Append(NiceName());
+        text = NiceName();
       }
 
-      return new GUIContent(body.ToString());
+      return text;
     }
 
-    private GUIStyle CreateHeaderStyle(GUIContent content)
+    private string BodyText()
+    {
+      var text = new StringBuilder();
+      behaviour.Description(text);
+
+      if (text.Length == 0)
+      {
+        text.Append(NiceName());
+      }
+
+      return text.ToString();
+    }
+
+    private static GUIStyle CreateHeaderStyle()
     {
       var style = new GUIStyle();
       style.normal.textColor = Color.white;
@@ -315,37 +273,58 @@ namespace Bonsai.Designer
       style.imagePosition = ImagePosition.ImageLeft;
       style.contentOffset = kContentOffset;
 
-      // Do not consider icon size. Manually set a size from text.
-      // Round for sharp GUI content.
-      Vector2 contentSize = style.CalcSize(new GUIContent(content.text));
-      contentSize.x = Mathf.Round(contentSize.x);
-      contentSize.y = Mathf.Round(contentSize.y);
-
-      bodyRect.width = contentSize.x + 80f + kContentOffset.x;
-      bodyRect.height = contentSize.y + 50f + kContentOffset.y;
-
-      style.fixedWidth = contentSize.x + 60f;
-      style.fixedHeight = contentSize.y + 10f;
-
-      contentRect.x = kContentOffset.x / 2f;
-      contentRect.y = BonsaiPort.kMinSize.y;
-      contentRect.width = bodyRect.width - kContentOffset.x;
-      contentRect.height = bodyRect.height - BonsaiPort.kMinSize.y * 2f;
-
       return style;
     }
 
-    private GUIStyle CreateBodyStyle(GUIContent content)
+    private static GUIStyle CreateBodyStyle()
     {
       var style = new GUIStyle();
       style.normal.textColor = Color.white;
       style.contentOffset = kContentOffset;
-      Vector2 contentSize = style.CalcSize(content);
-      bodyRect.height += contentSize.y;
-
-      contentRect.height += contentSize.y;
-
       return style;
+    }
+
+    private void ResizeToFitContent()
+    {
+      var prefs = BonsaiPreferences.Instance;
+
+      Vector2 headerSize = HeaderContentSize();
+      Vector2 bodySize = BodyContentSize();
+
+      // The minium size to fit content.
+      var contentSize = new Vector2(
+        Mathf.Max(headerSize.x, bodySize.x),
+        headerSize.y + bodySize.y);
+
+      bodyRect.size = contentSize + prefs.nodeBodyPadding + prefs.nodeContentOffset;
+
+      // Set the fixed width and height so icons are contrained and do not expand.
+      Vector2 styleSize = headerSize + prefs.nodeContentPadding;
+      HeaderStyle.fixedWidth = styleSize.x;
+      HeaderStyle.fixedHeight = styleSize.y;
+
+      contentRect.x = kContentOffset.x / 2f;
+      contentRect.y = prefs.portHeight;
+      contentRect.width = bodyRect.width - kContentOffset.x;
+      contentRect.height = bodyRect.height - prefs.portHeight * 2f;
+    }
+
+    private Vector2 HeaderContentSize()
+    {
+      // Do not consider icon size. Manually set a size from text.
+      // Round for sharp GUI content.
+      Vector2 size = HeaderStyle.CalcSize(new GUIContent(HeaderContent.text));
+      size.x = Mathf.Round(size.x);
+      size.y = Mathf.Round(size.y);
+      return size;
+    }
+
+    private Vector2 BodyContentSize()
+    {
+      Vector2 size = BodyStyle.CalcSize(BodyContent);
+      size.x = Mathf.Round(size.x);
+      size.y = Mathf.Round(size.y);
+      return size;
     }
 
     private string NiceName()

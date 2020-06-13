@@ -44,6 +44,12 @@ namespace Bonsai.Designer
     public float defaultConnectionWidth = 4f;
     public float runningConnectionWidth = 4f;
 
+    [Header("Node Properties")]
+    public Vector2 nodeBodyPadding = new Vector2(80f, 50f);
+    public Vector2 nodeContentOffset = new Vector2(20f, 5f);
+    public Vector2 nodeContentPadding = new Vector2(60f, 10f);
+    public float portHeight = 15f;
+
     private static BonsaiPreferences instance;
 
     public static BonsaiPreferences Instance

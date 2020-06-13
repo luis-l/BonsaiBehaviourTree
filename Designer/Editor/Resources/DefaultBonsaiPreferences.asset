@@ -13,13 +13,13 @@ MonoBehaviour:
   m_Name: DefaultBonsaiPreferences
   m_EditorClassIdentifier: 
   gridTexture: {fileID: 2800000, guid: 4ab4e605fe422164da65569c46a161d2, type: 3}
-  rootSymbol: {fileID: 2800000, guid: cf911a7be76db0142b6ecc0639fa0ba2, type: 3}
   failureSymbol: {fileID: 2800000, guid: 8db2b847ab6b6434c9da1e0cf721fd8e, type: 3}
   successSymbol: {fileID: 2800000, guid: 39cfff267dd954642b26f231c7a997ad, type: 3}
   nodeBackgroundTexture: {fileID: 2800000, guid: 6c5508e99038cdf46bb29a177e477d6d,
     type: 3}
   nodeGradient: {fileID: 2800000, guid: c453f51bbb9d4134d86679c771689df6, type: 3}
   portTexture: {fileID: 2800000, guid: dfda76d4e735e7a47bcf756d5d90c44d, type: 3}
+  rootSymbol: {fileID: 2800000, guid: cf911a7be76db0142b6ecc0639fa0ba2, type: 3}
   compositeColor: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
   decoratorColor: {r: 0.4553469, g: 0.38719293, b: 0.7264151, a: 1}
   conditionalColor: {r: 0.36663404, g: 0.7264151, b: 0.72088, a: 1}
@@ -40,3 +40,7 @@ MonoBehaviour:
   defaultConnectionColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 1}
   defaultConnectionWidth: 4
   runningConnectionWidth: 4
+  nodeBodyPadding: {x: 20, y: 50}
+  nodeContentOffset: {x: 20, y: 5}
+  nodeContentPadding: {x: 50, y: 10}
+  portHeight: 16

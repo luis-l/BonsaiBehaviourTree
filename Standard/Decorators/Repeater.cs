@@ -50,11 +50,9 @@ namespace Bonsai.Standard
     {
       if (infiniteLoop)
       {
-        builder.Append("Loop infinitely");
+        builder.Append("Loop forever");
       }
-
-
-      if (loopCount < 1)
+      else if (loopCount < 1)
       {
         builder.Append("Don't loop");
       }

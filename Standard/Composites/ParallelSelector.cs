@@ -4,7 +4,7 @@ using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
-  [BonsaiNode("Composites/", "ParallelQuestion")]
+  [BonsaiNode("Composites/", "ParallelSelector")]
   public class ParallelSelector : Parallel
   {
     public override Status Run()

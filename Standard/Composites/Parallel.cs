@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   /// <summary>
   /// Creates a basic parallel node which succeeds if all its children succeed.
   /// </summary>
-  [BonsaiNode("Composites/", "ParallelArrows")]
+  [BonsaiNode("Composites/", "Parallel")]
   public class Parallel : Composite
   {
     // The iterators to run the children in sequential "parallel".

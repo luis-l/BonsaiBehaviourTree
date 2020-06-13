@@ -65,7 +65,7 @@ namespace Bonsai.Designer
     private BonsaiNode CreateEditorNode(Type behaviourType)
     {
       var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
-      var tex = BonsaiResources.GetTexture(prop.texName);
+      var tex = BonsaiPreferences.Texture(prop.texName);
       var node = AddEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren, tex);
       return node;
     }

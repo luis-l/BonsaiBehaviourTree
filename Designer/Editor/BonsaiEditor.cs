@@ -16,8 +16,6 @@ namespace Bonsai.Designer
   /// </summary>
   internal class BonsaiEditor
   {
-    public BonsaiPreferences preferences = new BonsaiPreferences();
-
     private readonly BonsaiWindow window;
     public BonsaiCanvas Canvas { get; private set; }
     public Coord Coordinates { get; private set; }
@@ -178,12 +176,12 @@ namespace Bonsai.Designer
 
     public void DrawStaticGrid()
     {
-      Drawer.DrawStaticGrid(window.CanvasRect, preferences.backgroundTexture);
+      Drawer.DrawStaticGrid(window.CanvasRect, BonsaiPreferences.Instance.gridTexture);
     }
 
     private void DrawGrid()
     {
-      Drawer.DrawGrid(window.CanvasRect, preferences.backgroundTexture, Canvas.ZoomScale, Canvas.panOffset);
+      Drawer.DrawGrid(window.CanvasRect, BonsaiPreferences.Instance.gridTexture, Canvas.ZoomScale, Canvas.panOffset);
     }
 
     private void DrawCanvasContents()
@@ -222,13 +220,13 @@ namespace Bonsai.Designer
 
     private void DrawDefaultPortConnections(BonsaiNode node)
     {
-      Color connectionColor = preferences.defaultConnectionColor;
-      float connectionWidth = preferences.defaultConnectionWidth;
+      Color connectionColor = BonsaiPreferences.Instance.defaultConnectionColor;
+      float connectionWidth = BonsaiPreferences.Instance.defaultConnectionWidth;
 
       if (node.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
       {
-        connectionColor = preferences.runningStatusColor;
-        connectionWidth = preferences.runningConnectionWidth;
+        connectionColor = BonsaiPreferences.Instance.runningStatusColor;
+        connectionWidth = BonsaiPreferences.Instance.runningConnectionWidth;
       }
 
       // Start the Y anchor coord at the tip of the Output port.
@@ -255,7 +253,7 @@ namespace Bonsai.Designer
 
       // Draw the lines from the calculated positions.
       DrawLineCanvasSpace(parentAnchorTip, parentAnchorLineConnection, connectionColor, connectionWidth);
-      DrawLineCanvasSpace(anchorLineStart, anchorLineEnd, preferences.defaultConnectionColor, preferences.defaultConnectionWidth);
+      DrawLineCanvasSpace(anchorLineStart, anchorLineEnd, BonsaiPreferences.Instance.defaultConnectionColor, BonsaiPreferences.Instance.defaultConnectionWidth);
 
       foreach (var input in node.Output.InputConnections)
       {
@@ -266,15 +264,15 @@ namespace Bonsai.Designer
         // The node is running, hightlight the connection.
         if (input.parentNode.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
         {
-          DrawLineCanvasSpace(center, anchorLineConnection, preferences.runningStatusColor, preferences.runningConnectionWidth);
+          DrawLineCanvasSpace(center, anchorLineConnection, BonsaiPreferences.Instance.runningStatusColor, BonsaiPreferences.Instance.runningConnectionWidth);
 
           // Hightlight the portion of the anchorline between the running child and parent node.
-          DrawLineCanvasSpace(anchorLineConnection, parentAnchorLineConnection, preferences.runningStatusColor, preferences.runningConnectionWidth);
+          DrawLineCanvasSpace(anchorLineConnection, parentAnchorLineConnection, BonsaiPreferences.Instance.runningStatusColor, BonsaiPreferences.Instance.runningConnectionWidth);
         }
         else
         {
           // The node is not running, draw a default connection.
-          DrawLineCanvasSpace(center, anchorLineConnection, preferences.defaultConnectionColor, preferences.defaultConnectionWidth);
+          DrawLineCanvasSpace(center, anchorLineConnection, BonsaiPreferences.Instance.defaultConnectionColor, BonsaiPreferences.Instance.defaultConnectionWidth);
         }
       }
     }
@@ -326,20 +324,44 @@ namespace Bonsai.Designer
         // Shift the symbol so it is not in the center.
         localRect.x -= localRect.width / 2f - 20f;
 
-        DrawTexture(localRect, preferences.rootSymbol, preferences.rootSymbolColor);
+        DrawTexture(localRect, BonsaiPreferences.Instance.rootSymbol, BonsaiPreferences.Instance.rootSymbolColor);
       }
     }
 
     private void DrawNodeBackground(BonsaiNode node, Rect screenRect)
     {
-      NodeBackground(node, out Texture2D backgroundTexture);
-      GUI.DrawTexture(screenRect, backgroundTexture, ScaleMode.StretchToFill, true, 0, Color.white, 0, 5f);
+      GUI.DrawTexture(
+        screenRect, BonsaiPreferences.Instance.nodeBackgroundTexture,
+        ScaleMode.StretchToFill,
+        true,
+        0,
+        NodeStatusColor(node),
+        0,
+        5f);
     }
 
     // Render the background color scheme for the node type.
     private void DrawNodeTypeBackground(BonsaiNode node)
     {
-      GUI.DrawTexture(node.ContentRect, NodeTypeTexture(node), ScaleMode.StretchToFill, true, 0f, Color.white, 0f, 4f);
+      GUI.DrawTexture(
+        node.ContentRect,
+        BonsaiPreferences.Instance.nodeGradient,
+        ScaleMode.StretchToFill,
+        true,
+        0f,
+        nodeTypeColor(node),
+        0f,
+        4f);
+
+      GUI.DrawTexture(
+        node.ContentRect,
+        BonsaiPreferences.Instance.nodeGradient,
+        ScaleMode.StretchToFill,
+        true,
+        0f,
+        nodeTypeColor(node),
+        0f,
+        4f);
     }
 
     // Render the node body contents.
@@ -361,74 +383,75 @@ namespace Bonsai.Designer
 
       if (status == BehaviourNode.StatusEditor.Success)
       {
-        DrawTexture(localRect, preferences.successSymbol, preferences.successColor);
+        DrawTexture(localRect, BonsaiPreferences.Instance.successSymbol, BonsaiPreferences.Instance.successColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Failure)
       {
-        DrawTexture(localRect, preferences.failureSymbol, preferences.failureColor);
+        DrawTexture(localRect, BonsaiPreferences.Instance.failureSymbol, BonsaiPreferences.Instance.failureColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Aborted)
       {
-        DrawTexture(localRect, preferences.failureSymbol, preferences.abortedColor);
+        DrawTexture(localRect, BonsaiPreferences.Instance.failureSymbol, BonsaiPreferences.Instance.abortedColor);
       }
 
       else if (status == BehaviourNode.StatusEditor.Interruption)
       {
-        DrawTexture(localRect, preferences.failureSymbol, preferences.interruptedColor);
+        DrawTexture(localRect, BonsaiPreferences.Instance.failureSymbol, BonsaiPreferences.Instance.interruptedColor);
       }
     }
 
-    private Texture2D NodeTypeTexture(BonsaiNode node)
+    private Color nodeTypeColor(BonsaiNode node)
     {
       if (node.Behaviour is Task)
       {
-        return preferences.taskTexture;
+        return BonsaiPreferences.Instance.taskColor;
       }
 
       else if (node.Behaviour is Service)
       {
-        return preferences.serviceBackground;
+        return BonsaiPreferences.Instance.serviceColor;
       }
 
       else if (node.Behaviour is ConditionalAbort)
       {
-        return preferences.conditionalTexture;
+        return BonsaiPreferences.Instance.conditionalColor;
       }
 
       else if (node.Behaviour is Decorator)
       {
-        return preferences.decoratorTexture;
+        return BonsaiPreferences.Instance.decoratorColor;
       }
 
-      return preferences.compositeTexture;
+      return BonsaiPreferences.Instance.compositeColor;
     }
 
-    private void NodeBackground(BonsaiNode node, out Texture2D tex)
+    private Color NodeStatusColor(BonsaiNode node)
     {
-      tex = preferences.nodeBackgroundTexture;
 
       if (IsNodeEvaluating(node))
       {
-        tex = preferences.reevaluateHighlightTexture;
+        return BonsaiPreferences.Instance.evaluateColor;
       }
       else if (IsNodeRunning(node))
       {
-        tex = preferences.runningBackgroundTexture;
+        return BonsaiPreferences.Instance.runningColor;
       }
       else if (IsNodeSelected(node))
       {
-        tex = preferences.selectedHighlightTexture;
+        return BonsaiPreferences.Instance.selectedColor;
       }
       else if (IsNodeReferenced(node))
       {
-        tex = preferences.referenceHighlightTexture;
+        return BonsaiPreferences.Instance.referenceColor;
       }
       else if (IsNodeAbortable(node))
       {
-        tex = preferences.abortHighlightTexture;
+        return BonsaiPreferences.Instance.abortColor;
       }
+
+      return BonsaiPreferences.Instance.defaultNodeBackgroundColor;
     }
 
     [Pure]
@@ -551,7 +574,7 @@ namespace Bonsai.Designer
     {
       // Convert the body rect from canvas to screen space.
       portRect.position = Coordinates.CanvasToScreenSpace(portRect.position);
-      GUI.DrawTexture(portRect, preferences.portTexture, ScaleMode.StretchToFill);
+      GUI.DrawTexture(portRect, BonsaiPreferences.Instance.portTexture, ScaleMode.StretchToFill);
     }
 
     /// <summary>

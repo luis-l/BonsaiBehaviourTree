@@ -1,67 +1,105 @@
-﻿
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bonsai.Designer
 {
-  public class BonsaiPreferences
+  [CreateAssetMenu(fileName = "BonsaiPreferences", menuName = "Bonsai/Create Preferences")]
+  public class BonsaiPreferences : ScriptableObject
   {
-    public Texture2D backgroundTexture;
+    public Texture2D gridTexture;
     public Texture2D rootSymbol;
     public Texture2D failureSymbol;
     public Texture2D successSymbol;
-    public Texture2D selectedHighlightTexture;
-    public Texture2D runningBackgroundTexture;
-    public Texture2D abortHighlightTexture;
-    public Texture2D referenceHighlightTexture;
-    public Texture2D reevaluateHighlightTexture;
 
+    public Texture nodeBackgroundTexture;
+    public Texture2D nodeGradient;
     public Texture2D portTexture;
-    public Texture2D nodeBackgroundTexture;
-    public Texture2D compositeTexture;
-    public Texture2D taskTexture;
-    public Texture2D decoratorTexture;
-    public Texture2D conditionalTexture;
-    public Texture2D serviceBackground;
 
-    public Color rootSymbolColor;
-    public Color runningStatusColor;
-    public Color successColor;
-    public Color failureColor;
-    public Color abortedColor;
-    public Color interruptedColor;
+    public Color compositeColor;
+    public Color decoratorColor;
+    public Color conditionalColor;
+    public Color serviceColor;
+    public Color taskColor;
+
+    public Color defaultNodeBackgroundColor;
+    public Color selectedColor;
+    public Color runningColor;
+    public Color abortColor;
+    public Color referenceColor;
+    public Color evaluateColor;
+
+    public Color rootSymbolColor = new Color(0.3f, 0.3f, 0.3f, 1f);
+    public Color runningStatusColor = new Color(0.1f, 1f, 0.54f, 1f);
+    public Color successColor = new Color(0.1f, 1f, 0.54f, 0.25f);
+    public Color failureColor = new Color(1f, 0.1f, 0.1f, 0.25f);
+    public Color abortedColor = new Color(0.1f, 0.1f, 1f, 0.25f);
+    public Color interruptedColor = new Color(0.7f, 0.5f, 0.3f, 0.4f);
     public Color defaultConnectionColor = Color.white;
 
     public float defaultConnectionWidth = 4f;
     public float runningConnectionWidth = 4f;
 
-    public BonsaiPreferences()
+    //public BonsaiPreferences()
+    //{
+
+    //  compositeColor = Color.gray;
+    //  decoratorColor = Color.magenta;
+    //  conditionalColor = Color.blue;
+    //  serviceColor = Color.cyan;
+    //  taskColor = Color.red;
+
+    //  defaultNodeBackgroundColor = Color.gray;
+    //  selectedColor = Color.blue;
+    //  runningColor = Color.green;
+    //  abortColor = Color.cyan;
+    //  referenceColor = Color.yellow;
+    //  evaluateColor = Color.blue;
+
+    //  gridTexture = BonsaiResources.GetTexture("Grid");
+    //  rootSymbol = BonsaiResources.GetTexture("RootSymbol");
+    //  successSymbol = BonsaiResources.GetTexture("Checkmark");
+    //  failureSymbol = BonsaiResources.GetTexture("Cross");
+
+    //  nodeBackgroundTexture = BonsaiResources.GetTexture("PlainTexture");
+    //  portTexture = BonsaiResources.GetTexture("PortTexture");
+    //  nodeGradient = BonsaiResources.GetTexture("Gradient");
+    //}
+
+    private static BonsaiPreferences instance;
+
+    public static BonsaiPreferences Instance
     {
-      rootSymbolColor = new Color(0.3f, 0.3f, 0.3f, 1f);
-      runningStatusColor = new Color(0.1f, 1f, 0.54f, 1f);
-      successColor = new Color(0.1f, 1f, 0.54f, 0.25f);
-      failureColor = new Color(1f, 0.1f, 0.1f, 0.25f);
-      abortedColor = new Color(0.1f, 0.1f, 1f, 0.25f);
-      interruptedColor = new Color(0.7f, 0.5f, 0.3f, 0.4f);
+      get
+      {
+        if (instance == null)
+        {
+          instance = LoadDefaultPreferences();
+        }
+        return instance;
+      }
 
-      backgroundTexture = BonsaiResources.GetTexture("Grid");
-      rootSymbol = BonsaiResources.GetTexture("RootSymbol");
-      successSymbol = BonsaiResources.GetTexture("Checkmark");
-      failureSymbol = BonsaiResources.GetTexture("Cross");
+      set
+      {
+        instance = value;
+      }
+    }
 
-      selectedHighlightTexture = BonsaiResources.GetTexture("SelectionHighlight");
-      runningBackgroundTexture = BonsaiResources.GetTexture("GreenGradient");
+    public static BonsaiPreferences LoadDefaultPreferences()
+    {
+      BonsaiPreferences prefs = Resources.Load<BonsaiPreferences>("DefaultBonsaiPreferences");
 
-      abortHighlightTexture = BonsaiResources.GetTexture("AbortHighlightGradient");
-      referenceHighlightTexture = BonsaiResources.GetTexture("ReferenceHighlightGradient");
-      reevaluateHighlightTexture = BonsaiResources.GetTexture("ReevaluateHighlightGradient");
+      if (prefs == null)
+      {
+        Debug.LogWarning("Failed to load DefaultBonsaiPreferences");
+        // Empty preferences. Editor will not render nodes correctly.
+        prefs = CreateInstance<BonsaiPreferences>();
+      }
 
-      portTexture = BonsaiResources.GetTexture("PortTexture");
-      nodeBackgroundTexture = BonsaiResources.GetTexture("NodeBackground");
-      compositeTexture = BonsaiResources.GetTexture("CompositeBackground");
-      taskTexture = BonsaiResources.GetTexture("TaskBackground");
-      decoratorTexture = BonsaiResources.GetTexture("DecoratorBackground");
-      conditionalTexture = BonsaiResources.GetTexture("ConditionalBackground");
-      serviceBackground = BonsaiResources.GetTexture("ServiceBackground");
+      return prefs;
+    }
+
+    public static Texture2D Texture(string name)
+    {
+      return Resources.Load<Texture2D>(name);
     }
   }
 }

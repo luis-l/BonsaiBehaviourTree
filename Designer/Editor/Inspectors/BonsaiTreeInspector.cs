@@ -49,7 +49,7 @@ namespace Bonsai.Designer
         if (_darkBackgroundStyle == null)
         {
           _darkBackgroundStyle = new GUIStyle();
-          _darkBackgroundStyle.normal.background = BonsaiResources.GetTexture("DarkGray");
+          _darkBackgroundStyle.normal.background = BonsaiPreferences.Texture("DarkTexture");
         }
 
         return _darkBackgroundStyle;

@@ -272,11 +272,6 @@ namespace Bonsai.Designer
       fileMenu.DropDown(new Rect(5f, toolbarHeight, 0f, 0f));
     }
 
-    private void setGrayBackround(float value)
-    {
-      GUI.backgroundColor = new Color(value, value, value, 1.0f);
-    }
-
     // Centers and fits the entire tree in the view center.
     private void homeZoom()
     {
@@ -287,8 +282,8 @@ namespace Bonsai.Designer
 
     private void refreshEditor()
     {
-      BonsaiResources.LoadStandardTextures();
-      editor.preferences = new BonsaiPreferences();
+      // Reload preferences.
+      BonsaiPreferences.Instance = BonsaiPreferences.LoadDefaultPreferences();
       buildCanvas();
     }
 

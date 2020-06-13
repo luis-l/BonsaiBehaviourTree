@@ -19,7 +19,6 @@ MonoBehaviour:
     type: 3}
   nodeGradient: {fileID: 2800000, guid: c453f51bbb9d4134d86679c771689df6, type: 3}
   portTexture: {fileID: 2800000, guid: dfda76d4e735e7a47bcf756d5d90c44d, type: 3}
-  rootSymbol: {fileID: 2800000, guid: cf911a7be76db0142b6ecc0639fa0ba2, type: 3}
   compositeColor: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
   decoratorColor: {r: 0.4553469, g: 0.38719293, b: 0.7264151, a: 1}
   conditionalColor: {r: 0.36663404, g: 0.7264151, b: 0.72088, a: 1}
@@ -31,7 +30,7 @@ MonoBehaviour:
   abortColor: {r: 0.3722855, g: 0.8867924, b: 0.8457736, a: 1}
   referenceColor: {r: 1, g: 0.77234, b: 0.031372547, a: 1}
   evaluateColor: {r: 0, g: 0.42714262, b: 1, a: 1}
-  rootSymbolColor: {r: 0.3490566, g: 0.3490566, b: 0.3490566, a: 1}
+  rootSymbolColor: {r: 0.90977204, g: 1, b: 0, a: 1}
   runningStatusColor: {r: 0.4221253, g: 0.9622642, b: 0.56973785, a: 1}
   successColor: {r: 0.22828408, g: 0.8490566, b: 0.35737112, a: 1}
   failureColor: {r: 0.9716981, g: 0.40070745, b: 0.31626022, a: 1}

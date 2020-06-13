@@ -299,9 +299,6 @@ namespace Bonsai.Designer
       Rect localRect = node.bodyRect;
       localRect.position = Vector2.zero;
 
-      // Add root symbol if applicable
-      DrawRootSymbol(localRect, node);
-
       // Draw the status the node exited with if applicable.
       DrawExitStatus(localRect, node);
 
@@ -315,17 +312,6 @@ namespace Bonsai.Designer
 
       GUI.EndGroup();
       GUI.color = originalColor;
-    }
-
-    private void DrawRootSymbol(Rect localRect, BonsaiNode node)
-    {
-      if (window.tree.Root == node.Behaviour)
-      {
-        // Shift the symbol so it is not in the center.
-        localRect.x -= localRect.width / 2f - 20f;
-
-        DrawTexture(localRect, BonsaiPreferences.Instance.rootSymbol, BonsaiPreferences.Instance.rootSymbolColor);
-      }
     }
 
     private void DrawNodeBackground(BonsaiNode node, Rect screenRect)
@@ -432,6 +418,7 @@ namespace Bonsai.Designer
       {
         return BonsaiPreferences.Instance.selectedColor;
       }
+
       else if (IsNodeReferenced(node))
       {
         return BonsaiPreferences.Instance.referenceColor;
@@ -439,6 +426,11 @@ namespace Bonsai.Designer
       else if (IsNodeAbortable(node))
       {
         return BonsaiPreferences.Instance.abortColor;
+      }
+
+      else if (window.tree.Root == node.Behaviour)
+      {
+        return BonsaiPreferences.Instance.rootSymbolColor;
       }
 
       return BonsaiPreferences.Instance.defaultNodeBackgroundColor;

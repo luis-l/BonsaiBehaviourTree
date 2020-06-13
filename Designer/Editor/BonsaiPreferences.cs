@@ -14,7 +14,6 @@ namespace Bonsai.Designer
     public Texture2D nodeBackgroundTexture;
     public Texture2D nodeGradient;
     public Texture2D portTexture;
-    public Texture2D rootSymbol;
 
     [Header("Node Colors")]
     public Color compositeColor;

@@ -12,6 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 524b8d4bdc9aaf143b5ae1195caba6d6, type: 3}
   m_Name: DefaultBonsaiPreferences
   m_EditorClassIdentifier: 
+  snapStep: 12
+  zoomDelta: 0.2
+  minZoom: 1
+  maxZoom: 5
+  panSpeed: 1.2
   gridTexture: {fileID: 2800000, guid: 4ab4e605fe422164da65569c46a161d2, type: 3}
   failureSymbol: {fileID: 2800000, guid: 8db2b847ab6b6434c9da1e0cf721fd8e, type: 3}
   successSymbol: {fileID: 2800000, guid: 39cfff267dd954642b26f231c7a997ad, type: 3}
@@ -41,5 +46,5 @@ MonoBehaviour:
   runningConnectionWidth: 4
   nodeBodyPadding: {x: 20, y: 50}
   nodeContentOffset: {x: 20, y: 5}
-  nodeContentPadding: {x: 50, y: 10}
-  portHeight: 16
+  nodeContentPadding: {x: 50, y: 5}
+  portHeight: 18

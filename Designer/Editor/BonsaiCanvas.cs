@@ -12,10 +12,10 @@ namespace Bonsai.Designer
   /// </summary>
   public class BonsaiCanvas : IEnumerable<BonsaiNode>
   {
-    public static float zoomDelta = 0.2f;
-    public static float minZoom = 1f;
-    public static float maxZoom = 5f;
-    public static float panSpeed = 1.2f;
+    public static float ZoomDelta { get { return BonsaiPreferences.Instance.zoomDelta; } }
+    public static float MinZoom { get { return BonsaiPreferences.Instance.minZoom; } }
+    public static float MaxZoom { get { return BonsaiPreferences.Instance.maxZoom; } }
+    public static float PanSpeed { get { return BonsaiPreferences.Instance.panSpeed; } }
 
     public Vector2 zoom = Vector2.one;
     public Vector2 panOffset = Vector2.zero;

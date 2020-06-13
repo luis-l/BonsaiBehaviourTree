@@ -31,8 +31,7 @@ namespace Bonsai.Designer
     private readonly Texture icon;
 
     // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
-    public static readonly Vector2 kDefaultSize = Vector2.one * BonsaiEditor.snapStep * 8f;
-    public static readonly Vector2 kContentOffset = new Vector2(20f, 5f);
+    public static readonly Vector2 kDefaultSize = Vector2.one * BonsaiEditor.SnapStep * 8f;
 
     public readonly bool bCanHaveMultipleChildren = true;
 
@@ -271,7 +270,7 @@ namespace Bonsai.Designer
       style.fontSize = 15;
       style.fontStyle = FontStyle.Bold;
       style.imagePosition = ImagePosition.ImageLeft;
-      style.contentOffset = kContentOffset;
+      style.contentOffset = BonsaiPreferences.Instance.nodeContentOffset;
 
       return style;
     }
@@ -280,7 +279,7 @@ namespace Bonsai.Designer
     {
       var style = new GUIStyle();
       style.normal.textColor = Color.white;
-      style.contentOffset = kContentOffset;
+      style.contentOffset = BonsaiPreferences.Instance.nodeContentOffset;
       return style;
     }
 
@@ -298,9 +297,9 @@ namespace Bonsai.Designer
 
       bodyRect.size = contentSize + prefs.nodeBodyPadding + prefs.nodeContentOffset;
 
-      contentRect.x = kContentOffset.x / 2f;
+      contentRect.x = prefs.nodeContentOffset.x / 2f;
       contentRect.y = prefs.portHeight;
-      contentRect.width = bodyRect.width - kContentOffset.x;
+      contentRect.width = bodyRect.width - prefs.nodeContentOffset.x;
       contentRect.height = bodyRect.height - prefs.portHeight * 2f;
 
       // Set the fixed width and height so icons are contrained and do not expand.

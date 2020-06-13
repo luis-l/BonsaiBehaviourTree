@@ -1,11 +1,23 @@
 ﻿using UnityEngine;
+using UnityEngine.Internal;
 
 namespace Bonsai.Designer
 {
   [CreateAssetMenu(fileName = "BonsaiPreferences", menuName = "Bonsai/Create Preferences")]
   public class BonsaiPreferences : ScriptableObject
   {
-    [Header("Editor Textures")]
+    // The unit length of the grid in pixels.
+    // Note: Grid Texture has 12.8 as length, fix texture to be even.
+    private const int kGridSize = 12;
+
+    [Header("Editor")]
+    public int snapStep = kGridSize;
+    public float zoomDelta = 0.2f;
+    public float minZoom = 1f;
+    public float maxZoom = 5f;
+    public float panSpeed = 1.2f;
+
+    [Space()]
     public Texture2D gridTexture;
     public Texture2D failureSymbol;
     public Texture2D successSymbol;
@@ -43,7 +55,7 @@ namespace Bonsai.Designer
     public float defaultConnectionWidth = 4f;
     public float runningConnectionWidth = 4f;
 
-    [Header("Node Properties")]
+    [Header("Node Body Layout")]
     public Vector2 nodeBodyPadding = new Vector2(80f, 50f);
     public Vector2 nodeContentOffset = new Vector2(20f, 5f);
     public Vector2 nodeContentPadding = new Vector2(60f, 10f);

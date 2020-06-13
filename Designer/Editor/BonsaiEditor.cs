@@ -349,7 +349,7 @@ namespace Bonsai.Designer
         ScaleMode.StretchToFill,
         true,
         0f,
-        nodeTypeColor(node),
+        NodeTypeColor(node),
         0f,
         4f);
     }
@@ -392,7 +392,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private Color nodeTypeColor(BonsaiNode node)
+    private Color NodeTypeColor(BonsaiNode node)
     {
       if (node.Behaviour is Task)
       {

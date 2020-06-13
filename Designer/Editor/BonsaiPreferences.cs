@@ -38,32 +38,6 @@ namespace Bonsai.Designer
     public float defaultConnectionWidth = 4f;
     public float runningConnectionWidth = 4f;
 
-    //public BonsaiPreferences()
-    //{
-
-    //  compositeColor = Color.gray;
-    //  decoratorColor = Color.magenta;
-    //  conditionalColor = Color.blue;
-    //  serviceColor = Color.cyan;
-    //  taskColor = Color.red;
-
-    //  defaultNodeBackgroundColor = Color.gray;
-    //  selectedColor = Color.blue;
-    //  runningColor = Color.green;
-    //  abortColor = Color.cyan;
-    //  referenceColor = Color.yellow;
-    //  evaluateColor = Color.blue;
-
-    //  gridTexture = BonsaiResources.GetTexture("Grid");
-    //  rootSymbol = BonsaiResources.GetTexture("RootSymbol");
-    //  successSymbol = BonsaiResources.GetTexture("Checkmark");
-    //  failureSymbol = BonsaiResources.GetTexture("Cross");
-
-    //  nodeBackgroundTexture = BonsaiResources.GetTexture("PlainTexture");
-    //  portTexture = BonsaiResources.GetTexture("PortTexture");
-    //  nodeGradient = BonsaiResources.GetTexture("Gradient");
-    //}
-
     private static BonsaiPreferences instance;
 
     public static BonsaiPreferences Instance

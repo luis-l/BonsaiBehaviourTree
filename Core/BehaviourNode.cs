@@ -334,10 +334,14 @@ namespace Bonsai.Core
       _statusEditor = s;
     }
 
+    [Header("Description")]
+    public string title;
+
+    [Multiline]
+    public string comment;
+
     [HideInInspector]
     public Vector2 bonsaiNodePosition;
-
-    public string title;
 
     protected void OnDestroy()
     {

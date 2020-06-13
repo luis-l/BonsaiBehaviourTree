@@ -260,6 +260,14 @@ namespace Bonsai.Designer
         text.Append(NiceName());
       }
 
+      string comment = behaviour.comment;
+      if (comment != null && comment.Length != 0)
+      {
+        text.AppendLine();
+        text.AppendLine();
+        text.Append(comment);
+      }
+
       return text.ToString();
     }
 

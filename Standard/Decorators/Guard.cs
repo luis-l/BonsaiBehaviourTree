@@ -4,6 +4,7 @@ using UnityEngine;
 
 using Bonsai.Core;
 using Bonsai.Designer;
+using System.Text;
 
 namespace Bonsai.Standard
 {
@@ -99,6 +100,16 @@ namespace Bonsai.Standard
     public override BehaviourNode[] GetReferencedNodes()
     {
       return linkedGuards.ToArray();
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      builder.AppendFormat("Guarding {0}", linkedGuards.Count);
+      builder.AppendLine();
+      builder.AppendFormat("Active allowed: {0}", maxActiveGuards);
+      builder.AppendLine();
+      builder.AppendLine(waitUntilChildAvailable ? "Wait for child branch" : "Skip child branch");
+      builder.Append(returnSuccessOnSkip ? "Succeed on skip" : "Fail on skip");
     }
   }
 }

@@ -139,14 +139,12 @@ namespace Bonsai.Designer
       Vector2 pan = root.bodyRect.center - oldPos;
 
       // Move the entire subtree of the root.
-      Action<BonsaiNode> subtreeDrag = (node) =>
+      TreeIterator<BonsaiNode>.Traverse(root, node =>
       {
         // For all children, pan by the same amount that the parent changed by.
         if (node != root)
           node.bodyRect.center += Coord.SnapPosition(pan, SnapStep);
-      };
-
-      TreeIterator<BonsaiNode>.Traverse(root, subtreeDrag);
+      });
     }
 
     public void UpdateOrderIndices()

@@ -17,13 +17,13 @@ namespace Bonsai.Designer
     public enum SaveState { NoTree, TempTree, SavedTree };
 
     // The FSM used to structure the logic control of saving and loading.
-    private StateMachine<SaveState> _saveFSM;
+    private readonly StateMachine<SaveState> saveFsm = new StateMachine<SaveState>();
 
     // The events that dictate the flow of the manager's FSM.
     private enum SaveOp { None, New, Load, Save, SaveAs };
-    private SaveOp _saveOp = SaveOp.None;
+    private SaveOp requestedSaveOp = SaveOp.None;
 
-    private BonsaiWindow _window;
+    private readonly BonsaiWindow window;
 
     // Path that stores temporary canvases.
     private const string kTempCanvasPath = "Assets/Plugins/Bonsai/Temp/";
@@ -31,35 +31,33 @@ namespace Bonsai.Designer
 
     public BonsaiSaveManager(BonsaiWindow w)
     {
-      _window = w;
-
-      _saveFSM = new StateMachine<SaveState>();
+      window = w;
 
       var noTree = new StateMachine<SaveState>.State(SaveState.NoTree);
       var tempTree = new StateMachine<SaveState>.State(SaveState.TempTree);
       var savedTree = new StateMachine<SaveState>.State(SaveState.SavedTree);
 
-      _saveFSM.AddState(noTree);
-      _saveFSM.AddState(tempTree);
-      _saveFSM.AddState(savedTree);
+      saveFsm.AddState(noTree);
+      saveFsm.AddState(tempTree);
+      saveFsm.AddState(savedTree);
 
       // Actions to take when starting out on a window with no canvas.
-      _saveFSM.AddTransition(noTree, tempTree, isNewRequested, createNewOnto_Window_WithTempOrEmpty);
-      _saveFSM.AddTransition(noTree, savedTree, isLoadRequested, loadOnto_EmptyWindow);
+      saveFsm.AddTransition(noTree, tempTree, IsNewRequested, CreateNewOnto_Window_WithTempOrEmpty);
+      saveFsm.AddTransition(noTree, savedTree, IsLoadRequested, LoadOntoEmptyWindow);
 
       // Actions to take when the window has a temp canvas.
-      _saveFSM.AddTransition(tempTree, tempTree, isNewRequested, createNewOnto_Window_WithTempOrEmpty);
-      _saveFSM.AddTransition(tempTree, savedTree, isSaveAsRequested, saveTempAs);
-      _saveFSM.AddTransition(tempTree, savedTree, isLoadRequested, loadOnto_Window_WithTempCanvas);
+      saveFsm.AddTransition(tempTree, tempTree, IsNewRequested, CreateNewOnto_Window_WithTempOrEmpty);
+      saveFsm.AddTransition(tempTree, savedTree, IsSaveAsRequested, SaveTempAs);
+      saveFsm.AddTransition(tempTree, savedTree, IsLoadRequested, LoadOnto_Window_WithTempCanvas);
 
       // Actions to take when the window has a valid canvas (already saved).
-      _saveFSM.AddTransition(savedTree, savedTree, isSaveRequested, save);
-      _saveFSM.AddTransition(savedTree, savedTree, isSaveAsRequested, saveCloneAs);
-      _saveFSM.AddTransition(savedTree, savedTree, isLoadRequested, loadOnto_Window_WithSavedCanvas);
-      _saveFSM.AddTransition(savedTree, tempTree, isNewRequested, createNewOnto_Window_WithSavedCanvas);
+      saveFsm.AddTransition(savedTree, savedTree, IsSaveRequested, Save);
+      saveFsm.AddTransition(savedTree, savedTree, IsSaveAsRequested, SaveCloneAs);
+      saveFsm.AddTransition(savedTree, savedTree, IsLoadRequested, LoadOnto_Window_WithSavedCanvas);
+      saveFsm.AddTransition(savedTree, tempTree, IsNewRequested, CreateNewOnto_Window_WithSavedCanvas);
 
       // Consume the save operation even after the transition is made.
-      _saveFSM.OnStateChangedEvent += () => { _saveOp = SaveOp.None; };
+      saveFsm.OnStateChangedEvent += () => { requestedSaveOp = SaveOp.None; };
 
       InitState();
     }
@@ -67,13 +65,12 @@ namespace Bonsai.Designer
     /// <summary>
     /// This hanldes setting up the proper state based on the window's canvas.
     /// </summary>
-    internal void InitState()
+    public void InitState()
     {
       // If the window has a valid canvas and editable.
-      if (_window.Tree != null && _window.EditorMode == BonsaiWindow.Mode.Edit)
+      if (window.Tree != null && window.EditorMode == BonsaiWindow.Mode.Edit)
       {
-
-        string path = getCurrentTreePath();
+        string path = GetCurrentTreePath();
 
         // If the canvas is temp.
         if (path.Contains(kTempCanvasPath))
@@ -99,7 +96,7 @@ namespace Bonsai.Designer
     /// Get the path from open file dialog.
     /// </summary>
     /// <returns></returns>
-    private string getCanvasFilePath()
+    private string GetCanvasFilePath()
     {
       string path = EditorUtility.OpenFilePanel("Open Bonsai Canvas", "Assets/", "asset");
 
@@ -110,7 +107,7 @@ namespace Bonsai.Designer
         // If the selection was not cancelled...
         if (!string.IsNullOrEmpty(path))
         {
-          _window.ShowNotification(new GUIContent("Please select a Bonsai asset within the project's Asset folder."));
+          window.ShowNotification(new GUIContent("Please select a Bonsai asset within the project's Asset folder."));
           return null;
         }
       }
@@ -122,20 +119,20 @@ namespace Bonsai.Designer
     /// Assumes that the path is already valid.
     /// </summary>
     /// <param name="path"></param>
-    private void loadTree(string path)
+    private void LoadTree(string path)
     {
       int assetIndex = path.IndexOf("/Assets/");
       path = path.Substring(assetIndex + 1);
 
       var tree = AssetDatabase.LoadAssetAtPath<Core.BehaviourTree>(path);
-      _window.SetTree(tree);
+      window.SetTree(tree);
     }
 
     /// <summary>
     /// Gets the file path to save the canavs at.
     /// </summary>
     /// <returns></returns>
-    private string getSaveFilePath()
+    private string GetSaveFilePath()
     {
       string path = EditorUtility.SaveFilePanelInProject("Save Bonsai Canvas", "NewBonsaiBT", "asset", "Select a destination to save the canvas.");
 
@@ -159,12 +156,9 @@ namespace Bonsai.Designer
     {
       try
       {
-
         var behaviour = ScriptableObject.CreateInstance(t) as Core.BehaviourNode;
         AssetDatabase.AddObjectToAsset(behaviour, bt);
-
         behaviour.Tree = bt;
-
         return behaviour;
       }
 
@@ -184,9 +178,7 @@ namespace Bonsai.Designer
     {
       var behaviour = ScriptableObject.CreateInstance<T>();
       AssetDatabase.AddObjectToAsset(behaviour, bt);
-
       behaviour.Tree = bt;
-
       return behaviour;
     }
 
@@ -212,13 +204,10 @@ namespace Bonsai.Designer
       //
       // This means that we need to have a persistent directoy to store temp
       // assets.
-
       var bt = ScriptableObject.CreateInstance<Core.BehaviourTree>();
-
       AssetDatabase.CreateAsset(bt, path);
       CreateBlackboard(bt);
       AssetDatabase.SaveAssets();
-
       return bt;
     }
 
@@ -226,84 +215,79 @@ namespace Bonsai.Designer
     /// Creates a new temporary canvas.
     /// </summary>
     /// <returns></returns>
-    private Core.BehaviourTree createNew()
+    private Core.BehaviourTree CreateNew()
     {
-      _window.ShowNotification(new GUIContent("New Tree Created"));
+      window.ShowNotification(new GUIContent("New Tree Created"));
       return CreateBehaviourTree(getTemporaryPath());
     }
 
     // Create a new temp canvas on an empty window or with a temp canvas..
-    private void createNewOnto_Window_WithTempOrEmpty()
+    private void CreateNewOnto_Window_WithTempOrEmpty()
     {
-      _window.SetTree(createNew());
+      window.SetTree(CreateNew());
     }
 
     // Saves the current active canvas then loads a new canvas.
-    private void createNewOnto_Window_WithSavedCanvas()
+    private void CreateNewOnto_Window_WithSavedCanvas()
     {
       // Save the old canvas to avoid loss.
       AssetDatabase.SaveAssets();
 
-      _window.SetTree(createNew());
+      window.SetTree(CreateNew());
     }
 
     // Load a canvas to a window that has no canvas active.
-    private void loadOnto_EmptyWindow()
+    private void LoadOntoEmptyWindow()
     {
-      loadTree(getCanvasFilePath());
+      LoadTree(GetCanvasFilePath());
     }
 
     // Load a canvas to a window that has a temp canvas active.
-    private void loadOnto_Window_WithTempCanvas()
+    private void LoadOnto_Window_WithTempCanvas()
     {
-      string path = getCanvasFilePath();
+      string path = GetCanvasFilePath();
 
       if (path != null)
       {
-
         // Get rid of the temporary canvas.
-        AssetDatabase.DeleteAsset(getCurrentTreePath());
-
-        loadTree(path);
+        AssetDatabase.DeleteAsset(GetCurrentTreePath());
+        LoadTree(path);
       }
     }
 
     // Load a canvas to a window that has a saved canvas active.
-    private void loadOnto_Window_WithSavedCanvas()
+    private void LoadOnto_Window_WithSavedCanvas()
     {
-      string path = getCanvasFilePath();
+      string path = GetCanvasFilePath();
 
       if (path != null)
       {
-
         // Save the old canvas.
-        save();
-
-        loadTree(path);
+        Save();
+        LoadTree(path);
       }
     }
 
     // Makes the temporary canvas into a saved canvas.
-    private void saveTempAs()
+    private void SaveTempAs()
     {
-      string path = getSaveFilePath();
+      string path = GetSaveFilePath();
 
       if (path != null)
       {
 
-        AssetDatabase.MoveAsset(getCurrentTreePath(), path);
-        save();
+        AssetDatabase.MoveAsset(GetCurrentTreePath(), path);
+        Save();
       }
     }
 
     // Copies the current active canvas to a new location.
-    private void saveCloneAs()
+    private void SaveCloneAs()
     {
-      string path = getSaveFilePath();
+      string path = GetSaveFilePath();
 
       if (path != null)
       {
-
         // There seems to be a bug in the AssetDatabase.Copy
         // The asset hierarchy is not preserved since it follows a 
         // lexicographical traversal to copy.
@@ -313,38 +297,37 @@ namespace Bonsai.Designer
         // asset in the copy while the original main asset becomes a subasset.
 
         // Rename subassets such that they are lexicographically after the main asset.
-        foreach (var node in _window.Editor.Canvas)
+        foreach (var node in window.Editor.Canvas)
         {
-          node.Behaviour.name = _window.Tree.name + node.Behaviour.GetType().Name;
+          node.Behaviour.name = window.Tree.name + node.Behaviour.GetType().Name;
         }
 
-        AssetDatabase.CopyAsset(getCurrentTreePath(), path);
-
-        save();
+        AssetDatabase.CopyAsset(GetCurrentTreePath(), path);
+        Save();
       }
     }
 
     // Saves the current canvas (not a temp canvas).
-    private void save()
+    private void Save()
     {
       // Sort the nodes in pre order so it is easier to clone the tree.
-      _window.Tree.SortNodes();
+      window.Tree.SortNodes();
 
-      saveTreeMetaData();
+      SaveTreeMetaData();
       AssetDatabase.SaveAssets();
 
-      _window.ShowNotification(new GUIContent("Tree Saved"));
+      window.ShowNotification(new GUIContent("Tree Saved"));
     }
 
-    private void saveTreeMetaData()
+    private void SaveTreeMetaData()
     {
-      foreach (var editorNode in _window.Editor.Canvas)
+      foreach (var editorNode in window.Editor.Canvas)
       {
         editorNode.Behaviour.bonsaiNodePosition = editorNode.bodyRect.position;
       }
 
-      _window.Tree.panPosition = _window.Editor.Canvas.panOffset;
-      _window.Tree.zoomPosition = _window.Editor.Canvas.zoom;
+      window.Tree.panPosition = window.Editor.Canvas.panOffset;
+      window.Tree.zoomPosition = window.Editor.Canvas.zoom;
     }
 
     #endregion
@@ -352,68 +335,68 @@ namespace Bonsai.Designer
     /// <summary>
     /// Handles deleting temporary canvas or saving valid canvas.
     /// </summary>
-    internal void OnCleanup()
+    public void OnCleanup()
     {
       // Only save/delete things if we are in edit mode.
-      if (_window.EditorMode != BonsaiWindow.Mode.Edit)
+      if (window.EditorMode != BonsaiWindow.Mode.Edit)
       {
         return;
       }
 
-      SaveState state = _saveFSM.CurrentState.Value;
+      SaveState state = saveFsm.CurrentState.Value;
 
       if (state == SaveState.TempTree)
       {
-        AssetDatabase.DeleteAsset(getCurrentTreePath());
+        AssetDatabase.DeleteAsset(GetCurrentTreePath());
       }
 
       else if (state == SaveState.SavedTree)
       {
-        save();
+        Save();
       }
     }
 
     /*
      * These are conditions used the save FSM to know when to transition.
      *  */
-    private bool isNewRequested() { return _saveOp == SaveOp.New; }
-    private bool isLoadRequested() { return _saveOp == SaveOp.Load; }
-    private bool isSaveRequested() { return _saveOp == SaveOp.Save; }
-    private bool isSaveAsRequested() { return _saveOp == SaveOp.SaveAs; }
+    private bool IsNewRequested() { return requestedSaveOp == SaveOp.New; }
+    private bool IsLoadRequested() { return requestedSaveOp == SaveOp.Load; }
+    private bool IsSaveRequested() { return requestedSaveOp == SaveOp.Save; }
+    private bool IsSaveAsRequested() { return requestedSaveOp == SaveOp.SaveAs; }
 
     /*
      * These are the events that drive the save manager.
      * Whenever one of this is fired, the save operation is set 
      * and the save FSM updated.
      * */
-    internal void RequestNew() { _saveOp = SaveOp.New; _saveFSM.Update(); }
-    internal void RequestLoad() { _saveOp = SaveOp.Load; _saveFSM.Update(); }
-    internal void RequestSave() { _saveOp = SaveOp.Save; _saveFSM.Update(); }
-    internal void RequestSaveAs() { _saveOp = SaveOp.SaveAs; _saveFSM.Update(); }
+    public void RequestNew() { requestedSaveOp = SaveOp.New; saveFsm.Update(); }
+    public void RequestLoad() { requestedSaveOp = SaveOp.Load; saveFsm.Update(); }
+    public void RequestSave() { requestedSaveOp = SaveOp.Save; saveFsm.Update(); }
+    public void RequestSaveAs() { requestedSaveOp = SaveOp.SaveAs; saveFsm.Update(); }
 
     private string getTemporaryPath()
     {
-      return kTempCanvasPath + kTempFileName + _window.GetInstanceID().ToString() + ".asset";
+      return kTempCanvasPath + kTempFileName + window.GetInstanceID().ToString() + ".asset";
     }
 
-    internal void SetState(SaveState state)
+    public void SetState(SaveState state)
     {
-      _saveFSM.SetCurrentState(state);
+      saveFsm.SetCurrentState(state);
     }
 
-    internal bool IsInNoCanvasState()
+    public bool IsInNoCanvasState()
     {
-      return _saveFSM.CurrentState.Value == SaveState.NoTree;
+      return saveFsm.CurrentState.Value == SaveState.NoTree;
     }
 
-    internal SaveState CurrentState()
+    public SaveState CurrentState()
     {
-      return _saveFSM.CurrentState.Value;
+      return saveFsm.CurrentState.Value;
     }
 
-    private string getCurrentTreePath()
+    private string GetCurrentTreePath()
     {
-      return AssetDatabase.GetAssetPath(_window.Tree);
+      return AssetDatabase.GetAssetPath(window.Tree);
     }
   }
 }

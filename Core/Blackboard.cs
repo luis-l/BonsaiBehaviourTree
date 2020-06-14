@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Collections.Generic;
 
 using UnityEngine;
+using Bonsai.Utility;
 
 namespace Bonsai.Core
 {
@@ -13,7 +14,7 @@ namespace Bonsai.Core
   ///</summary>
   public class Blackboard : ScriptableObject, ISerializationCallbackReceiver
   {
-    private Dictionary<string, RegisterBase> _memory = new Dictionary<string, RegisterBase>();
+    private Dictionary<string, RegisterBase> memory = new Dictionary<string, RegisterBase>();
 
     /// <summary>
     /// The dictionary containing the string-Register pairs.
@@ -22,17 +23,17 @@ namespace Bonsai.Core
     {
       get
       {
-        return _memory;
+        return memory;
       }
     }
 
     // Used to serailize the register names.
     [SerializeField, HideInInspector]
-    private List<string> _keys = new List<string>();
+    private readonly List<string> keys = new List<string>();
 
     // Used to serialize the register type.
     [SerializeField, HideInInspector]
-    private List<string> _types = new List<string>();
+    private readonly List<string> types = new List<string>();
 
     void OnEnable()
     {
@@ -44,7 +45,7 @@ namespace Bonsai.Core
     ///</summary>
     public void Add<T>(string key)
     {
-      if (_memory.ContainsKey(key))
+      if (memory.ContainsKey(key))
       {
         Debug.LogWarning("Cannot Add. Register " + key + " already exists in the Blackboard.");
       }
@@ -52,7 +53,7 @@ namespace Bonsai.Core
       else
       {
         var r = new Register<T>();
-        _memory.Add(key, r);
+        memory.Add(key, r);
       }
     }
 
@@ -78,7 +79,7 @@ namespace Bonsai.Core
     /// </summary>
     public void Add(string key, Type t)
     {
-      if (_memory.ContainsKey(key))
+      if (memory.ContainsKey(key))
       {
         Debug.LogWarning("Cannot Add. Register " + key + " already exists in the Blackboard.");
       }
@@ -92,7 +93,7 @@ namespace Bonsai.Core
         Type registerType = genericRegType.MakeGenericType(args);
         var register = Activator.CreateInstance(registerType) as RegisterBase;
 
-        _memory.Add(key, register);
+        memory.Add(key, register);
       }
     }
 
@@ -101,12 +102,12 @@ namespace Bonsai.Core
     ///</summary>
     public void Remove(string key)
     {
-      _memory.Remove(key);
+      memory.Remove(key);
     }
 
     public void Clear()
     {
-      _memory.Clear();
+      memory.Clear();
     }
 
     /// <summary>
@@ -143,7 +144,7 @@ namespace Bonsai.Core
         return register.value;
       }
 
-      return default(T);
+      return default;
     }
 
     /// <summary>
@@ -153,12 +154,12 @@ namespace Bonsai.Core
     /// <returns></returns>
     public object Get(string key)
     {
-      return _memory[key].GetValue();
+      return memory[key].GetValue();
     }
 
     public RegisterBase GetRegister(string key)
     {
-      return _memory[key];
+      return memory[key];
     }
 
     /// <summary>
@@ -174,7 +175,7 @@ namespace Bonsai.Core
         return null;
       }
 
-      var register = _memory[key] as Register<T>;
+      var register = memory[key] as Register<T>;
 
       if (register == null)
       {
@@ -187,7 +188,7 @@ namespace Bonsai.Core
     // Test if the key exists in the memory dictionary.
     public bool Exists(string key)
     {
-      return _memory.ContainsKey(key);
+      return memory.ContainsKey(key);
     }
 
     /// <summary>
@@ -195,7 +196,7 @@ namespace Bonsai.Core
     /// </summary>
     public int Count
     {
-      get { return _memory.Count; }
+      get { return memory.Count; }
     }
 
     /// <summary>
@@ -281,20 +282,20 @@ namespace Bonsai.Core
 
     public void OnAfterDeserialize()
     {
-      _memory = new Dictionary<string, RegisterBase>();
+      memory = new Dictionary<string, RegisterBase>();
 
-      if (_keys.Count != _types.Count)
+      if (keys.Count != types.Count)
       {
         Debug.LogError("Serialization failure. The lengths of the key and type lists are not the same.");
       }
 
-      int length = Math.Min(_keys.Count, _types.Count);
+      int length = Math.Min(keys.Count, types.Count);
 
       for (int i = 0; i < length; ++i)
       {
 
-        string key = _keys[i];
-        Type type = Type.GetType(_types[i]);
+        string key = keys[i];
+        Type type = Type.GetType(types[i]);
 
         Add(key, type);
       }
@@ -302,17 +303,17 @@ namespace Bonsai.Core
 
     public void OnBeforeSerialize()
     {
-      _keys.Clear();
-      _types.Clear();
+      keys.Clear();
+      types.Clear();
 
-      foreach (var kvp in _memory)
+      foreach (var kvp in memory)
       {
 
         string key = kvp.Key;
         string typename = kvp.Value.GetValueType().AssemblyQualifiedName;
 
-        _keys.Add(key);
-        _types.Add(typename);
+        keys.Add(key);
+        types.Add(typename);
       }
     }
 
@@ -328,34 +329,35 @@ namespace Bonsai.Core
 
     static Blackboard()
     {
-      collectRegisterTypes();
+      CollectRegisterTypes();
     }
 
-    private static void collectRegisterTypes()
+    private static void CollectRegisterTypes()
     {
-      var types = new List<Type>();
+      var types = new List<Type>
+      {
+        typeof(GameObject),
+        typeof(Component),
+        typeof(Transform),
 
-      types.Add(typeof(GameObject));
-      types.Add(typeof(Component));
-      types.Add(typeof(Transform));
+        typeof(int),
+        typeof(bool),
+        typeof(float),
+        typeof(string),
+        typeof(Vector2),
+        typeof(Vector3),
+        typeof(Quaternion),
 
-      types.Add(typeof(int));
-      types.Add(typeof(bool));
-      types.Add(typeof(float));
-      types.Add(typeof(string));
-      types.Add(typeof(Vector2));
-      types.Add(typeof(Vector3));
-      types.Add(typeof(Quaternion));
-
-      types.Add(typeof(List<>));
+        typeof(List<>)
+      };
 
       registerTypes = types.ToArray();
-      registerTypeNames = types.Select(t => t.NiceName()).ToArray();
+      registerTypeNames = types.Select(t => TypeExtensions.NiceName(t)).ToArray();
     }
 
     private static readonly Type kUnityObjectType = typeof(UnityEngine.Object);
 
-    public static bool isUnityObject(Type t)
+    public static bool IsUnityObject(Type t)
     {
       return kUnityObjectType.IsAssignableFrom(t);
     }

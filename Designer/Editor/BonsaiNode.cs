@@ -28,8 +28,6 @@ namespace Bonsai.Designer
     protected BonsaiInputPort inputPort;
     protected BonsaiOutputPort outputPort;
 
-    private readonly Texture icon;
-
     // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
     public static readonly Vector2 kDefaultSize = Vector2.one * 100;
 
@@ -78,7 +76,6 @@ namespace Bonsai.Designer
       }
 
       this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
-      this.icon = icon;
 
       if (icon)
       {

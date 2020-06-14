@@ -242,7 +242,7 @@ namespace Bonsai.Designer
       string text = behaviour.title;
 
       // Fall back to node name if there is no brief supplied.
-      if (text == null || text.Length == 0)
+      if (string.IsNullOrEmpty(text))
       {
         text = NiceName();
       }
@@ -260,12 +260,11 @@ namespace Bonsai.Designer
         text.Append(NiceName());
       }
 
-      string comment = behaviour.comment;
-      if (comment != null && comment.Length != 0)
+      if (!string.IsNullOrEmpty(behaviour.comment))
       {
         text.AppendLine();
         text.AppendLine();
-        text.Append(comment);
+        text.Append(behaviour.comment);
       }
 
       return text.ToString();

@@ -8,6 +8,7 @@ using Bonsai.Core;
 using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Bonsai.Designer
 {
@@ -769,12 +770,22 @@ namespace Bonsai.Designer
           }
 
           string menuPath = "Uncategorized/";
-          string texName = "Play";
+
+          // Service base class is abstract. For Service types, default to Service texture.
+          string texName = typeof(Service).IsAssignableFrom(type) ? "Service" : "Play";
 
           if (attrib != null)
           {
-            menuPath = attrib.menuPath;
-            texName = attrib.texturePath;
+            if (!string.IsNullOrEmpty(attrib.menuPath))
+            {
+              menuPath = attrib.menuPath;
+            }
+
+            // Texxture names are optional. Use only if specified.
+            if (!string.IsNullOrEmpty(attrib.texturePath))
+            {
+              texName = attrib.texturePath;
+            }
           }
 
           bool bCreateInput = false;

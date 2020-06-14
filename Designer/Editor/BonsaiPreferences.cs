@@ -55,10 +55,17 @@ namespace Bonsai.Designer
     public float runningConnectionWidth = 4f;
 
     [Header("Node Body Layout")]
-    public Vector2 nodeBodyPadding = new Vector2(80f, 50f);
-    public Vector2 nodeContentOffset = new Vector2(20f, 5f);
-    public Vector2 nodeContentPadding = new Vector2(60f, 10f);
-    public float portHeight = 15f;
+    [Tooltip("Controls additional node size.")]
+    public Vector2 nodeSizePadding = new Vector2(12f, 6f);
+
+    [Tooltip("Controls the thickness of left and right edges.")]
+    public float nodeWidthPadding = 12f;
+
+    [Tooltip("Controls how thick the ports are. Changes the nodes overall height too.")]
+    public float portHeight = 20f;
+
+    [Tooltip("Control how far the ports extend in the node.")]
+    public float portWidthTrim = 50f;
 
     private static BonsaiPreferences instance;
 

@@ -27,7 +27,7 @@ MonoBehaviour:
   compositeColor: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
   decoratorColor: {r: 0.4553469, g: 0.38719293, b: 0.7264151, a: 1}
   conditionalColor: {r: 0.36663404, g: 0.7264151, b: 0.72088, a: 1}
-  serviceColor: {r: 0.9339623, g: 0.57658637, b: 0.110137045, a: 1}
+  serviceColor: {r: 0.990566, g: 0.6200383, b: 0.13550198, a: 1}
   taskColor: {r: 0.59679204, g: 0.6415094, b: 0.5355998, a: 1}
   defaultNodeBackgroundColor: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 1}
   selectedColor: {r: 0.3443396, g: 0.62303853, b: 1, a: 1}
@@ -44,7 +44,7 @@ MonoBehaviour:
   defaultConnectionColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 1}
   defaultConnectionWidth: 4
   runningConnectionWidth: 4
-  nodeBodyPadding: {x: 20, y: 50}
-  nodeContentOffset: {x: 20, y: 5}
-  nodeContentPadding: {x: 50, y: 5}
-  portHeight: 18
+  nodeBodyPadding: {x: 12, y: 6}
+  nodeContentWidthPadding: 12
+  portHeight: 20
+  portWidthTrim: 50

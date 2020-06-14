@@ -342,12 +342,6 @@ namespace Bonsai.Designer
     // Render the node body contents.
     private void DrawNodeContent(BonsaiNode node)
     {
-      // Spacing for input.
-      if (node.Input != null)
-      {
-        GUILayout.Space(node.Input.bodyRect.height);
-      }
-
       GUILayout.Box(node.HeaderContent, node.HeaderStyle);
       GUILayout.Box(node.BodyContent, node.BodyStyle);
     }
@@ -523,9 +517,11 @@ namespace Bonsai.Designer
       BonsaiOutputPort output = node.Output;
       BonsaiInputPort input = node.Input;
 
+      float portWidth = nodeRect.width - Preferences.portWidthTrim;
+
       if (input != null)
       {
-        input.bodyRect.width = nodeRect.width - Preferences.nodeContentOffset.x * 2f;
+        input.bodyRect.width = portWidth;
 
         // Place the port above the node
         float x = nodeRect.x + (nodeRect.width - input.bodyRect.width) / 2f;
@@ -537,7 +533,7 @@ namespace Bonsai.Designer
 
       if (output != null)
       {
-        output.bodyRect.width = nodeRect.width - Preferences.nodeContentOffset.x * 2f;
+        output.bodyRect.width = portWidth;
 
         // Place the port below the node.
         float x = nodeRect.x + (nodeRect.width - output.bodyRect.width) / 2f;

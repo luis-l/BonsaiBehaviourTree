@@ -278,8 +278,6 @@ namespace Bonsai.Designer
       style.fontSize = 15;
       style.fontStyle = FontStyle.Bold;
       style.imagePosition = ImagePosition.ImageLeft;
-      style.contentOffset = BonsaiPreferences.Instance.nodeContentOffset;
-
       return style;
     }
 
@@ -287,7 +285,6 @@ namespace Bonsai.Designer
     {
       var style = new GUIStyle();
       style.normal.textColor = Color.white;
-      style.contentOffset = BonsaiPreferences.Instance.nodeContentOffset;
       return style;
     }
 
@@ -295,32 +292,38 @@ namespace Bonsai.Designer
     {
       var prefs = BonsaiPreferences.Instance;
 
+      float portHeights = 2f * prefs.portHeight;
+      Vector2 contentSize = MinimumRequiredContentSize();
+
+      bodyRect.size = contentSize
+        + 2f * prefs.nodeSizePadding
+        + 2f * Vector2.right * prefs.nodeWidthPadding
+        + Vector2.up * portHeights;
+
+      contentRect.width = bodyRect.width - 2f * prefs.nodeWidthPadding;
+      contentRect.height = bodyRect.height - portHeights;
+      contentRect.center = bodyRect.center;
+
+      // Place content relative to the content rect.
+      Vector2 contentOffset = contentRect.position + prefs.nodeSizePadding;
+      HeaderStyle.contentOffset = contentOffset;
+      BodyStyle.contentOffset = contentOffset;
+    }
+
+    private Vector2 MinimumRequiredContentSize()
+    {
       Vector2 headerSize = HeaderContentSize();
       Vector2 bodySize = BodyContentSize();
-
-      // The minium size to fit content.
-      var contentSize = new Vector2(
-        Mathf.Max(headerSize.x, bodySize.x),
-        headerSize.y + bodySize.y);
-
-      bodyRect.size = contentSize + prefs.nodeBodyPadding + prefs.nodeContentOffset;
-
-      contentRect.x = prefs.nodeContentOffset.x / 2f;
-      contentRect.y = prefs.portHeight;
-      contentRect.width = bodyRect.width - prefs.nodeContentOffset.x;
-      contentRect.height = bodyRect.height - prefs.portHeight * 2f;
-
-      // Set the fixed width and height so icons are contrained and do not expand.
-      Vector2 headerFixedSize = headerSize + prefs.nodeContentPadding;
-      HeaderStyle.fixedWidth = headerFixedSize.x;
-      HeaderStyle.fixedHeight = headerFixedSize.y;
+      float maxContentWidth = Mathf.Max(headerSize.x, bodySize.x);
+      float totalContentHeight = headerSize.y + bodySize.y;
+      return new Vector2(maxContentWidth, totalContentHeight);
     }
 
     private Vector2 HeaderContentSize()
     {
       // Do not consider icon size. Manually set a size from text.
       // Round for sharp GUI content.
-      Vector2 size = HeaderStyle.CalcSize(new GUIContent(HeaderContent.text));
+      Vector2 size = HeaderStyle.CalcSize(HeaderContent);
       size.x = Mathf.Round(size.x);
       size.y = Mathf.Round(size.y);
       return size;

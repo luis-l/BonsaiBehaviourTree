@@ -44,7 +44,8 @@ MonoBehaviour:
   defaultConnectionColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 1}
   defaultConnectionWidth: 4
   runningConnectionWidth: 4
-  nodeBodyPadding: {x: 12, y: 6}
-  nodeContentWidthPadding: 12
+  nodeSizePadding: {x: 12, y: 6}
+  nodeWidthPadding: 12
   portHeight: 20
   portWidthTrim: 50
+  iconSize: 32

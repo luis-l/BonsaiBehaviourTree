@@ -21,7 +21,6 @@ namespace Bonsai.Designer
 
     public GUIStyle HeaderStyle { get; } = CreateHeaderStyle();
     public GUIStyle BodyStyle { get; } = CreateBodyStyle();
-
     public GUIContent HeaderContent { get; } = new GUIContent();
     public GUIContent BodyContent { get; } = new GUIContent();
 
@@ -31,7 +30,7 @@ namespace Bonsai.Designer
     private readonly Texture icon;
 
     // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
-    public static readonly Vector2 kDefaultSize = Vector2.one * BonsaiEditor.SnapStep * 8f;
+    public static readonly Vector2 kDefaultSize = Vector2.one * 100;
 
     public readonly bool bCanHaveMultipleChildren = true;
 
@@ -79,6 +78,11 @@ namespace Bonsai.Designer
 
       this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
       this.icon = icon;
+
+      if (icon)
+      {
+        HeaderContent = new GUIContent(icon);
+      }
     }
 
     /// <summary>
@@ -228,12 +232,6 @@ namespace Bonsai.Designer
     {
       HeaderContent.text = HeaderText();
       BodyContent.text = BodyText();
-
-      if (icon)
-      {
-        HeaderContent.image = icon;
-      }
-
       ResizeToFitContent();
     }
 
@@ -301,7 +299,8 @@ namespace Bonsai.Designer
 
       contentRect.width = bodyRect.width - 2f * prefs.nodeWidthPadding;
       contentRect.height = bodyRect.height - portHeights;
-      contentRect.center = bodyRect.center;
+      contentRect.x = prefs.nodeWidthPadding;
+      contentRect.y = prefs.portHeight;
 
       // Place content relative to the content rect.
       Vector2 contentOffset = contentRect.position + prefs.nodeSizePadding;
@@ -320,11 +319,17 @@ namespace Bonsai.Designer
 
     private Vector2 HeaderContentSize()
     {
-      // Do not consider icon size. Manually set a size from text.
+      // Manually add the icon size specified in preferences.
+      // This was done because using CalcSize(HeaderContent) (with the icon set in GUIContent's image)
+      // caused the nodes to be incorrectly sized when opening a tree from the inspector.
+      // e.g. Clicking on a GameObjects tree asset from Bonsai Tree Component.
+      float iconSize = BonsaiPreferences.Instance.iconSize;
+      Vector2 size = HeaderStyle.CalcSize(new GUIContent(HeaderText()));
+
       // Round for sharp GUI content.
-      Vector2 size = HeaderStyle.CalcSize(HeaderContent);
-      size.x = Mathf.Round(size.x);
-      size.y = Mathf.Round(size.y);
+      size.x = Mathf.Round(size.x + iconSize);
+      size.y = Mathf.Round(Mathf.Max(size.y, iconSize));
+
       return size;
     }
 

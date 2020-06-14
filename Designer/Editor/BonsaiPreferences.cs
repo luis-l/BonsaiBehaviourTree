@@ -67,7 +67,9 @@ namespace Bonsai.Designer
     [Tooltip("Control how far the ports extend in the node.")]
     public float portWidthTrim = 50f;
 
-    private static BonsaiPreferences instance;
+    public float iconSize = 32f;
+
+    private static BonsaiPreferences instance = null;
 
     public static BonsaiPreferences Instance
     {
@@ -88,7 +90,7 @@ namespace Bonsai.Designer
 
     public static BonsaiPreferences LoadDefaultPreferences()
     {
-      BonsaiPreferences prefs = Resources.Load<BonsaiPreferences>("DefaultBonsaiPreferences");
+      var prefs = Resources.Load<BonsaiPreferences>("DefaultBonsaiPreferences");
 
       if (prefs == null)
       {

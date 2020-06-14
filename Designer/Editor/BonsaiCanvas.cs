@@ -155,7 +155,6 @@ namespace Bonsai.Designer
         BonsaiNode node = CreateNode(behaviour);
         node.Behaviour = behaviour;
         node.bodyRect.position = behaviour.bonsaiNodePosition;
-
         nodeMap.Add(behaviour, node);
       }
 

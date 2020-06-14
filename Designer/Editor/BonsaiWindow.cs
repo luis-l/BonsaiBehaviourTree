@@ -1,12 +1,8 @@
 ﻿
-using System.Collections.Generic;
-
-using UnityEngine;
+using Bonsai.Core;
 using UnityEditor;
 using UnityEditor.Callbacks;
-
-using Bonsai.Core;
-using UnityEditor.PackageManager.UI;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
@@ -363,7 +359,6 @@ namespace Bonsai.Designer
         windowToUse.SetTree(treeSelected);
         windowToUse.saveManager.InitState();
         windowToUse.Repaint();
-
         return true;
       }
 

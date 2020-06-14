@@ -1,6 +1,7 @@
 ﻿
 using UnityEngine;
 using System;
+using System.Text;
 
 namespace Bonsai.Core
 {
@@ -59,6 +60,23 @@ namespace Bonsai.Core
     private void UpdateWaitTime()
     {
       timer.WaitTime = interval + ((float)Tree.Random.NextDouble() * 2f * randomDeviation - randomDeviation);
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      if (randomDeviation == 0)
+      {
+        builder.AppendFormat("Tick {0:0.00}s", interval);
+      }
+      else
+      {
+        float lower = interval - randomDeviation;
+        float upper = interval + randomDeviation;
+        builder.AppendFormat("Tick {0:0.00}s - {1:0.00}s", lower, upper);
+      }
+
+      builder.AppendLine();
+      builder.Append(restartTimerOnEnter ? "Restart timer on enter" : "Resume timer on enter");
     }
   }
 

@@ -1,6 +1,7 @@
 ﻿
 using System.Text;
 using Bonsai.Core;
+using Bonsai.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -304,8 +305,12 @@ namespace Bonsai.Designer
 
       // Place content relative to the content rect.
       Vector2 contentOffset = contentRect.position + prefs.nodeSizePadding;
-      HeaderStyle.contentOffset = contentOffset;
-      BodyStyle.contentOffset = contentOffset;
+      HeaderStyle.contentOffset = MathExtensions.Round(contentOffset);
+      BodyStyle.contentOffset = MathExtensions.Round(contentOffset);
+
+      // Round for UI Sharpness.
+      contentRect = MathExtensions.Round(contentRect);
+      bodyRect = MathExtensions.Round(bodyRect);
     }
 
     private Vector2 MinimumRequiredContentSize()
@@ -325,20 +330,12 @@ namespace Bonsai.Designer
       // e.g. Clicking on a GameObjects tree asset from Bonsai Tree Component.
       float iconSize = BonsaiPreferences.Instance.iconSize;
       Vector2 size = HeaderStyle.CalcSize(new GUIContent(HeaderText()));
-
-      // Round for sharp GUI content.
-      size.x = Mathf.Round(size.x + iconSize);
-      size.y = Mathf.Round(Mathf.Max(size.y, iconSize));
-
-      return size;
+      return new Vector2(size.x + iconSize, Mathf.Max(size.y, iconSize));
     }
 
     private Vector2 BodyContentSize()
     {
-      Vector2 size = BodyStyle.CalcSize(BodyContent);
-      size.x = Mathf.Round(size.x);
-      size.y = Mathf.Round(size.y);
-      return size;
+      return BodyStyle.CalcSize(BodyContent);
     }
 
     private string NiceName()

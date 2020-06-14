@@ -1,11 +1,8 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-using UnityEditor.Callbacks;
-
 using Bonsai.Utility;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {

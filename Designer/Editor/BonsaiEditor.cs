@@ -8,7 +8,6 @@ using Bonsai.Core;
 using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace Bonsai.Designer
 {
@@ -21,15 +20,15 @@ namespace Bonsai.Designer
     public BonsaiCanvas Canvas { get; private set; }
     public Coord Coordinates { get; private set; }
 
-    private static Dictionary<Type, NodeTypeProperties> _behaviourNodes;
+    private static Dictionary<Type, NodeTypeProperties> behaviourNodes;
 
-    private BonsaiNode _nodeToPositionUnderMouse = null;
+    private BonsaiNode nodeToPositionUnderMouse = null;
 
     // Remembers which nodes are currently being referenced by another node.
-    private HashSet<BehaviourNode> _referencedNodes = new HashSet<BehaviourNode>();
+    private readonly HashSet<BehaviourNode> referencedNodes = new HashSet<BehaviourNode>();
 
     // The types of node which can store refs to other nodes.
-    internal HashSet<Type> referenceContainerTypes = new HashSet<Type>();
+    public readonly HashSet<Type> referenceContainerTypes = new HashSet<Type>();
 
     /// <summary>
     /// The multiple that grid snapping rounds to.
@@ -37,11 +36,15 @@ namespace Bonsai.Designer
     /// </summary>
     public static float SnapStep { get { return Preferences.snapStep; } }
 
+    private readonly GUIStyle modeStatusStyle = new GUIStyle { fontSize = 36, fontStyle = FontStyle.Bold };
+    private readonly Rect modeStatusRect = new Rect(20f, 20f, 250f, 150f);
+
     public BonsaiEditor(BonsaiWindow window)
     {
       this.window = window;
       referenceContainerTypes.Add(typeof(Interruptor));
       referenceContainerTypes.Add(typeof(Guard));
+      modeStatusStyle.normal.textColor = new Color(1f, 1f, 1f, 0.2f);
     }
 
     public void SetBehaviourTree(BehaviourTree tree)
@@ -146,33 +149,33 @@ namespace Bonsai.Designer
       TreeIterator<BonsaiNode>.Traverse(root, subtreeDrag);
     }
 
-    internal void UpdateOrderIndices()
+    public void UpdateOrderIndices()
     {
       window.tree.CalculateTreeOrders();
     }
 
-    internal void SetReferencedNodes(IEnumerable<BehaviourNode> nodes)
+    public void SetReferencedNodes(IEnumerable<BehaviourNode> nodes)
     {
       if (nodes == null)
       {
         return;
       }
 
-      _referencedNodes.Clear();
+      referencedNodes.Clear();
       foreach (BehaviourNode node in nodes)
       {
-        _referencedNodes.Add(node);
+        referencedNodes.Add(node);
       }
     }
 
-    internal void ClearReferencedNodes()
+    public void ClearReferencedNodes()
     {
-      _referencedNodes.Clear();
+      referencedNodes.Clear();
     }
 
     #endregion
 
-    #region Aggregate Drawing Methods (Draw all nodes, all ports, ...etc)
+    #region Editor Drawing
 
     public void DrawStaticGrid()
     {
@@ -203,7 +206,7 @@ namespace Bonsai.Designer
       foreach (var node in Canvas.NodesInDrawOrder)
       {
         Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
-        DrawPorts(node);
+        Drawer.DrawPorts(Coordinates, node);
       }
     }
 
@@ -218,10 +221,61 @@ namespace Bonsai.Designer
       }
     }
 
+    /// <summary>
+    /// Draws the preview connection from the selected output port and the mouse.
+    /// </summary>
+    private void DrawConnectionPreview()
+    {
+      // Draw connection between mouse and the port.
+      if (window.inputHandler.IsMakingConnection)
+      {
+        var start = Coordinates.CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
+        var end = Event.current.mousePosition;
+        Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
+        window.Repaint();
+      }
+    }
+
+    private void DrawAreaSelection()
+    {
+      if (window.inputHandler.IsAreaSelecting)
+      {
+        // Construct and display the rect.
+        Rect selectionRect = window.inputHandler.SelectionScreenSpace();
+        Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
+        Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
+
+        window.Repaint();
+      }
+    }
+
+    /// <summary>
+    /// Draw the window mode in the background.
+    /// </summary>
+    public void DrawMode()
+    {
+      if (!window.tree)
+      {
+        GUI.Label(modeStatusRect, new GUIContent("No Tree Set"), modeStatusStyle);
+      }
+
+      else if (window.inputHandler.IsRefLinking)
+      {
+        GUI.Label(modeStatusRect, new GUIContent("Link References"), modeStatusStyle);
+      }
+
+      else if (window.GetMode() == BonsaiWindow.Mode.Edit)
+      {
+        GUI.Label(modeStatusRect, new GUIContent("Edit"), modeStatusStyle);
+      }
+
+      else
+      {
+        GUI.Label(modeStatusRect, new GUIContent("View"), modeStatusStyle);
+      }
+    }
+
     #endregion
-
-    #region Canvas Unit Drawing Methods (Node, Ports, ... etc)
-
 
     private Color NodeStatusColor(BonsaiNode node)
     {
@@ -288,7 +342,7 @@ namespace Bonsai.Designer
     [Pure]
     private bool IsNodeReferenced(BonsaiNode node)
     {
-      return _referencedNodes.Contains(node.Behaviour);
+      return referencedNodes.Contains(node.Behaviour);
     }
 
     [Pure]
@@ -327,156 +381,25 @@ namespace Bonsai.Designer
       return false;
     }
 
-    private void DrawPorts(BonsaiNode node)
-    {
-      Rect nodeRect = node.bodyRect;
-      BonsaiOutputPort output = node.Output;
-      BonsaiInputPort input = node.Input;
-
-      float portWidth = nodeRect.width - Preferences.portWidthTrim;
-
-      if (input != null)
-      {
-        input.bodyRect.width = portWidth;
-
-        // Place the port above the node
-        float x = nodeRect.x + (nodeRect.width - input.bodyRect.width) / 2f;
-        float y = nodeRect.yMin;
-        input.bodyRect.position = new Vector2(x, y);
-
-        DrawPort(input.bodyRect);
-      }
-
-      if (output != null)
-      {
-        output.bodyRect.width = portWidth;
-
-        // Place the port below the node.
-        float x = nodeRect.x + (nodeRect.width - output.bodyRect.width) / 2f;
-        float y = nodeRect.yMax - output.bodyRect.height;
-        output.bodyRect.position = new Vector2(x, y);
-
-        DrawPort(output.bodyRect);
-      }
-    }
-
-    private void DrawPort(Rect portRect)
-    {
-      // Convert the body rect from canvas to screen space.
-      portRect.position = Coordinates.CanvasToScreenSpace(portRect.position);
-      GUI.DrawTexture(portRect, Preferences.portTexture, ScaleMode.StretchToFill);
-    }
-
-    /// <summary>
-    /// Draws the preview connection from the selected output port and the mouse.
-    /// </summary>
-    private void DrawConnectionPreview()
-    {
-      // Draw connection between mouse and the port.
-      if (window.inputHandler.IsMakingConnection)
-      {
-        var start = Coordinates.CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
-        var end = Event.current.mousePosition;
-        Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
-        window.Repaint();
-      }
-    }
-
-    /// <summary>
-    /// Handles drawing a rect line between two points in canvas space.
-    /// </summary>
-    /// <param name="start"></param>
-    /// <param name="end"></param>
-    public void DrawRectConnectionCanvasSpace(Vector2 start, Vector2 end, Color color)
-    {
-      start = Coordinates.CanvasToScreenSpace(start);
-      end = Coordinates.CanvasToScreenSpace(end);
-      Drawer.DrawRectConnectionScreenSpace(start, end, color);
-    }
-
-
-    private void DrawAreaSelection()
-    {
-      if (window.inputHandler.IsAreaSelecting)
-      {
-        // Construct and display the rect.
-        Rect selectionRect = window.inputHandler.SelectionScreenSpace();
-        Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
-        Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
-
-        window.Repaint();
-      }
-    }
-
-    /// <summary>
-    /// Draw the window mode in the background.
-    /// </summary>
-    public void DrawMode()
-    {
-      if (!window.tree)
-      {
-        GUI.Label(_modeStatusRect, new GUIContent("No Tree Set"), ModeStatusStyle);
-      }
-
-      else if (window.inputHandler.IsRefLinking)
-      {
-        GUI.Label(_modeStatusRect, new GUIContent("Link References"), ModeStatusStyle);
-      }
-
-      else if (window.GetMode() == BonsaiWindow.Mode.Edit)
-      {
-        GUI.Label(_modeStatusRect, new GUIContent("Edit"), ModeStatusStyle);
-      }
-
-      else
-      {
-        GUI.Label(_modeStatusRect, new GUIContent("View"), ModeStatusStyle);
-      }
-    }
-
-    #endregion
-
     private void HandleNewNodeToPositionUnderMouse()
     {
-      if (_nodeToPositionUnderMouse != null)
+      if (nodeToPositionUnderMouse != null)
       {
-        _nodeToPositionUnderMouse.bodyRect.position = Coordinates.MousePosition();
-        _nodeToPositionUnderMouse = null;
+        nodeToPositionUnderMouse.bodyRect.position = Coordinates.MousePosition();
+        nodeToPositionUnderMouse = null;
       }
     }
 
-    internal void SetNewNodeToPositionUnderMouse(BonsaiNode node)
+    public void SetNewNodeToPositionUnderMouse(BonsaiNode node)
     {
-      _nodeToPositionUnderMouse = node;
-    }
-
-    private GUIStyle _modeStatusStyle;
-
-    private Rect _modeStatusRect = new Rect(20f, 20f, 250f, 150f);
-
-    private GUIStyle ModeStatusStyle
-    {
-      get
-      {
-        if (_modeStatusStyle == null)
-        {
-          _modeStatusStyle = new GUIStyle
-          {
-            fontSize = 36,
-            fontStyle = FontStyle.Bold
-          };
-          _modeStatusStyle.normal.textColor = new Color(1f, 1f, 1f, 0.2f);
-        }
-
-        return _modeStatusStyle;
-      }
+      nodeToPositionUnderMouse = node;
     }
 
     #region Node Type Properties
 
     public static void FetchBehaviourNodes()
     {
-      _behaviourNodes = new Dictionary<Type, NodeTypeProperties>();
+      behaviourNodes = new Dictionary<Type, NodeTypeProperties>();
 
       IEnumerable<Assembly> scriptAssemblies = AppDomain.CurrentDomain.GetAssemblies().
           Where((Assembly assembly) => assembly.FullName.Contains("Assembly")
@@ -548,21 +471,21 @@ namespace Bonsai.Designer
           menuPath += type.Name;
           var prop = new NodeTypeProperties(menuPath, texName, bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
 
-          _behaviourNodes.Add(type, prop);
+          behaviourNodes.Add(type, prop);
         }
       }
     }
 
     public static IEnumerable<KeyValuePair<Type, NodeTypeProperties>> Behaviours
     {
-      get { return _behaviourNodes; }
+      get { return behaviourNodes; }
     }
 
     public static NodeTypeProperties GetNodeTypeProperties(Type t)
     {
-      if (_behaviourNodes.ContainsKey(t))
+      if (behaviourNodes.ContainsKey(t))
       {
-        return _behaviourNodes[t];
+        return behaviourNodes[t];
       }
 
       return null;

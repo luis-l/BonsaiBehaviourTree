@@ -184,6 +184,46 @@ namespace Bonsai.Designer
       }
     }
 
+    public static void DrawPorts(Coord coord, BonsaiNode node)
+    {
+      Rect nodeRect = node.bodyRect;
+      BonsaiOutputPort output = node.Output;
+      BonsaiInputPort input = node.Input;
+
+      float portWidth = nodeRect.width - BonsaiPreferences.Instance.portWidthTrim;
+
+      if (input != null)
+      {
+        input.bodyRect.width = portWidth;
+
+        // Place the port above the node
+        float x = nodeRect.x + (nodeRect.width - input.bodyRect.width) / 2f;
+        float y = nodeRect.yMin;
+        input.bodyRect.position = new Vector2(x, y);
+
+        DrawPort(coord, input.bodyRect);
+      }
+
+      if (output != null)
+      {
+        output.bodyRect.width = portWidth;
+
+        // Place the port below the node.
+        float x = nodeRect.x + (nodeRect.width - output.bodyRect.width) / 2f;
+        float y = nodeRect.yMax - output.bodyRect.height;
+        output.bodyRect.position = new Vector2(x, y);
+
+        DrawPort(coord, output.bodyRect);
+      }
+    }
+
+    public static void DrawPort(Coord c, Rect portRect)
+    {
+      // Convert the body rect from canvas to screen space.
+      portRect.position = c.CanvasToScreenSpace(portRect.position);
+      GUI.DrawTexture(portRect, BonsaiPreferences.Instance.portTexture, ScaleMode.StretchToFill);
+    }
+
     public static void DrawDefaultPortConnections(Coord coord, BonsaiNode node)
     {
       var prefs = BonsaiPreferences.Instance;
@@ -287,6 +327,18 @@ namespace Bonsai.Designer
 
       Handles.color = originalColor;
     }
+
+    /// <summary>
+    /// Handles drawing a rect line between two points in canvas space.
+    /// </summary>
+    /// <param name="start"></param>
+    /// <param name="end"></param>
+    //public static void DrawRectConnectionCanvasSpace(Vector2 start, Vector2 end, Color color)
+    //{
+    //  start = Coordinates.CanvasToScreenSpace(start);
+    //  end = Coordinates.CanvasToScreenSpace(end);
+    //  DrawRectConnectionScreenSpace(start, end, color);
+    //}
 
     // Helper method to draw textures with color tint.
     public static void DrawTexture(Rect r, Texture2D tex, Color c)

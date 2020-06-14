@@ -98,7 +98,7 @@ namespace Bonsai.Designer
       return false;
     }
 
-    internal void RemoveInputConnection(BonsaiInputPort input)
+    public void RemoveInputConnection(BonsaiInputPort input)
     {
       if (inputs.Remove(input))
       {
@@ -107,7 +107,7 @@ namespace Bonsai.Designer
       }
     }
 
-    internal void RemoveAllInputs()
+    public void RemoveAllInputs()
     {
       foreach (var i in inputs)
       {

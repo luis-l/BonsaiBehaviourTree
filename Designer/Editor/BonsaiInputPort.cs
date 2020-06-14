@@ -9,7 +9,7 @@ namespace Bonsai.Designer
     /// <summary>
     /// The output connected to the input.
     /// </summary>
-    internal BonsaiOutputPort outputConnection;
+    public BonsaiOutputPort outputConnection;
 
     public BonsaiInputPort(BonsaiNode node) : base(node)
     {

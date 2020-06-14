@@ -10,6 +10,11 @@ namespace Bonsai.Designer
   {
     private readonly List<BonsaiInputPort> inputs = new List<BonsaiInputPort>();
 
+    public BonsaiOutputPort(BonsaiNode node) : base(node)
+    {
+
+    }
+
     public IEnumerable<BonsaiInputPort> InputConnections
     {
       get { return inputs; }
@@ -23,7 +28,7 @@ namespace Bonsai.Designer
     public void Add(BonsaiInputPort input)
     {
       // Avoid connecting it to a root.
-      if (input.parentNode.Behaviour == input.parentNode.Behaviour.Tree.Root)
+      if (input.ParentNode.Behaviour == input.ParentNode.Behaviour.Tree.Root)
       {
         Debug.LogWarning("A root cannot be a child.");
         return;
@@ -52,7 +57,7 @@ namespace Bonsai.Designer
       input.outputConnection = this;
 
       // Disconnect other inputs since we can only have 1.
-      if (!parentNode.bCanHaveMultipleChildren)
+      if (!ParentNode.bCanHaveMultipleChildren)
       {
         RemoveAllInputs();
       }
@@ -60,18 +65,18 @@ namespace Bonsai.Designer
       inputs.Add(input);
 
       // Notify the parent that there was a new input.
-      parentNode.OnNewInputConnection(input);
+      ParentNode.OnNewInputConnection(input);
     }
 
     private bool CycleDetected(BonsaiInputPort input)
     {
-      var currentNode = this.parentNode;
+      var currentNode = this.ParentNode;
 
       while (currentNode != null)
       {
 
         // Cycle detected.
-        if (input.parentNode == currentNode)
+        if (input.ParentNode == currentNode)
         {
           return true;
         }
@@ -85,7 +90,7 @@ namespace Bonsai.Designer
         // Move up the tree.
         else
         {
-          currentNode = currentNode.Input.outputConnection.parentNode;
+          currentNode = currentNode.Input.outputConnection.ParentNode;
         }
       }
 
@@ -97,7 +102,7 @@ namespace Bonsai.Designer
     {
       if (inputs.Remove(input))
       {
-        parentNode.OnInputConnectionRemoved(input);
+        ParentNode.OnInputConnectionRemoved(input);
         input.outputConnection = null;
       }
     }
@@ -106,7 +111,7 @@ namespace Bonsai.Designer
     {
       foreach (var i in inputs)
       {
-        parentNode.OnInputConnectionRemoved(i);
+        ParentNode.OnInputConnectionRemoved(i);
         i.outputConnection = null;
       }
 
@@ -137,7 +142,7 @@ namespace Bonsai.Designer
     /// </summary>
     public void SyncOrdering()
     {
-      var composite = parentNode.Behaviour as Composite;
+      var composite = ParentNode.Behaviour as Composite;
 
       if (!composite) return;
 
@@ -147,7 +152,7 @@ namespace Bonsai.Designer
       for (int i = 0; i < inputs.Count; ++i)
       {
 
-        BehaviourNode b = inputs[i].parentNode.Behaviour;
+        BehaviourNode b = inputs[i].ParentNode.Behaviour;
 
         // We can do this without destroying the association between parent and children nodes
         // since all we are doing is modifying the ordering of the child nodes in the children array.
@@ -170,7 +175,7 @@ namespace Bonsai.Designer
       foreach (BonsaiInputPort input in inputs)
       {
 
-        Vector2 toChild = input.bodyRect.position - parentNode.bodyRect.position;
+        Vector2 toChild = input.bodyRect.position - ParentNode.bodyRect.position;
 
         float yDist = Mathf.Abs(toChild.y);
 
@@ -191,13 +196,13 @@ namespace Bonsai.Designer
     /// <param name="maxX"></param>
     public void GetBoundsX(out float minX, out float maxX)
     {
-      minX = parentNode.bodyRect.center.x;
-      maxX = parentNode.bodyRect.center.x;
+      minX = ParentNode.bodyRect.center.x;
+      maxX = ParentNode.bodyRect.center.x;
 
       foreach (BonsaiInputPort input in inputs)
       {
 
-        float x = input.parentNode.bodyRect.center.x;
+        float x = input.ParentNode.bodyRect.center.x;
 
         if (x < minX)
         {

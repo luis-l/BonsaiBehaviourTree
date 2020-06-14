@@ -563,7 +563,7 @@ namespace Bonsai.Designer
         }
 
         // Nodes that have a selected parent are not selected roots.
-        else if (!node.Input.outputConnection.parentNode.bAreaSelectionFlag)
+        else if (!node.Input.outputConnection.ParentNode.bAreaSelectionFlag)
         {
           _draggingSubroots.Add(node);
         }

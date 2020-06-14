@@ -69,12 +69,12 @@ namespace Bonsai.Designer
 
       if (bCreateInput)
       {
-        inputPort = new BonsaiInputPort { parentNode = this };
+        inputPort = new BonsaiInputPort(this);
       }
 
       if (bCreateOuput)
       {
-        outputPort = new BonsaiOutputPort { parentNode = this };
+        outputPort = new BonsaiOutputPort(this);
       }
 
       this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
@@ -87,7 +87,7 @@ namespace Bonsai.Designer
     /// <param name="removedInputConnection"></param>
     public void OnInputConnectionRemoved(BonsaiInputPort removedInputConnection)
     {
-      var disconnectedNode = removedInputConnection.parentNode;
+      var disconnectedNode = removedInputConnection.ParentNode;
       RemoveChild(disconnectedNode.behaviour);
     }
 
@@ -97,7 +97,7 @@ namespace Bonsai.Designer
     /// <param name="newInput"></param>
     public void OnNewInputConnection(BonsaiInputPort newInput)
     {
-      var newChild = newInput.parentNode.behaviour;
+      var newChild = newInput.ParentNode.behaviour;
 
       // If already connected, this occurs when 
       // building canvas from a loaded tree.
@@ -145,7 +145,7 @@ namespace Bonsai.Designer
 
     public BonsaiNode GetChildAt(int index)
     {
-      return outputPort?.GetInput(index).parentNode;
+      return outputPort?.GetInput(index).ParentNode;
     }
 
     public int ChildCount()

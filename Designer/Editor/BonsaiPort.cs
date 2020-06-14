@@ -6,6 +6,11 @@ namespace Bonsai.Designer
 {
   public abstract class BonsaiPort
   {
+    public BonsaiPort(BonsaiNode node)
+    {
+      ParentNode = node;
+    }
+
     /// <summary>
     /// The rect defining the area of the port in canvas space.
     /// </summary>
@@ -14,6 +19,6 @@ namespace Bonsai.Designer
     /// <summary>
     /// The node that the port belongs to.
     /// </summary>
-    internal BonsaiNode parentNode;
+    public BonsaiNode ParentNode { get; private set; }
   }
 }

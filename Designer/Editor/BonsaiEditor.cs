@@ -262,7 +262,7 @@ namespace Bonsai.Designer
         var anchorLineConnection = new Vector2(center.x, anchorY);
 
         // The node is running, hightlight the connection.
-        if (input.parentNode.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
+        if (input.ParentNode.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
         {
           DrawLineCanvasSpace(center, anchorLineConnection, Preferences.runningStatusColor, Preferences.runningConnectionWidth);
 

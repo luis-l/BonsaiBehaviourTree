@@ -11,6 +11,11 @@ namespace Bonsai.Designer
     /// </summary>
     internal BonsaiOutputPort outputConnection;
 
+    public BonsaiInputPort(BonsaiNode node) : base(node)
+    {
+
+    }
+
     public void OnDestroy()
     {
       // Since this input node got deleted, we need to notify
@@ -29,7 +34,7 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public int CompareTo(BonsaiInputPort other)
     {
-      bool bIsLesser = parentNode.bodyRect.center.x < other.parentNode.bodyRect.center.x;
+      bool bIsLesser = ParentNode.bodyRect.center.x < other.ParentNode.bodyRect.center.x;
 
       return bIsLesser ? -1 : 1;
     }

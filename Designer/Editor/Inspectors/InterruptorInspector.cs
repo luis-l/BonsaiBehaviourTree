@@ -30,7 +30,7 @@ namespace Bonsai.Designer
       {
 
         // Found the tree, cache this window.
-        if (win.tree == bt)
+        if (win.Tree == bt)
         {
           parentWindow = win;
           break;
@@ -41,7 +41,7 @@ namespace Bonsai.Designer
     void OnDestroy()
     {
       // Make sure to cleanup.
-      parentWindow.inputHandler.EndReferenceLinking();
+      parentWindow.InputHandler.EndReferenceLinking();
     }
 
     public override void OnInspectorGUI()
@@ -71,21 +71,21 @@ namespace Bonsai.Designer
         if (_bIsLinking)
         {
 
-          parentWindow.inputHandler.StartReferenceLinking(typeof(Interruptable), onNodeSelectedForLinking);
+          parentWindow.InputHandler.StartReferenceLinking(typeof(Interruptable), onNodeSelectedForLinking);
           parentWindow.Repaint();
         }
 
         else
         {
 
-          parentWindow.inputHandler.EndReferenceLinking();
+          parentWindow.InputHandler.EndReferenceLinking();
           parentWindow.Repaint();
         }
       }
 
       if (parentWindow)
       {
-        _bIsLinking = parentWindow.inputHandler.IsRefLinking;
+        _bIsLinking = parentWindow.InputHandler.IsRefLinking;
       }
 
       EditorGUILayout.EndVertical();
@@ -115,7 +115,7 @@ namespace Bonsai.Designer
 
       // Update the referenced nodes in the editor.
       var refs = _interruptor.GetReferencedNodes();
-      parentWindow.editor.SetReferencedNodes(refs);
+      parentWindow.Editor.SetReferencedNodes(refs);
     }
   }
 }

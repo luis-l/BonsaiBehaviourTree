@@ -70,7 +70,7 @@ namespace Bonsai.Designer
     internal void InitState()
     {
       // If the window has a valid canvas and editable.
-      if (_window.tree != null && _window.GetMode() == BonsaiWindow.Mode.Edit)
+      if (_window.Tree != null && _window.EditorMode == BonsaiWindow.Mode.Edit)
       {
 
         string path = getCurrentTreePath();
@@ -313,9 +313,9 @@ namespace Bonsai.Designer
         // asset in the copy while the original main asset becomes a subasset.
 
         // Rename subassets such that they are lexicographically after the main asset.
-        foreach (var node in _window.editor.Canvas)
+        foreach (var node in _window.Editor.Canvas)
         {
-          node.Behaviour.name = _window.tree.name + node.Behaviour.GetType().Name;
+          node.Behaviour.name = _window.Tree.name + node.Behaviour.GetType().Name;
         }
 
         AssetDatabase.CopyAsset(getCurrentTreePath(), path);
@@ -328,7 +328,7 @@ namespace Bonsai.Designer
     private void save()
     {
       // Sort the nodes in pre order so it is easier to clone the tree.
-      _window.tree.SortNodes();
+      _window.Tree.SortNodes();
 
       saveTreeMetaData();
       AssetDatabase.SaveAssets();
@@ -338,13 +338,13 @@ namespace Bonsai.Designer
 
     private void saveTreeMetaData()
     {
-      foreach (var editorNode in _window.editor.Canvas)
+      foreach (var editorNode in _window.Editor.Canvas)
       {
         editorNode.Behaviour.bonsaiNodePosition = editorNode.bodyRect.position;
       }
 
-      _window.tree.panPosition = _window.editor.Canvas.panOffset;
-      _window.tree.zoomPosition = _window.editor.Canvas.zoom;
+      _window.Tree.panPosition = _window.Editor.Canvas.panOffset;
+      _window.Tree.zoomPosition = _window.Editor.Canvas.zoom;
     }
 
     #endregion
@@ -355,7 +355,7 @@ namespace Bonsai.Designer
     internal void OnCleanup()
     {
       // Only save/delete things if we are in edit mode.
-      if (_window.GetMode() != BonsaiWindow.Mode.Edit)
+      if (_window.EditorMode != BonsaiWindow.Mode.Edit)
       {
         return;
       }
@@ -413,7 +413,7 @@ namespace Bonsai.Designer
 
     private string getCurrentTreePath()
     {
-      return AssetDatabase.GetAssetPath(_window.tree);
+      return AssetDatabase.GetAssetPath(_window.Tree);
     }
   }
 }

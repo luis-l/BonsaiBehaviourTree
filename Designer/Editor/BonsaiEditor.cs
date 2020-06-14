@@ -14,7 +14,7 @@ namespace Bonsai.Designer
   /// <summary>
   /// The editor handles rendering, manipulation and viewing of the canvas.
   /// </summary>
-  internal class BonsaiEditor
+  public class BonsaiEditor
   {
     private readonly BonsaiWindow window;
     public BonsaiCanvas Canvas { get; private set; }
@@ -151,7 +151,7 @@ namespace Bonsai.Designer
 
     public void UpdateOrderIndices()
     {
-      window.tree.CalculateTreeOrders();
+      window.Tree.CalculateTreeOrders();
     }
 
     public void SetReferencedNodes(IEnumerable<BehaviourNode> nodes)
@@ -189,13 +189,13 @@ namespace Bonsai.Designer
 
     private void DrawCanvasContents()
     {
-      ScaleUtility.BeginScale(window.CanvasRect, Canvas.ZoomScale, window.toolbarHeight);
+      ScaleUtility.BeginScale(window.CanvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
 
       DrawConnectionPreview();
       DrawPortConnections();
       DrawNodes();
 
-      ScaleUtility.EndScale(window.CanvasRect, Canvas.ZoomScale, window.toolbarHeight);
+      ScaleUtility.EndScale(window.CanvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
 
       // Selection overlays and independent of zoom.
       DrawAreaSelection();
@@ -227,9 +227,9 @@ namespace Bonsai.Designer
     private void DrawConnectionPreview()
     {
       // Draw connection between mouse and the port.
-      if (window.inputHandler.IsMakingConnection)
+      if (window.InputHandler.IsMakingConnection)
       {
-        var start = Coordinates.CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
+        var start = Coordinates.CanvasToScreenSpace(window.InputHandler.OutputToConnect.bodyRect.center);
         var end = Event.current.mousePosition;
         Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
         window.Repaint();
@@ -238,10 +238,10 @@ namespace Bonsai.Designer
 
     private void DrawAreaSelection()
     {
-      if (window.inputHandler.IsAreaSelecting)
+      if (window.InputHandler.IsAreaSelecting)
       {
         // Construct and display the rect.
-        Rect selectionRect = window.inputHandler.SelectionScreenSpace();
+        Rect selectionRect = window.InputHandler.SelectionScreenSpace();
         Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
         Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
 
@@ -254,17 +254,17 @@ namespace Bonsai.Designer
     /// </summary>
     public void DrawMode()
     {
-      if (!window.tree)
+      if (!window.Tree)
       {
         GUI.Label(modeStatusRect, new GUIContent("No Tree Set"), modeStatusStyle);
       }
 
-      else if (window.inputHandler.IsRefLinking)
+      else if (window.InputHandler.IsRefLinking)
       {
         GUI.Label(modeStatusRect, new GUIContent("Link References"), modeStatusStyle);
       }
 
-      else if (window.GetMode() == BonsaiWindow.Mode.Edit)
+      else if (window.EditorMode == BonsaiWindow.Mode.Edit)
       {
         GUI.Label(modeStatusRect, new GUIContent("Edit"), modeStatusStyle);
       }
@@ -299,7 +299,7 @@ namespace Bonsai.Designer
       {
         return Preferences.abortColor;
       }
-      else if (window.tree.Root == node.Behaviour)
+      else if (window.Tree.Root == node.Behaviour)
       {
         return Preferences.rootSymbolColor;
       }
@@ -318,12 +318,12 @@ namespace Bonsai.Designer
     private bool IsNodeAbortable(BonsaiNode node)
     {
       // Root must exist.
-      if (!window.tree.Root)
+      if (!window.Tree.Root)
       {
         return false;
       }
 
-      BonsaiNode selected = window.inputHandler.SelectedNode;
+      BonsaiNode selected = window.InputHandler.SelectedNode;
 
       // A node must be selected.
       if (selected == null)
@@ -371,7 +371,7 @@ namespace Bonsai.Designer
         int index = itr.CurrentIndex;
         if (index != -1)
         {
-          BehaviourNode currentNode = window.tree.GetNode(index);
+          BehaviourNode currentNode = window.Tree.GetNode(index);
 
           // The current running node can be aborted by it.
           return aborter && ConditionalAbort.IsAbortable(aborter, currentNode);

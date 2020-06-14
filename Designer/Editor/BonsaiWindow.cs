@@ -11,101 +11,94 @@ namespace Bonsai.Designer
     [MenuItem("Window/Bonsai Designer")]
     static void Init()
     {
-      var window = EditorWindow.CreateInstance<BonsaiWindow>();
+      var window = CreateInstance<BonsaiWindow>();
       window.titleContent = new GUIContent("Bonsai");
       window.Show();
     }
 
-    public float toolbarHeight = 20;
+    public const float toolbarHeight = 20;
 
     // We serialize the reference to the opened tree.
     // This way, when a editor window is left opened and Unity closes,
     // the tree opens up with the editor window.
     [SerializeField]
-    internal Core.BehaviourTree tree;
+    private BehaviourTree behaviourTree;
+    public BehaviourTree Tree { get { return behaviourTree; } }
 
-    internal BonsaiEditor editor;
-    internal BonsaiInputHandler inputHandler;
-    internal BonsaiSaveManager saveManager;
+    public BonsaiEditor Editor { get; private set; }
+    public BonsaiInputHandler InputHandler { get; private set; }
+    public BonsaiSaveManager SaveManager { get; private set; }
 
     public enum Mode { Edit, View };
-    private Mode _mode;
-    public Mode GetMode()
-    {
-      return _mode;
-    }
+    public Mode EditorMode { get; private set; }
 
     void OnEnable()
     {
-      editor = new BonsaiEditor(this);
+      Editor = new BonsaiEditor(this);
       BonsaiEditor.FetchBehaviourNodes();
 
-      inputHandler = new BonsaiInputHandler(this);
-      saveManager = new BonsaiSaveManager(this);
+      InputHandler = new BonsaiInputHandler(this);
+      SaveManager = new BonsaiSaveManager(this);
 
-      buildCanvas();
+      BuildCanvas();
 
       // Always start in edit mode.
       //
       // The only way it can be in view mode is if the window is
       // already opened and the user selects a game object with a
       // behaviour tree component.
-      _mode = Mode.Edit;
+      EditorMode = Mode.Edit;
     }
 
     void OnDisable()
     {
-      saveManager.OnCleanup();
+      SaveManager.OnCleanup();
     }
 
     void OnGUI()
     {
-      if (tree == null)
+      if (Tree == null)
       {
-
-        editor.DrawStaticGrid();
-        editor.DrawMode();
-
-        _mode = Mode.Edit;
+        Editor.DrawStaticGrid();
+        Editor.DrawMode();
+        EditorMode = Mode.Edit;
 
         // Asset removed.
-        if (!saveManager.IsInNoCanvasState())
+        if (!SaveManager.IsInNoCanvasState())
         {
-          saveManager.InitState();
+          SaveManager.InitState();
         }
       }
 
       else
       {
-
         // Make sure to build a canvas for an active tree.
-        if (editor.Canvas == null)
+        if (Editor.Canvas == null)
         {
-          buildCanvas();
+          BuildCanvas();
         }
 
-        editor.Draw();
-
-        inputHandler.HandleMouseEvents(Event.current);
+        Editor.Draw();
+        InputHandler.HandleMouseEvents(Event.current);
       }
 
       // Always draw the toolbar.
-      drawToolbar();
+      DrawToolbar();
     }
 
     void Update()
     {
       // Check if there is a request to view a tree.
-      goToViewMode();
+      GoToViewMode();
 
       // Update the window during the play mode when the window
       // is viewing a tree instance of a game object.
       // This is to quicky update all changes of the tree.
       bool bConditions =
-          tree &&
-          _mode == Mode.View &&
+          Tree &&
+          EditorMode == Mode.View &&
           EditorApplication.isPlaying &&
-          tree.IsRunning();
+          Tree.IsRunning();
 
       if (bConditions)
       {
@@ -113,7 +106,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private void goToViewMode()
+    private void GoToViewMode()
     {
       if (!EditorApplication.isPlaying || !Selection.activeTransform)
       {
@@ -132,21 +125,20 @@ namespace Bonsai.Designer
       // There must be a non-null tree to view,
       // it must be a different tree than the active tree for this window,
       // and must not be opened somewhere else.
-      if (treeToView && tree != treeToView)
+      if (treeToView && Tree != treeToView)
       {
-
         var windows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
 
         // Look and check if this tree is already being viewed.
         foreach (var w in windows)
         {
-          if (w.tree == treeToView)
+          if (w.Tree == treeToView)
           {
             return;
           }
 
           // Have the window without a set tree to view the tree selected.
-          else if (!w.tree)
+          else if (!w.Tree)
           {
             w.Repaint();
             w.SetTree(treeToView, Mode.View);
@@ -157,82 +149,73 @@ namespace Bonsai.Designer
         Repaint();
 
         // Cleanup window before putting new tree.
-        saveManager.OnCleanup();
+        SaveManager.OnCleanup();
 
         SetTree(treeToView, Mode.View);
       }
     }
 
-    private void buildCanvas()
+    private void BuildCanvas()
     {
-      if (tree)
+      if (Tree)
       {
-        editor.SetBehaviourTree(tree);
+        Editor.SetBehaviourTree(Tree);
         Repaint();
       }
     }
 
-    private void nicifyTree()
+    private void NicifyTree()
     {
-      if (tree && editor.Canvas != null)
+      if (Tree && Editor.Canvas != null)
       {
-        Formatter.PositionNodesNicely(tree, editor.Canvas);
+        Formatter.PositionNodesNicely(Tree, Editor.Canvas);
       }
     }
 
-    public void SetTree(Core.BehaviourTree bt, Mode mode = Mode.Edit)
+    public void SetTree(BehaviourTree bt, Mode mode = Mode.Edit)
     {
-      tree = bt;
-      buildCanvas();
-
-      _mode = mode;
+      behaviourTree = bt;
+      BuildCanvas();
+      EditorMode = mode;
     }
 
-    private void drawToolbar()
+    private void DrawToolbar()
     {
       EditorGUILayout.BeginHorizontal("Toolbar");
 
       if (GUILayout.Button("File", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
-
-        if (_mode == Mode.Edit)
+        if (EditorMode == Mode.Edit)
         {
-          createFileMenuEditable();
+          CreateFileMenuEditable();
         }
-
         else
         {
-          createFileMenuViewOnly();
+          CreateFileMenuViewOnly();
         }
       }
 
       if (GUILayout.Button("View", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
-
         var fileMenu = new GenericMenu();
-
-        fileMenu.AddItem(new GUIContent("Nicefy Tree"), false, nicifyTree);
-        fileMenu.AddItem(new GUIContent("Home Zoom"), false, homeZoom);
-
+        fileMenu.AddItem(new GUIContent("Nicefy Tree"), false, NicifyTree);
+        fileMenu.AddItem(new GUIContent("Home Zoom"), false, HomeZoom);
         fileMenu.DropDown(new Rect(55f, toolbarHeight, 0f, 0f));
       }
 
       if (GUILayout.Button("Tools", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
-
         var fileMenu = new GenericMenu();
-
-        fileMenu.AddItem(new GUIContent("Refresh Editor"), false, refreshEditor);
-
+        fileMenu.AddItem(new GUIContent("Refresh Editor"), false, RefreshEditor);
         fileMenu.DropDown(new Rect(105f, toolbarHeight, 0f, 0f));
       }
 
       GUILayout.FlexibleSpace();
 
       string name = "None";
-      if (tree != null)
+      if (Tree != null)
       {
-        name = tree.name;
+        name = Tree.name;
       }
 
       GUILayout.Label(name);
@@ -240,21 +223,21 @@ namespace Bonsai.Designer
       EditorGUILayout.EndHorizontal();
     }
 
-    private void createFileMenuEditable()
+    private void CreateFileMenuEditable()
     {
       var fileMenu = new GenericMenu();
 
-      fileMenu.AddItem(new GUIContent("Create New"), false, saveManager.RequestNew);
-      fileMenu.AddItem(new GUIContent("Load"), false, saveManager.RequestLoad);
+      fileMenu.AddItem(new GUIContent("Create New"), false, SaveManager.RequestNew);
+      fileMenu.AddItem(new GUIContent("Load"), false, SaveManager.RequestLoad);
 
       fileMenu.AddSeparator("");
-      fileMenu.AddItem(new GUIContent("Save"), false, saveManager.RequestSave);
-      fileMenu.AddItem(new GUIContent("Save As"), false, saveManager.RequestSaveAs);
+      fileMenu.AddItem(new GUIContent("Save"), false, SaveManager.RequestSave);
+      fileMenu.AddItem(new GUIContent("Save As"), false, SaveManager.RequestSaveAs);
 
       fileMenu.DropDown(new Rect(5f, toolbarHeight, 0f, 0f));
     }
 
-    private void createFileMenuViewOnly()
+    private void CreateFileMenuViewOnly()
     {
       var fileMenu = new GenericMenu();
 
@@ -269,18 +252,18 @@ namespace Bonsai.Designer
     }
 
     // Centers and fits the entire tree in the view center.
-    private void homeZoom()
+    private void HomeZoom()
     {
-      if (!tree) return;
+      if (!Tree) return;
 
       LogNotImplemented("Home Zoom");
     }
 
-    private void refreshEditor()
+    private void RefreshEditor()
     {
       // Reload preferences.
       BonsaiPreferences.Instance = BonsaiPreferences.LoadDefaultPreferences();
-      buildCanvas();
+      BuildCanvas();
     }
 
     /// <summary>
@@ -308,7 +291,7 @@ namespace Bonsai.Designer
       }
     }
 
-    internal static void LogNotImplemented(string msg)
+    public static void LogNotImplemented(string msg)
     {
       Debug.Log("<color=maroon> Feature not implemented: " + msg + "</color>");
     }
@@ -326,22 +309,20 @@ namespace Bonsai.Designer
 
       if (treeSelected != null)
       {
-
         BonsaiWindow windowToUse = null;
 
         // Try to find an editor window without a canvas...
         var bonsaiWindows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
         foreach (var w in bonsaiWindows)
         {
-
           // The canvas is already opened
-          if (w.tree == treeSelected)
+          if (w.Tree == treeSelected)
           {
             return false;
           }
 
           // Found a window with no active canvas.
-          if (w.tree == null)
+          if (w.Tree == null)
           {
             windowToUse = w;
             break;
@@ -357,7 +338,7 @@ namespace Bonsai.Designer
         }
 
         windowToUse.SetTree(treeSelected);
-        windowToUse.saveManager.InitState();
+        windowToUse.SaveManager.InitState();
         windowToUse.Repaint();
         return true;
       }

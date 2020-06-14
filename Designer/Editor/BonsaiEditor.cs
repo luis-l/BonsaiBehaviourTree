@@ -202,7 +202,7 @@ namespace Bonsai.Designer
     {
       foreach (var node in Canvas.NodesInDrawOrder)
       {
-        DrawNode(node);
+        Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
         DrawPorts(node);
       }
     }
@@ -213,66 +213,7 @@ namespace Bonsai.Designer
       {
         if (node.Output != null)
         {
-          DrawDefaultPortConnections(node);
-        }
-      }
-    }
-
-    private void DrawDefaultPortConnections(BonsaiNode node)
-    {
-      Color connectionColor = Preferences.defaultConnectionColor;
-      float connectionWidth = Preferences.defaultConnectionWidth;
-
-      if (node.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
-      {
-        connectionColor = Preferences.runningStatusColor;
-        connectionWidth = Preferences.runningConnectionWidth;
-      }
-
-      // Start the Y anchor coord at the tip of the Output port.
-      float yoffset = node.bodyRect.yMax;
-
-      // Calculate the anchor position.
-      float anchorX = node.bodyRect.center.x;
-      float anchorY = (yoffset + node.Output.GetNearestInputY()) / 2f;
-
-      // Anchor line, between the first and last child.
-
-      // Find the min and max X coords between the children and the parent.
-      node.Output.GetBoundsX(out float anchorLineStartX, out float anchorLineEndX);
-
-      // Get start and end positions of the anchor line (The common line where the parent and children connect).
-      var anchorLineStart = new Vector2(anchorLineStartX, anchorY);
-      var anchorLineEnd = new Vector2(anchorLineEndX, anchorY);
-
-      // The tip where the parent starts its line to connect to the anchor line.
-      var parentAnchorTip = new Vector2(anchorX, yoffset);
-
-      // The point where the parent connects to the anchor line.
-      var parentAnchorLineConnection = new Vector2(anchorX, anchorY);
-
-      // Draw the lines from the calculated positions.
-      DrawLineCanvasSpace(parentAnchorTip, parentAnchorLineConnection, connectionColor, connectionWidth);
-      DrawLineCanvasSpace(anchorLineStart, anchorLineEnd, Preferences.defaultConnectionColor, Preferences.defaultConnectionWidth);
-
-      foreach (var input in node.Output.InputConnections)
-      {
-        // Get the positions to draw a line between the node and the anchor line.
-        Vector2 center = input.bodyRect.center;
-        var anchorLineConnection = new Vector2(center.x, anchorY);
-
-        // The node is running, hightlight the connection.
-        if (input.ParentNode.Behaviour.GetStatusEditor() == BehaviourNode.StatusEditor.Running)
-        {
-          DrawLineCanvasSpace(center, anchorLineConnection, Preferences.runningStatusColor, Preferences.runningConnectionWidth);
-
-          // Hightlight the portion of the anchorline between the running child and parent node.
-          DrawLineCanvasSpace(anchorLineConnection, parentAnchorLineConnection, Preferences.runningStatusColor, Preferences.runningConnectionWidth);
-        }
-        else
-        {
-          // The node is not running, draw a default connection.
-          DrawLineCanvasSpace(center, anchorLineConnection, Preferences.defaultConnectionColor, Preferences.defaultConnectionWidth);
+          Drawer.DrawDefaultPortConnections(Coordinates, node);
         }
       }
     }
@@ -281,121 +222,6 @@ namespace Bonsai.Designer
 
     #region Canvas Unit Drawing Methods (Node, Ports, ... etc)
 
-    private void DrawNode(BonsaiNode node)
-    {
-      // Convert the node rect from canvas to screen space.
-      Rect screenRect = node.bodyRect;
-      screenRect.position = Coordinates.CanvasToScreenSpace(screenRect.position);
-
-      // Remember the original color that way it is reset when the function exits.
-      Color originalColor = GUI.color;
-
-      DrawNodeBackground(node, screenRect);
-
-      // The node contents are grouped together within the node body.
-      GUI.BeginGroup(screenRect);
-
-      // Make the body of node local to the group coordinate space.
-      Rect localRect = node.bodyRect;
-      localRect.position = Vector2.zero;
-
-      // Draw the status the node exited with if applicable.
-      DrawExitStatus(localRect, node);
-
-      // Draw the contents inside the node body, automatically laid out.
-      GUILayout.BeginArea(localRect, GUIStyle.none);
-
-      DrawNodeTypeBackground(node);
-      DrawNodeContent(node);
-
-      GUILayout.EndArea();
-
-      GUI.EndGroup();
-      GUI.color = originalColor;
-    }
-
-    private void DrawNodeBackground(BonsaiNode node, Rect screenRect)
-    {
-      GUI.DrawTexture(
-        screenRect, Preferences.nodeBackgroundTexture,
-        ScaleMode.StretchToFill,
-        true,
-        0,
-        NodeStatusColor(node),
-        0,
-        5f);
-    }
-
-    // Render the background color scheme for the node type.
-    private void DrawNodeTypeBackground(BonsaiNode node)
-    {
-      GUI.DrawTexture(
-        node.ContentRect,
-        Preferences.nodeGradient,
-        ScaleMode.StretchToFill,
-        true,
-        0f,
-        NodeTypeColor(node),
-        0f,
-        4f);
-    }
-
-    // Render the node body contents.
-    private void DrawNodeContent(BonsaiNode node)
-    {
-      GUILayout.Box(node.HeaderContent, node.HeaderStyle);
-      GUILayout.Box(node.BodyContent, node.BodyStyle);
-    }
-
-    private void DrawExitStatus(Rect localRect, BonsaiNode node)
-    {
-      var status = node.Behaviour.GetStatusEditor();
-
-      if (status == BehaviourNode.StatusEditor.Success)
-      {
-        DrawTexture(localRect, Preferences.successSymbol, Preferences.successColor);
-      }
-
-      else if (status == BehaviourNode.StatusEditor.Failure)
-      {
-        DrawTexture(localRect, Preferences.failureSymbol, Preferences.failureColor);
-      }
-
-      else if (status == BehaviourNode.StatusEditor.Aborted)
-      {
-        DrawTexture(localRect, Preferences.failureSymbol, Preferences.abortedColor);
-      }
-
-      else if (status == BehaviourNode.StatusEditor.Interruption)
-      {
-        DrawTexture(localRect, Preferences.failureSymbol, Preferences.interruptedColor);
-      }
-    }
-
-    private Color NodeTypeColor(BonsaiNode node)
-    {
-      if (node.Behaviour is Task)
-      {
-        return Preferences.taskColor;
-      }
-
-      else if (node.Behaviour is Service)
-      {
-        return Preferences.serviceColor;
-      }
-
-      else if (node.Behaviour is ConditionalAbort)
-      {
-        return Preferences.conditionalColor;
-      }
-
-      else if (node.Behaviour is Decorator)
-      {
-        return Preferences.decoratorColor;
-      }
-
-      return Preferences.compositeColor;
-    }
 
     private Color NodeStatusColor(BonsaiNode node)
     {
@@ -501,17 +327,6 @@ namespace Bonsai.Designer
       return false;
     }
 
-    // Helper method to draw textures with color tint.
-    private static void DrawTexture(Rect r, Texture2D tex, Color c)
-    {
-      var originalColor = GUI.color;
-
-      GUI.color = c;
-      GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit);
-
-      GUI.color = originalColor;
-    }
-
     private void DrawPorts(BonsaiNode node)
     {
       Rect nodeRect = node.bodyRect;
@@ -562,7 +377,7 @@ namespace Bonsai.Designer
       {
         var start = Coordinates.CanvasToScreenSpace(window.inputHandler.OutputToConnect.bodyRect.center);
         var end = Event.current.mousePosition;
-        DrawRectConnectionScreenSpace(start, end, Color.white);
+        Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
         window.Repaint();
       }
     }
@@ -576,89 +391,9 @@ namespace Bonsai.Designer
     {
       start = Coordinates.CanvasToScreenSpace(start);
       end = Coordinates.CanvasToScreenSpace(end);
-
-      DrawRectConnectionScreenSpace(start, end, color);
+      Drawer.DrawRectConnectionScreenSpace(start, end, color);
     }
 
-    /// <summary>
-    /// Handles drawing a rect line between two points in screen space.
-    /// </summary>
-    /// <param name="start"></param>
-    /// <param name="end"></param>
-    public void DrawRectConnectionScreenSpace(Vector2 start, Vector2 end, Color color)
-    {
-      var originalColor = Handles.color;
-      Handles.color = color;
-
-      // The distance between start and end halved.
-      float halfDist = (start - end).magnitude / 2f;
-
-      Vector2 directionToEnd = (end - start).normalized;
-      Vector2 directionToStart = (start - end).normalized;
-
-      // This dictates in what direction are the tips aligned.
-      // If Vector.up, then the tips are aligned on the y axis and the middle line
-      // is aligned on the x-axis(right).
-      //
-      //If Vector.right, then the tips are aligned on the x axis and the middle line
-      // is aligned on the y-axis(up).
-      Vector2 axisForTipAlignment = Vector3.up;
-
-      // Project the directions to the towards the end/start positions along the
-      // axis of alignment.
-      Vector2 startTip = Vector3.Project(directionToEnd, axisForTipAlignment) * halfDist + (Vector3)start;
-      Vector2 endTip = Vector3.Project(directionToStart, axisForTipAlignment) * halfDist + (Vector3)end;
-
-      if (startTip == endTip)
-      {
-        Handles.DrawLine(start, end);
-      }
-
-      else
-      {
-        Handles.DrawLine(start, startTip);
-        Handles.DrawLine(end, endTip);
-        Handles.DrawLine(startTip, endTip);
-      }
-
-      Handles.color = originalColor;
-    }
-
-    public void DrawLineCanvasSpace(Vector2 start, Vector2 end, Color color)
-    {
-      start = Coordinates.CanvasToScreenSpace(start);
-      end = Coordinates.CanvasToScreenSpace(end);
-
-      DrawLineScreenSpace(start, end, color);
-    }
-
-    public void DrawLineScreenSpace(Vector2 start, Vector2 end, Color color)
-    {
-      var originalColor = Handles.color;
-      Handles.color = color;
-
-      Handles.DrawLine(start, end);
-
-      Handles.color = originalColor;
-    }
-
-    public void DrawLineCanvasSpace(Vector2 start, Vector2 end, Color color, float width)
-    {
-      start = Coordinates.CanvasToScreenSpace(start);
-      end = Coordinates.CanvasToScreenSpace(end);
-
-      DrawLineScreenSpace(start, end, color, width);
-    }
-
-    public void DrawLineScreenSpace(Vector2 start, Vector2 end, Color color, float width)
-    {
-      var originalColor = Handles.color;
-      Handles.color = color;
-
-      Handles.DrawAAPolyLine(width, start, end);
-
-      Handles.color = originalColor;
-    }
 
     private void DrawAreaSelection()
     {
@@ -667,7 +402,6 @@ namespace Bonsai.Designer
         // Construct and display the rect.
         Rect selectionRect = window.inputHandler.SelectionScreenSpace();
         Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
-
         Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
 
         window.Repaint();

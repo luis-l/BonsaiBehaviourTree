@@ -43,8 +43,6 @@ namespace Bonsai.Standard
 
     public override void Description(StringBuilder builder)
     {
-      builder.AppendFormat("{0} log", logType.ToString());
-
       // Nothing to display.
       if (message.Length == 0)
       {
@@ -66,8 +64,10 @@ namespace Bonsai.Standard
         return;
       }
 
-      // Separation for message.
-      builder.AppendLine();
+      if (logType != LogType.Normal)
+      {
+        builder.AppendLine(logType.ToString());
+      }
 
       // Cap the message length to display to keep things compact.
       int maxCharacters = 20;

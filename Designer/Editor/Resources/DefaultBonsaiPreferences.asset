@@ -49,3 +49,4 @@ MonoBehaviour:
   portHeight: 20
   portWidthTrim: 50
   iconSize: 32
+  statusIconSize: 16

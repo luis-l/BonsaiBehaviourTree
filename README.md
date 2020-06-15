@@ -19,6 +19,7 @@ Features Overview:
 - Conditional Aborts (AKA Observer aborts)
 - Includes: Parallel execution, Interrupts, Guards, Services, Concurrent Branch Evaluation.
 - Supports including Sub-trees
+- Change node titles, descriptions and comments.
 - Can easily create custom Composites, Decorators, Tasks
 - Behaviour trees are ScriptableObjects, so it integrates perfectly with the Unity Editor.
 
@@ -62,6 +63,7 @@ There are four main categories of nodes which you can extend from to add functio
 
 - Composite
 - Decorator
+- Services
 - Conditional Abort
 - Conditional Task
 - Task

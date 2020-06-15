@@ -1,30 +1,27 @@
 ﻿
 
 using System;
-
-using UnityEditor;
-
-using Bonsai.Standard;
 using Bonsai.Core;
+using Bonsai.Standard;
+using UnityEditor;
 
 namespace Bonsai.Designer
 {
   [CustomEditor(typeof(IsValueOfType))]
-  public class IsValueOfTypeInspector : Editor
+  public class IsValueOfTypeInspector : BehaviourNodeInspector
   {
     int index = 0;
 
-    void OnEnable()
+    protected override void OnEnable()
     {
+      base.OnEnable();
       var isValueOfTypeNode = target as IsValueOfType;
       index = Array.FindIndex(Blackboard.registerTypes, t => t == isValueOfTypeNode.type);
       index = Math.Max(0, index);
     }
 
-    public override void OnInspectorGUI()
+    protected override void OnBehaviourNodeInspectorGUI()
     {
-      DrawDefaultInspector();
-
       var isValueOfTypeNode = target as IsValueOfType;
 
       EditorGUILayout.BeginHorizontal();

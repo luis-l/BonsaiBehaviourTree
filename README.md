@@ -1,17 +1,8 @@
 ## Bonsai Behaviour Tree
 Advanced behavior tree solution with a graphical editor
 
-![Bonsai Logo](http://i.imgur.com/rq9Tfja.png)
-
-[![Bonsai Behaviour Tree Showcase](https://i.imgur.com/Cuddqco.png)](https://www.youtube.com/watch?v=BL6TUJwAFWg)
-
-Videos:
-- [Quick showcase of multiple features](https://twitter.com/i/status/866473174577401856)
-- [Simple demo with agents](https://twitter.com/i/status/865356769572384776)
-- [Nicify tree](https://twitter.com/i/status/855851944103092224)
-- [Multi-Selection Actions](https://twitter.com/i/status/866830814234980352)
-- [Interrupts and Guards](https://twitter.com/i/status/867516094537510912)
-
+![Bonsai Logo](https://i.imgur.com/WTxGOZC.png)
+![Bonsai Editor](https://i.imgur.com/KQZgWtF.png)
 
 Goals of the project
 - Lightweight, robust, and fast behaviour trees.
@@ -145,7 +136,16 @@ Since the goal of this project was a lightweight system, a complete, built-in fu
 - Show relevant information on Node visual.
 - View node property during Play. (e.g. View time left on Wait Task)
 
-### Screenshots
+### Old Screenshots and videos
+
+[![Bonsai Behaviour Tree Showcase](https://i.imgur.com/Cuddqco.png)](https://www.youtube.com/watch?v=BL6TUJwAFWg)
+
+Videos:
+- [Quick showcase of multiple features](https://twitter.com/i/status/866473174577401856)
+- [Simple demo with agents](https://twitter.com/i/status/865356769572384776)
+- [Nicify tree](https://twitter.com/i/status/855851944103092224)
+- [Multi-Selection Actions](https://twitter.com/i/status/866830814234980352)
+- [Interrupts and Guards](https://twitter.com/i/status/867516094537510912)
 
 The IsKeyDown decorator has a lower priority abort type set, so the sub-trees to the right are highlighted since they can be aborted by the decorator.
 

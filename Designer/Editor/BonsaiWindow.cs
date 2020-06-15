@@ -35,6 +35,8 @@ namespace Bonsai.Designer
 
     void OnEnable()
     {
+      BonsaiPreferences.Instance = BonsaiPreferences.LoadDefaultPreferences();
+
       Editor = new BonsaiEditor(this);
       BonsaiEditor.FetchBehaviourNodes();
 

@@ -373,7 +373,7 @@ namespace Bonsai.Designer
     [Pure]
     private bool IsNodeSelected(BonsaiNode node)
     {
-      return node.Behaviour == Selection.activeObject || node.bAreaSelectionFlag;
+      return node.Behaviour == Selection.activeObject || node.isUnderAreaSelection;
     }
 
     /// <summary>

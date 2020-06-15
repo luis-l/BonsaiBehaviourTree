@@ -40,7 +40,7 @@ namespace Bonsai.Designer
     /// <summary>
     /// A flag that helps the editor to highlight if it is selected from area selection.
     /// </summary>
-    internal bool bAreaSelectionFlag = false;
+    public bool isUnderAreaSelection = false;
 
     [SerializeField]
     private BehaviourNode behaviour;

@@ -100,7 +100,7 @@ namespace Bonsai.Designer
     {
       Predicate<BonsaiNode> match = (node) =>
       {
-        bool bRemove = node.bAreaSelectionFlag;
+        bool bRemove = node.isUnderAreaSelection;
 
         if (bRemove)
         {

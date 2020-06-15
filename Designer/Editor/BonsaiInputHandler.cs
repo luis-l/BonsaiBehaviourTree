@@ -85,7 +85,7 @@ namespace Bonsai.Designer
       {
         // Only apply single node selection on a node that is
         // not currently under area selection.
-        if (!node.bAreaSelectionFlag)
+        if (!node.isUnderAreaSelection)
         {
           window.Editor.ClearReferencedNodes();
           ClearAreaSelection();
@@ -397,14 +397,14 @@ namespace Bonsai.Designer
           {
             // The original nodes will become selected.
             BonsaiNode node = selectedNodes[i];
-            node.bAreaSelectionFlag = false;
+            node.isUnderAreaSelection = false;
 
             Type t = node.Behaviour.GetType();
 
             // Duplicate nodes become selected and are spawned
             // at offset from their original.
             BonsaiNode duplicate = canvas.CreateNode(t, bt);
-            duplicate.bAreaSelectionFlag = true;
+            duplicate.isUnderAreaSelection = true;
             duplicate.Position = node.Position + Vector2.one * 40f;
 
             // Replace in the list with new selections.
@@ -521,7 +521,7 @@ namespace Bonsai.Designer
         }
 
         // Nodes that have a selected parent are not selected roots.
-        else if (!node.Input.outputConnection.ParentNode.bAreaSelectionFlag)
+        else if (!node.Input.outputConnection.ParentNode.isUnderAreaSelection)
         {
           draggingSubroots.Add(node);
         }
@@ -599,7 +599,7 @@ namespace Bonsai.Designer
 
       foreach (BonsaiNode node in selectedNodes)
       {
-        node.bAreaSelectionFlag = false;
+        node.isUnderAreaSelection = false;
       }
 
       draggingSubroots.Clear();
@@ -633,12 +633,12 @@ namespace Bonsai.Designer
       {
         if (node.RectPositon.Overlaps(selectRect))
         {
-          node.bAreaSelectionFlag = true;
+          node.isUnderAreaSelection = true;
         }
 
         else
         {
-          node.bAreaSelectionFlag = false;
+          node.isUnderAreaSelection = false;
         }
       }
     }
@@ -653,7 +653,7 @@ namespace Bonsai.Designer
       {
         if (node.RectPositon.Overlaps(selectionRect))
         {
-          node.bAreaSelectionFlag = true;
+          node.isUnderAreaSelection = true;
           selectedNodes.Add(node);
         }
       }

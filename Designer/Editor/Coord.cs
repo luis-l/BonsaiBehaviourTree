@@ -35,10 +35,7 @@ namespace Bonsai.Designer
     [Pure]
     public bool IsInView(BonsaiNode node)
     {
-      Vector2 nodeScreenPosition = CanvasToScreenSpace(node.Position);
-      Vector2 nodeScreenSize = node.Size / canvas.ZoomScale;
-      Rect nodeRect = new Rect(nodeScreenPosition, nodeScreenSize);
-
+      var nodeRect = new Rect(CanvasToScreenSpace(node.Position), node.Size);
       Rect viewRect = window.CanvasRect;
       viewRect.size *= canvas.ZoomScale;
       return viewRect.Overlaps(nodeRect);

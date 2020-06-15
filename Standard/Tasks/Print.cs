@@ -3,6 +3,7 @@ using UnityEngine;
 using Bonsai.Core;
 using Bonsai.Designer;
 using System.Text;
+using System.Linq;
 
 namespace Bonsai.Standard
 {
@@ -43,8 +44,43 @@ namespace Bonsai.Standard
     public override void Description(StringBuilder builder)
     {
       builder.AppendFormat("{0} log", logType.ToString());
+
+      // Nothing to display.
+      if (message.Length == 0)
+      {
+        return;
+      }
+
+      string displayed = message;
+
+      // Only consider display the message up to the newline.
+      int newLineIndex = message.IndexOf('\n');
+      if (newLineIndex >= 0)
+      {
+        displayed = message.Substring(0, newLineIndex);
+      }
+
+      // Nothing to display.
+      if (displayed.Length == 0)
+      {
+        return;
+      }
+
+      // Separation for message.
       builder.AppendLine();
-      builder.Append(message);
+
+      // Cap the message length to display to keep things compact.
+      int maxCharacters = 20;
+      if (displayed.Length > maxCharacters)
+      {
+        builder.Append(displayed.Substring(0, maxCharacters));
+        builder.Append("...");
+      }
+      else
+      {
+        builder.Append(displayed);
+      }
     }
+
   }
 }

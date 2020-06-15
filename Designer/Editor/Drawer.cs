@@ -85,13 +85,11 @@ namespace Bonsai.Designer
       Rect localRect = node.RectPositon;
       localRect.position = Vector2.zero;
 
-      // Draw the status the node exited with if applicable.
-      DrawExitStatus(localRect, node);
-
       // Draw the contents inside the node body, automatically laid out.
       GUILayout.BeginArea(localRect, GUIStyle.none);
 
       DrawNodeTypeBackground(node);
+      DrawExitStatus(node);
       DrawNodeContent(node);
 
       GUILayout.EndArea();
@@ -158,29 +156,34 @@ namespace Bonsai.Designer
       GUILayout.Box(node.BodyContent, node.BodyStyle);
     }
 
-    public static void DrawExitStatus(Rect localRect, BonsaiNode node)
+    public static void DrawExitStatus(BonsaiNode node)
     {
+      // Draw the exit status in the top right corner.
+      float statusSize = BonsaiPreferences.Instance.statusIconSize;
+      Rect contentRect = node.ContentRect;
+      var rect = new Rect(contentRect.xMax - statusSize, contentRect.yMin, statusSize, statusSize);
+
       var prefs = BonsaiPreferences.Instance;
       var status = node.Behaviour.GetStatusEditor();
 
       if (status == Core.BehaviourNode.StatusEditor.Success)
       {
-        DrawTexture(localRect, prefs.successSymbol, prefs.successColor);
+        DrawTexture(rect, prefs.successSymbol, prefs.successColor);
       }
 
       else if (status == Core.BehaviourNode.StatusEditor.Failure)
       {
-        DrawTexture(localRect, prefs.failureSymbol, prefs.failureColor);
+        DrawTexture(rect, prefs.failureSymbol, prefs.failureColor);
       }
 
       else if (status == Core.BehaviourNode.StatusEditor.Aborted)
       {
-        DrawTexture(localRect, prefs.failureSymbol, prefs.abortedColor);
+        DrawTexture(rect, prefs.failureSymbol, prefs.abortedColor);
       }
 
       else if (status == Core.BehaviourNode.StatusEditor.Interruption)
       {
-        DrawTexture(localRect, prefs.failureSymbol, prefs.interruptedColor);
+        DrawTexture(rect, prefs.failureSymbol, prefs.interruptedColor);
       }
     }
 

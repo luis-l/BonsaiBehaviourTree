@@ -71,6 +71,7 @@ namespace Bonsai.Designer
     public float portWidthTrim = 50f;
 
     public float iconSize = 32f;
+    public float statusIconSize = 16f;
 
     private static BonsaiPreferences instance = null;
 

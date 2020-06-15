@@ -34,13 +34,13 @@ MonoBehaviour:
   runningColor: {r: 0.2971698, g: 1, b: 0.61701846, a: 1}
   abortColor: {r: 0.3722855, g: 0.8867924, b: 0.8457736, a: 1}
   referenceColor: {r: 1, g: 0.77234, b: 0.031372547, a: 1}
-  evaluateColor: {r: 0, g: 0.42714262, b: 1, a: 1}
+  evaluateColor: {r: 0, g: 0.42990875, b: 1, a: 1}
   rootSymbolColor: {r: 0.90977204, g: 1, b: 0, a: 1}
   runningStatusColor: {r: 0.4221253, g: 0.9622642, b: 0.56973785, a: 1}
-  successColor: {r: 0.22828408, g: 0.8490566, b: 0.35737112, a: 1}
-  failureColor: {r: 0.9716981, g: 0.40070745, b: 0.31626022, a: 1}
-  abortedColor: {r: 0.28025985, g: 0.42552847, b: 0.8867924, a: 1}
-  interruptedColor: {r: 0.9433962, g: 0.69046754, b: 0.17354932, a: 1}
+  successColor: {r: 0.3066038, g: 1, b: 0.6434876, a: 1}
+  failureColor: {r: 1, g: 0.4301899, b: 0.36320752, a: 1}
+  abortedColor: {r: 0.17030083, g: 0.48223865, b: 0.8396226, a: 1}
+  interruptedColor: {r: 1, g: 0.7523259, b: 0.042452812, a: 1}
   defaultConnectionColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 1}
   defaultConnectionWidth: 4
   runningConnectionWidth: 4

@@ -86,7 +86,7 @@ In order to add custom functionality you can override key methods:
     public virtual void OnAbort(ConditionalAbort aborter) { }
 
     // Call when a child finished executing
-    public void OnChildExit(int childIndex, Status childStatus) { }
+    public virtual void OnChildExit(int childIndex, Status childStatus) { }
 ```
 Example of a simple, custom Wait task:
 ```csharp

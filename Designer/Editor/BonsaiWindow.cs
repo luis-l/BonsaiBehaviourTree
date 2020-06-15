@@ -115,9 +115,7 @@ namespace Bonsai.Designer
     /// <param name="behaviour"></param>
     public void BehaviourNodeEdited(BehaviourNode behaviour)
     {
-      BonsaiNode node = Editor.Canvas.First(n => n.Behaviour == behaviour);
-      node.UpdateGui();
-      node.UpdatePortPositions();
+      Editor.UpdateNodeGUI(behaviour);
       Repaint();
     }
 

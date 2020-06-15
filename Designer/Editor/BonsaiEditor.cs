@@ -147,6 +147,16 @@ namespace Bonsai.Designer
       });
     }
 
+    public void UpdateNodeGUI(BehaviourNode behaviour)
+    {
+      BonsaiNode node = Canvas.First(n => n.Behaviour == behaviour);
+      node.UpdateGui();
+      node.UpdatePortPositions();
+
+      // Snap so connections align.
+      node.Center = Coord.SnapPosition(node.Center, SnapStep);
+    }
+
     public void UpdateOrderIndices()
     {
       window.Tree.CalculateTreeOrders();

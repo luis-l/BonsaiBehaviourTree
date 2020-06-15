@@ -2,6 +2,7 @@
 using UnityEngine;
 using Bonsai.Core;
 using Bonsai.Designer;
+using System.Text;
 
 namespace Bonsai.Standard
 {
@@ -13,6 +14,7 @@ namespace Bonsai.Standard
   {
     public enum LogType { Normal, Warning, Error };
 
+    [Multiline]
     public string message = "Print Node";
 
     [Tooltip("The type of message to display.")]
@@ -22,7 +24,6 @@ namespace Bonsai.Standard
     {
       switch (logType)
       {
-
         case LogType.Normal:
           Debug.Log(message);
           break;
@@ -37,6 +38,13 @@ namespace Bonsai.Standard
       }
 
       return Status.Success;
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      builder.AppendFormat("{0} log", logType.ToString());
+      builder.AppendLine();
+      builder.Append(message);
     }
   }
 }

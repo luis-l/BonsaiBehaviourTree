@@ -73,7 +73,7 @@ namespace Bonsai.Designer
       DrawCanvasContents();
     }
 
-    #region Node/Canvas Editing and Modification
+    #region Editing
 
     /// <summary>
     /// Translates the canvas.
@@ -114,8 +114,8 @@ namespace Bonsai.Designer
       if (root.Input.outputConnection != null)
       {
 
-        float nodeTop = root.Input.bodyRect.yMin;
-        float parentBottom = root.Input.outputConnection.bodyRect.yMax;
+        float nodeTop = root.Input.RectPosition.yMin;
+        float parentBottom = root.Input.outputConnection.RectPosition.yMax;
 
         // The root cannot be above its parent.
         if (nodeTop < parentBottom)
@@ -126,24 +126,24 @@ namespace Bonsai.Designer
 
       // Record the old position so we can know by how much the root moved
       // so all children can be shifted by the pan delta.
-      Vector2 oldPos = root.bodyRect.center;
+      Vector2 oldPos = root.Center;
 
       // Clamp the position so it does not go above the parent.
       Vector2 diff = pos - offset;
       diff.y = Mathf.Clamp(diff.y, min, float.MaxValue);
 
       Vector2 rounded = Coord.SnapPosition(diff, SnapStep);
-      root.bodyRect.center = rounded;
+      root.Center = rounded;
 
       // Calculate the change of position of the root.
-      Vector2 pan = root.bodyRect.center - oldPos;
+      Vector2 pan = root.Center - oldPos;
 
       // Move the entire subtree of the root.
       TreeIterator<BonsaiNode>.Traverse(root, node =>
       {
         // For all children, pan by the same amount that the parent changed by.
         if (node != root)
-          node.bodyRect.center += Coord.SnapPosition(pan, SnapStep);
+          node.Center += Coord.SnapPosition(pan, SnapStep);
       });
     }
 
@@ -173,7 +173,7 @@ namespace Bonsai.Designer
 
     #endregion
 
-    #region Editor Drawing
+    #region Drawing
 
     public void DrawStaticGrid()
     {
@@ -203,8 +203,11 @@ namespace Bonsai.Designer
     {
       foreach (var node in Canvas.NodesInDrawOrder)
       {
-        Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
-        Drawer.DrawPorts(Coordinates, node);
+        if (Coordinates.IsInView(node))
+        {
+          Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
+          Drawer.DrawPorts(Coordinates, node);
+        }
       }
     }
 
@@ -227,7 +230,7 @@ namespace Bonsai.Designer
       // Draw connection between mouse and the port.
       if (window.InputHandler.IsMakingConnection)
       {
-        var start = Coordinates.CanvasToScreenSpace(window.InputHandler.OutputToConnect.bodyRect.center);
+        var start = Coordinates.CanvasToScreenSpace(window.InputHandler.OutputToConnect.RectPosition.center);
         var end = Event.current.mousePosition;
         Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
         window.Repaint();
@@ -383,7 +386,7 @@ namespace Bonsai.Designer
     {
       if (nodeToPositionUnderMouse != null)
       {
-        nodeToPositionUnderMouse.bodyRect.position = Coordinates.MousePosition();
+        nodeToPositionUnderMouse.Position = Coordinates.MousePosition();
         nodeToPositionUnderMouse = null;
       }
     }

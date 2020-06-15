@@ -174,15 +174,15 @@ namespace Bonsai.Designer
 
       foreach (BonsaiInputPort input in inputs)
       {
-
-        Vector2 toChild = input.bodyRect.position - ParentNode.bodyRect.position;
+        Vector2 inputPosition = input.RectPosition.position;
+        Vector2 toChild = inputPosition - ParentNode.Position;
 
         float yDist = Mathf.Abs(toChild.y);
 
         if (yDist < nearestDist)
         {
           nearestDist = yDist;
-          nearestY = input.bodyRect.position.y;
+          nearestY = inputPosition.y;
         }
       }
 
@@ -196,13 +196,12 @@ namespace Bonsai.Designer
     /// <param name="maxX"></param>
     public void GetBoundsX(out float minX, out float maxX)
     {
-      minX = ParentNode.bodyRect.center.x;
-      maxX = ParentNode.bodyRect.center.x;
+      minX = ParentNode.Center.x;
+      maxX = ParentNode.Center.x;
 
       foreach (BonsaiInputPort input in inputs)
       {
-
-        float x = input.ParentNode.bodyRect.center.x;
+        float x = input.ParentNode.Center.x;
 
         if (x < minX)
         {

@@ -405,7 +405,7 @@ namespace Bonsai.Designer
             // at offset from their original.
             BonsaiNode duplicate = canvas.CreateNode(t, bt);
             duplicate.bAreaSelectionFlag = true;
-            duplicate.bodyRect.position = node.bodyRect.position + Vector2.one * 40f;
+            duplicate.Position = node.Position + Vector2.one * 40f;
 
             // Replace in the list with new selections.
             selectedNodes[i] = duplicate;
@@ -464,7 +464,7 @@ namespace Bonsai.Designer
 
         // Calculate the relative mouse position from the node for dragging.
         Vector2 mpos = window.Editor.Coordinates.MousePosition();
-        singleDragOffset = mpos - draggingNode.bodyRect.center;
+        singleDragOffset = mpos - draggingNode.Center;
       });
     }
 
@@ -492,7 +492,7 @@ namespace Bonsai.Designer
 
       foreach (BonsaiNode node in selectedNodes)
       {
-        if (window.Editor.Coordinates.IsUnderMouse(node.bodyRect))
+        if (window.Editor.Coordinates.IsUnderMouse(node.RectPositon))
         {
           bStartDrag = true;
           break;
@@ -532,7 +532,7 @@ namespace Bonsai.Designer
       foreach (BonsaiNode root in draggingSubroots)
       {
         // Calculate the relative mouse position from the node for dragging.
-        Vector2 offset = mpos - root.bodyRect.center;
+        Vector2 offset = mpos - root.Center;
 
         multiDragOffsets.Add(offset);
       }
@@ -631,7 +631,7 @@ namespace Bonsai.Designer
       // Mark nodes as selected if they overlap the selection area.
       foreach (BonsaiNode node in window.Editor.Canvas)
       {
-        if (node.bodyRect.Overlaps(selectRect))
+        if (node.RectPositon.Overlaps(selectRect))
         {
           node.bAreaSelectionFlag = true;
         }
@@ -651,7 +651,7 @@ namespace Bonsai.Designer
       // Collect all nodes overlapping the selection rect.
       foreach (BonsaiNode node in window.Editor.Canvas)
       {
-        if (node.bodyRect.Overlaps(selectionRect))
+        if (node.RectPositon.Overlaps(selectionRect))
         {
           node.bAreaSelectionFlag = true;
           selectedNodes.Add(node);

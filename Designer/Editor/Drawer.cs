@@ -70,7 +70,7 @@ namespace Bonsai.Designer
       Color statusColor)
     {
       // Convert the node rect from canvas to screen space.
-      Rect screenRect = node.bodyRect;
+      Rect screenRect = node.RectPositon;
       screenRect.position = coord.CanvasToScreenSpace(screenRect.position);
 
       // Remember the original color that way it is reset when the function exits.
@@ -82,7 +82,7 @@ namespace Bonsai.Designer
       GUI.BeginGroup(screenRect);
 
       // Make the body of node local to the group coordinate space.
-      Rect localRect = node.bodyRect;
+      Rect localRect = node.RectPositon;
       localRect.position = Vector2.zero;
 
       // Draw the status the node exited with if applicable.
@@ -186,34 +186,18 @@ namespace Bonsai.Designer
 
     public static void DrawPorts(Coord coord, BonsaiNode node)
     {
-      Rect nodeRect = node.bodyRect;
+      //Rect nodeRect = node.bodyRect;
       BonsaiOutputPort output = node.Output;
       BonsaiInputPort input = node.Input;
 
-      float portWidth = nodeRect.width - BonsaiPreferences.Instance.portWidthTrim;
-
       if (input != null)
       {
-        input.bodyRect.width = portWidth;
-
-        // Place the port above the node
-        float x = nodeRect.x + (nodeRect.width - input.bodyRect.width) / 2f;
-        float y = nodeRect.yMin;
-        input.bodyRect.position = new Vector2(x, y);
-
-        DrawPort(coord, input.bodyRect);
+        DrawPort(coord, input.RectPosition);
       }
 
       if (output != null)
       {
-        output.bodyRect.width = portWidth;
-
-        // Place the port below the node.
-        float x = nodeRect.x + (nodeRect.width - output.bodyRect.width) / 2f;
-        float y = nodeRect.yMax - output.bodyRect.height;
-        output.bodyRect.position = new Vector2(x, y);
-
-        DrawPort(coord, output.bodyRect);
+        DrawPort(coord, output.RectPosition);
       }
     }
 
@@ -226,6 +210,11 @@ namespace Bonsai.Designer
 
     public static void DrawDefaultPortConnections(Coord coord, BonsaiNode node)
     {
+      if (node.Output.InputCount() == 0)
+      {
+        return;
+      }
+
       var prefs = BonsaiPreferences.Instance;
 
       Color connectionColor = prefs.defaultConnectionColor;
@@ -238,10 +227,10 @@ namespace Bonsai.Designer
       }
 
       // Start the Y anchor coord at the tip of the Output port.
-      float yoffset = node.bodyRect.yMax;
+      float yoffset = node.RectPositon.yMax;
 
       // Calculate the anchor position.
-      float anchorX = node.bodyRect.center.x;
+      float anchorX = node.RectPositon.center.x;
       float anchorY = (yoffset + node.Output.GetNearestInputY()) / 2f;
 
       // Anchor line, between the first and last child.
@@ -260,30 +249,57 @@ namespace Bonsai.Designer
       var parentAnchorLineConnection = new Vector2(anchorX, anchorY);
 
       // Draw the lines from the calculated positions.
-      DrawLineCanvasSpace(coord, parentAnchorTip, parentAnchorLineConnection, connectionColor, connectionWidth);
-      DrawLineCanvasSpace(coord, anchorLineStart, anchorLineEnd, prefs.defaultConnectionColor, prefs.defaultConnectionWidth);
+      DrawLineCanvasSpace(
+        coord,
+        parentAnchorTip,
+        parentAnchorLineConnection,
+        connectionColor,
+        connectionWidth);
+
+      DrawLineCanvasSpace(
+        coord,
+        anchorLineStart,
+        anchorLineEnd,
+        prefs.defaultConnectionColor,
+        prefs.defaultConnectionWidth);
 
       foreach (var input in node.Output.InputConnections)
       {
         // Get the positions to draw a line between the node and the anchor line.
-        Vector2 center = input.bodyRect.center;
+        Vector2 center = input.RectPosition.center;
         var anchorLineConnection = new Vector2(center.x, anchorY);
 
         // The node is running, hightlight the connection.
         if (input.ParentNode.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
         {
-          DrawLineCanvasSpace(coord, center, anchorLineConnection, prefs.runningStatusColor, prefs.runningConnectionWidth);
+          DrawLineCanvasSpace(
+            coord,
+            center,
+            anchorLineConnection,
+            prefs.runningStatusColor,
+            prefs.runningConnectionWidth);
 
           // Hightlight the portion of the anchorline between the running child and parent node.
-          DrawLineCanvasSpace(coord, anchorLineConnection, parentAnchorLineConnection, prefs.runningStatusColor, prefs.runningConnectionWidth);
+          DrawLineCanvasSpace(
+            coord,
+            anchorLineConnection,
+            parentAnchorLineConnection,
+            prefs.runningStatusColor,
+            prefs.runningConnectionWidth);
         }
         else
         {
           // The node is not running, draw a default connection.
-          DrawLineCanvasSpace(coord, center, anchorLineConnection, prefs.defaultConnectionColor, prefs.defaultConnectionWidth);
+          DrawLineCanvasSpace(
+            coord,
+            anchorLineConnection,
+            center,
+            prefs.defaultConnectionColor,
+            prefs.defaultConnectionWidth);
         }
       }
     }
+
     /// <summary>
     /// Handles drawing a rect line between two points in screen space.
     /// </summary>
@@ -353,12 +369,14 @@ namespace Bonsai.Designer
       DrawLineScreenSpace(start, end, color);
     }
 
-
     public static void DrawLineCanvasSpace(Coord c, Vector2 start, Vector2 end, Color color, float width)
     {
       start = c.CanvasToScreenSpace(start);
       end = c.CanvasToScreenSpace(end);
-      DrawLineScreenSpace(start, end, color, width);
+      if (c.IsScreenAxisLineInView(start, end))
+      {
+        DrawLineScreenSpace(start, end, color, width);
+      }
     }
 
     public static void DrawLineScreenSpace(Vector2 start, Vector2 end, Color color)

@@ -12,7 +12,10 @@ namespace Bonsai.Designer
     [Header("Editor")]
     public int snapStep = kGridSize;
     public float zoomDelta = 0.2f;
+
+    [Min(0.1f)]
     public float minZoom = 1f;
+
     public float maxZoom = 5f;
     public float panSpeed = 1.2f;
 

@@ -320,7 +320,7 @@ namespace Bonsai.Designer
     {
       foreach (var editorNode in window.Editor.Canvas)
       {
-        editorNode.Behaviour.bonsaiNodePosition = editorNode.bodyRect.position;
+        editorNode.Behaviour.bonsaiNodePosition = editorNode.Position;
       }
 
       window.Tree.panPosition = window.Editor.Canvas.panOffset;

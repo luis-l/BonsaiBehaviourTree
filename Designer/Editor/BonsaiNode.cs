@@ -9,16 +9,15 @@ namespace Bonsai.Designer
 {
   public class BonsaiNode : IIterableNode<BonsaiNode>
   {
+    private Rect rectPosition;
+
     /// <summary>
     /// The rect of the node in canvas space.
     /// </summary>
-    public Rect bodyRect;
+    public Rect RectPositon { get { return rectPosition; } }
 
     private Rect contentRect;
-    public Rect ContentRect
-    {
-      get { return contentRect; }
-    }
+    public Rect ContentRect { get { return contentRect; } }
 
     public GUIStyle HeaderStyle { get; } = CreateHeaderStyle();
     public GUIStyle BodyStyle { get; } = CreateBodyStyle();
@@ -63,8 +62,6 @@ namespace Bonsai.Designer
     /// <param name="bCreateOuput">If the node should have an output.</param>
     public BonsaiNode(bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren, Texture icon = null)
     {
-      bodyRect = new Rect(Vector2.zero, kDefaultSize);
-
       if (bCreateInput)
       {
         inputPort = new BonsaiInputPort(this);
@@ -80,6 +77,36 @@ namespace Bonsai.Designer
       if (icon)
       {
         HeaderContent = new GUIContent(icon);
+      }
+    }
+
+    public Vector2 Position
+    {
+      get { return rectPosition.position; }
+      set
+      {
+        rectPosition.position = value;
+        UpdatePortPositions();
+      }
+    }
+
+    public Vector2 Size
+    {
+      get { return rectPosition.size; }
+      set
+      {
+        rectPosition.size = value;
+        UpdatePortPositions();
+      }
+    }
+
+    public Vector2 Center
+    {
+      get { return rectPosition.center; }
+      set
+      {
+        rectPosition.center = value;
+        UpdatePortPositions();
       }
     }
 
@@ -224,6 +251,29 @@ namespace Bonsai.Designer
 
     #endregion
 
+
+    private void UpdatePortPositions()
+    {
+      float w = rectPosition.width - BonsaiPreferences.Instance.portWidthTrim;
+      float h = BonsaiPreferences.Instance.portHeight;
+
+      if (Input != null)
+      {
+        float x = rectPosition.x + (rectPosition.width - Input.RectPosition.width) / 2f;
+        float y = rectPosition.yMin;
+        Input.RectPosition = new Rect(x, y, w, h);
+
+      }
+
+      if (Output != null)
+      {
+        float x = rectPosition.x + (rectPosition.width - Output.RectPosition.width) / 2f;
+        float y = rectPosition.yMax - Output.RectPosition.height;
+        Output.RectPosition = new Rect(x, y, w, h);
+
+      }
+    }
+
     #region Styles and Contents
 
     public void UpdateGui()
@@ -290,13 +340,13 @@ namespace Bonsai.Designer
       float portHeights = 2f * prefs.portHeight;
       Vector2 contentSize = MinimumRequiredContentSize();
 
-      bodyRect.size = contentSize
+      rectPosition.size = contentSize
         + 2f * prefs.nodeSizePadding
         + 2f * Vector2.right * prefs.nodeWidthPadding
         + Vector2.up * portHeights;
 
-      contentRect.width = bodyRect.width - 2f * prefs.nodeWidthPadding;
-      contentRect.height = bodyRect.height - portHeights;
+      contentRect.width = rectPosition.width - 2f * prefs.nodeWidthPadding;
+      contentRect.height = rectPosition.height - portHeights;
       contentRect.x = prefs.nodeWidthPadding;
       contentRect.y = prefs.portHeight;
 
@@ -307,7 +357,8 @@ namespace Bonsai.Designer
 
       // Round for UI Sharpness.
       contentRect = MathExtensions.Round(contentRect);
-      bodyRect = MathExtensions.Round(bodyRect);
+      rectPosition = MathExtensions.Round(rectPosition);
+      UpdatePortPositions();
     }
 
     private Vector2 MinimumRequiredContentSize()

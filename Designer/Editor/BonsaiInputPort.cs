@@ -34,7 +34,7 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public int CompareTo(BonsaiInputPort other)
     {
-      bool bIsLesser = ParentNode.bodyRect.center.x < other.ParentNode.bodyRect.center.x;
+      bool bIsLesser = ParentNode.Center.x < other.ParentNode.Center.x;
 
       return bIsLesser ? -1 : 1;
     }

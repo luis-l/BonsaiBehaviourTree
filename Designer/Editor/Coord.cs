@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
+using UnityEditor;
 using UnityEngine;
 
 namespace Bonsai.Designer
@@ -24,6 +25,39 @@ namespace Bonsai.Designer
     {
       this.canvas = canvas;
       this.window = window;
+    }
+
+    /// <summary>
+    /// Tests if the node is in view of the window.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    [Pure]
+    public bool IsInView(BonsaiNode node)
+    {
+      Vector2 nodeScreenPosition = CanvasToScreenSpace(node.Position);
+      Vector2 nodeScreenSize = node.Size / canvas.ZoomScale;
+      Rect nodeRect = new Rect(nodeScreenPosition, nodeScreenSize);
+
+      Rect viewRect = window.CanvasRect;
+      viewRect.size *= canvas.ZoomScale;
+      return viewRect.Overlaps(nodeRect);
+    }
+
+    /// <summary>
+    /// Test if the line segment is in viewe of the window. 
+    /// Only works for axis aligned lines (horizontal or vertical).
+    /// </summary>
+    /// <param name="start">Start point of the line in screen space.</param>
+    /// <param name="end">End point of the line in screen space</param>
+    /// <returns></returns>
+    [Pure]
+    public bool IsScreenAxisLineInView(Vector2 start, Vector2 end)
+    {
+      var lineBox = new Rect { position = start, max = end };
+      Rect viewRect = window.CanvasRect;
+      viewRect.size *= canvas.ZoomScale;
+      return viewRect.Overlaps(lineBox);
     }
 
     /// <summary>
@@ -113,7 +147,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (IsUnderMouse(node.bodyRect) && !IsMouseOverNodePorts(node))
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
         {
           callback(node);
           return true;
@@ -131,12 +165,12 @@ namespace Bonsai.Designer
     [Pure]
     public bool IsMouseOverNodePorts(BonsaiNode node)
     {
-      if (node.Output != null && IsUnderMouse(node.Output.bodyRect))
+      if (node.Output != null && IsUnderMouse(node.Output.RectPosition))
       {
         return true;
       }
 
-      if (node.Input != null && IsUnderMouse(node.Input.bodyRect))
+      if (node.Input != null && IsUnderMouse(node.Input.RectPosition))
       {
         return true;
       }
@@ -158,7 +192,7 @@ namespace Bonsai.Designer
           continue;
         }
 
-        if (IsUnderMouse(node.Output.bodyRect))
+        if (IsUnderMouse(node.Output.RectPosition))
         {
           callback(node.Output);
           return true;
@@ -182,7 +216,7 @@ namespace Bonsai.Designer
           continue;
         }
 
-        if (IsUnderMouse(node.Input.bodyRect))
+        if (IsUnderMouse(node.Input.RectPosition))
         {
           callback(node.Input);
           return true;
@@ -201,8 +235,8 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        bool bCondition = IsUnderMouse(node.bodyRect) ||
-            (node.Input != null && IsUnderMouse(node.Input.bodyRect));
+        bool bCondition = IsUnderMouse(node.RectPositon) ||
+            (node.Input != null && IsUnderMouse(node.Input.RectPosition));
 
         if (bCondition)
         {

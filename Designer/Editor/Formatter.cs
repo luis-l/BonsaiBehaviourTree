@@ -43,7 +43,7 @@ namespace Bonsai.Designer
         if (positions.ContainsKey(behaviour))
         {
           Vector2 pos = positions[behaviour];
-          editorNode.bodyRect.position = pos;
+          editorNode.Position = pos;
         }
       }
     }

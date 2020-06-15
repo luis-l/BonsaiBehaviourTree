@@ -38,27 +38,22 @@ Things that cannot be currently edited in Play mode:
 - Changing the root
 - Changing connections between nodes
 
-### Editor Features
+#### Overview
 
 - A canvas which can be panned and zoomed
-- Add, delete, drag, duplicate, and connect nodes.
-- There is multi selection support so you can apply multi-edit/drag/duplicate/delete.
+- Multi selection support so you can apply multi-edit/drag/duplicate/delete.
 - Grid snapping
 - Sub-tree dragging - when you drag a node, the entire sub-tree under it drags along.
 - Save and load behaviour tree assets.
-- Nodes resize properly to fit internal contents such as the name of node.
-- Context menus to organize nodes.
 - Attributes which can be used on a custom node class to categorize and add an icon to your custom node.
-- A custom blackboard inspector to add variables (specify key and type).
-- Custom inspector for nodes that need to reference other nodes like Interrupts and Semaphore Guards, the inspector lets you push a button to activate a linking action, in which you can click on nodes to link.
 - A simple [nicify](https://twitter.com/i/status/855851944103092224) feature which automatically lays out the tree neatly.
-- Visual highlighting feedback to quickly see what nodes are being referenced by other nodes and which nodes get aborted by a conditional abort.
 - Multiple behaviour tree editors can be opened at once.
 - Viewing a running behaviour tree just requires clicking on a game object with behaviour tree component.
 - Behaviour tree assets can be opened by double clicking on the asset file.
 - Editor Preferences to change editor behaviour. Node look can be customized. Colors, size, and layouts can be changed.
 
 ### API and Custom Tasks
+
 There are four main categories of nodes which you can extend from to add functionality:
 
 - Composite
@@ -129,7 +124,6 @@ Since the goal of this project was a lightweight system, a complete, built-in fu
 
 ### Upcoming Features
 - Undo functionality. Any modification to the tree will be undo-able.
-- Show relevant information on Node visual.
 - View node property during Play. (e.g. View time left on Wait Task)
 
 ### Old Screenshots and videos

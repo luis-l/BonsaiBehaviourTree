@@ -1,7 +1,9 @@
 ## Bonsai Behaviour Tree
+
+![Bonsai Logo](https://i.imgur.com/WTxGOZC.png) 
+
 Advanced behavior tree solution with a graphical editor
 
-![Bonsai Logo](https://i.imgur.com/WTxGOZC.png)
 ![Bonsai Editor](https://i.imgur.com/KQZgWtF.png)
 
 Goals of the project
@@ -22,7 +24,7 @@ Features Overview:
 
 Behaviour tree running.
 
-![Behaviour tree running](http://i.imgur.com/aUe8neD.png)
+![Behaviour tree running](https://i.imgur.com/0DLgw5C.png)
 
 ### Editor Features and Limitations
 
@@ -53,6 +55,7 @@ Things that cannot be currently edited in Play mode:
 - Multiple behaviour tree editors can be opened at once.
 - Viewing a running behaviour tree just requires clicking on a game object with behaviour tree component.
 - Behaviour tree assets can be opened by double clicking on the asset file.
+- Editor Preferences to change editor behaviour. Node look can be customized. Colors, size, and layouts can be changed.
 
 ### API and Custom Tasks
 There are four main categories of nodes which you can extend from to add functionality:
@@ -77,20 +80,11 @@ In order to add custom functionality you can override key methods:
     // Called when a traversal on the node ends.
     public virtual void OnExit() { }
 
-    // The priority value of the node.
-    // Default value for all nodes is the negated pre-order index,
-    // since lower preorders are executed first (default behaviour).
-    public virtual float Priority() { }
-
     // Called when a child caused an abort.
-    protected internal virtual void OnAbort(ConditionalAbort aborter) { }
+    public virtual void OnAbort(ConditionalAbort aborter) { }
 
     // Call when a child finished executing
-    protected internal virtual void OnChildExit(int childIndex, Status childStatus) { }
-
-    // Called once after the entire tree is finished being copied.
-    // Should be used to setup special BehaviourNode references.
-    public virtual void OnCopy() { }
+    public void OnChildExit(int childIndex, Status childStatus) { }
 ```
 Example of a simple, custom Wait task:
 ```csharp

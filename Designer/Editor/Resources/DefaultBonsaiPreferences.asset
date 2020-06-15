@@ -43,7 +43,7 @@ MonoBehaviour:
   interruptedColor: {r: 1, g: 0.7523259, b: 0.042452812, a: 1}
   defaultConnectionColor: {r: 0.7607844, g: 0.7607844, b: 0.7607844, a: 1}
   defaultConnectionWidth: 4
-  runningConnectionWidth: 4
+  runningConnectionWidth: 6
   nodeSizePadding: {x: 12, y: 6}
   nodeWidthPadding: 12
   portHeight: 20

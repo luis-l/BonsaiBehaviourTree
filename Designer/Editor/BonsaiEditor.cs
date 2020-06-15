@@ -201,12 +201,36 @@ namespace Bonsai.Designer
 
     private void DrawNodes()
     {
+      if (window.EditorMode == BonsaiWindow.Mode.Edit)
+      {
+        DrawNodesInEditMode();
+      }
+      else
+      {
+        DrawNodesInViewMode();
+      }
+    }
+
+    private void DrawNodesInEditMode()
+    {
       foreach (var node in Canvas.NodesInDrawOrder)
       {
         if (Coordinates.IsInView(node))
         {
           Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
           Drawer.DrawPorts(Coordinates, node);
+        }
+      }
+    }
+
+    // Does not render ports in view mode since nodes cannot be changed.
+    private void DrawNodesInViewMode()
+    {
+      foreach (var node in Canvas.NodesInDrawOrder)
+      {
+        if (Coordinates.IsInView(node))
+        {
+          Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
         }
       }
     }

@@ -252,7 +252,7 @@ namespace Bonsai.Designer
     #endregion
 
 
-    private void UpdatePortPositions()
+    public void UpdatePortPositions()
     {
       float w = rectPosition.width - BonsaiPreferences.Instance.portWidthTrim;
       float h = BonsaiPreferences.Instance.portHeight;
@@ -270,7 +270,6 @@ namespace Bonsai.Designer
         float x = rectPosition.x + (rectPosition.width - Output.RectPosition.width) / 2f;
         float y = rectPosition.yMax - Output.RectPosition.height;
         Output.RectPosition = new Rect(x, y, w, h);
-
       }
     }
 
@@ -281,6 +280,7 @@ namespace Bonsai.Designer
       HeaderContent.text = HeaderText();
       BodyContent.text = BodyText();
       ResizeToFitContent();
+      UpdatePortPositions();
     }
 
     private string HeaderText()
@@ -358,7 +358,6 @@ namespace Bonsai.Designer
       // Round for UI Sharpness.
       contentRect = MathExtensions.Round(contentRect);
       rectPosition = MathExtensions.Round(rectPosition);
-      UpdatePortPositions();
     }
 
     private Vector2 MinimumRequiredContentSize()

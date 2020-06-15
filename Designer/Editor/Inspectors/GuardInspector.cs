@@ -1,57 +1,37 @@
 ﻿
-using UnityEngine;
-using UnityEditor;
-
 using Bonsai.Core;
 using Bonsai.Standard;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
   [CustomEditor(typeof(Guard))]
-  public class GuardInspector : Editor
+  public class GuardInspector : BehaviourNodeInspector
   {
-    private bool _bIsLinking = false;
+    private bool isLinking = false;
 
-    // The bonsai window associated with the target's inspector behaviour.
-    private BonsaiWindow parentWindow = null;
+    private Guard guard;
 
-    private Guard _guard;
-
-    void OnEnable()
+    protected override void OnEnable()
     {
-      _guard = target as Guard;
-      BehaviourTree bt = _guard.Tree;
-
-      var editorWindows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
-
-      // Find the the editor window with the tree associated with this behaviour.
-      foreach (BonsaiWindow win in editorWindows)
-      {
-
-        // Found the tree, cache this window.
-        if (win.Tree == bt)
-        {
-          parentWindow = win;
-          break;
-        }
-      }
+      base.OnEnable();
+      guard = target as Guard;
     }
 
     void OnDestroy()
     {
       // Make sure to cleanup.
-      parentWindow.InputHandler.EndReferenceLinking();
+      ParentWindow.InputHandler.EndReferenceLinking();
     }
 
-    public override void OnInspectorGUI()
+    protected override void OnBehaviourNodeInspectorGUI()
     {
-      DrawDefaultInspector();
-
       EditorGUILayout.BeginVertical();
 
       string message;
 
-      if (_bIsLinking)
+      if (isLinking)
       {
         message = "Finish Linking";
       }
@@ -65,26 +45,26 @@ namespace Bonsai.Designer
       {
 
         // Toggle
-        _bIsLinking = !_bIsLinking;
+        isLinking = !isLinking;
 
-        if (_bIsLinking)
+        if (isLinking)
         {
 
-          parentWindow.InputHandler.StartReferenceLinking(typeof(Guard), onNodeSelectedForLinking);
-          parentWindow.Repaint();
+          ParentWindow.InputHandler.StartReferenceLinking(typeof(Guard), OnNodeSelectedForLinking);
+          ParentWindow.Repaint();
         }
 
         else
         {
 
-          parentWindow.InputHandler.EndReferenceLinking();
-          parentWindow.Repaint();
+          ParentWindow.InputHandler.EndReferenceLinking();
+          ParentWindow.Repaint();
         }
       }
 
-      if (parentWindow)
+      if (ParentWindow)
       {
-        _bIsLinking = parentWindow.InputHandler.IsRefLinking;
+        isLinking = ParentWindow.InputHandler.IsRefLinking;
       }
 
       EditorGUILayout.EndVertical();
@@ -93,19 +73,19 @@ namespace Bonsai.Designer
       {
 
         // Synchronize the key values.
-        foreach (Guard linkedGuard in _guard.linkedGuards)
+        foreach (Guard linkedGuard in guard.linkedGuards)
         {
-          linkedGuard.maxActiveGuards = _guard.maxActiveGuards;
-          linkedGuard.waitUntilChildAvailable = _guard.waitUntilChildAvailable;
-          linkedGuard.returnSuccessOnSkip = _guard.returnSuccessOnSkip;
+          linkedGuard.maxActiveGuards = guard.maxActiveGuards;
+          linkedGuard.waitUntilChildAvailable = guard.waitUntilChildAvailable;
+          linkedGuard.returnSuccessOnSkip = guard.returnSuccessOnSkip;
         }
       }
     }
 
-    private void onNodeSelectedForLinking(BehaviourNode node)
+    private void OnNodeSelectedForLinking(BehaviourNode node)
     {
       // Cannot link itself.
-      if (node == _guard)
+      if (node == guard)
       {
         return;
       }
@@ -113,16 +93,16 @@ namespace Bonsai.Designer
       serializedObject.Update();
 
       var refGuard = node as Guard;
-      bool bAlreadyLinked = _guard.linkedGuards.Contains(refGuard);
+      bool bAlreadyLinked = guard.linkedGuards.Contains(refGuard);
 
       // Works as a toggle, if already linked then unlink.
       if (bAlreadyLinked)
       {
 
-        _guard.linkedGuards.Remove(refGuard);
+        guard.linkedGuards.Remove(refGuard);
 
         // The rest of the guards forget about this unlinked guard too.
-        foreach (Guard linkedGuard in _guard.linkedGuards)
+        foreach (Guard linkedGuard in guard.linkedGuards)
         {
           linkedGuard.linkedGuards.Remove(refGuard);
         }
@@ -136,7 +116,7 @@ namespace Bonsai.Designer
       {
 
         // The other guards must reference the new linked guard too.
-        foreach (Guard link in _guard.linkedGuards)
+        foreach (Guard link in guard.linkedGuards)
         {
           link.linkedGuards.Add(refGuard);
 
@@ -145,17 +125,17 @@ namespace Bonsai.Designer
         }
 
         // This guard add the new linked guard.
-        _guard.linkedGuards.Add(refGuard);
+        guard.linkedGuards.Add(refGuard);
 
         // The new linked guard must also know about this guard.
-        refGuard.linkedGuards.Add(_guard);
+        refGuard.linkedGuards.Add(guard);
       }
 
       serializedObject.ApplyModifiedProperties();
 
       // Update the referenced nodes in the editor.
-      var refs = _guard.GetReferencedNodes();
-      parentWindow.Editor.SetReferencedNodes(refs);
+      var refs = guard.GetReferencedNodes();
+      ParentWindow.Editor.SetReferencedNodes(refs);
     }
   }
 }

@@ -1,58 +1,37 @@
-﻿using System.Collections.Generic;
-
-using UnityEngine;
-using UnityEditor;
-
+﻿
 using Bonsai.Core;
 using Bonsai.Standard;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
   [CustomEditor(typeof(Interruptor))]
-  public class InterruptorInspector : Editor
+  public class InterruptorInspector : BehaviourNodeInspector
   {
-    private bool _bIsLinking = false;
+    private bool isLinking = false;
 
-    // The bonsai window associated with the target's inspector behaviour.
-    private BonsaiWindow parentWindow = null;
+    private Interruptor interruptor;
 
-    private Interruptor _interruptor;
-
-    void OnEnable()
+    protected override void OnEnable()
     {
-      _interruptor = target as Interruptor;
-      BehaviourTree bt = _interruptor.Tree;
-
-      var editorWindows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
-
-      // Find the the editor window with the tree associated with this behaviour.
-      foreach (BonsaiWindow win in editorWindows)
-      {
-
-        // Found the tree, cache this window.
-        if (win.Tree == bt)
-        {
-          parentWindow = win;
-          break;
-        }
-      }
+      base.OnEnable();
+      interruptor = target as Interruptor;
     }
 
     void OnDestroy()
     {
       // Make sure to cleanup.
-      parentWindow.InputHandler.EndReferenceLinking();
+      ParentWindow.InputHandler.EndReferenceLinking();
     }
 
-    public override void OnInspectorGUI()
+    protected override void OnBehaviourNodeInspectorGUI()
     {
-      DrawDefaultInspector();
-
       EditorGUILayout.BeginVertical();
 
       string message;
 
-      if (_bIsLinking)
+      if (isLinking)
       {
         message = "Finish Linking";
       }
@@ -66,56 +45,56 @@ namespace Bonsai.Designer
       {
 
         // Toggle
-        _bIsLinking = !_bIsLinking;
+        isLinking = !isLinking;
 
-        if (_bIsLinking)
+        if (isLinking)
         {
 
-          parentWindow.InputHandler.StartReferenceLinking(typeof(Interruptable), onNodeSelectedForLinking);
-          parentWindow.Repaint();
+          ParentWindow.InputHandler.StartReferenceLinking(typeof(Interruptable), OnNodeSelectedForLinking);
+          ParentWindow.Repaint();
         }
 
         else
         {
 
-          parentWindow.InputHandler.EndReferenceLinking();
-          parentWindow.Repaint();
+          ParentWindow.InputHandler.EndReferenceLinking();
+          ParentWindow.Repaint();
         }
       }
 
-      if (parentWindow)
+      if (ParentWindow)
       {
-        _bIsLinking = parentWindow.InputHandler.IsRefLinking;
+        isLinking = ParentWindow.InputHandler.IsRefLinking;
       }
 
       EditorGUILayout.EndVertical();
     }
 
-    private void onNodeSelectedForLinking(BehaviourNode node)
+    private void OnNodeSelectedForLinking(BehaviourNode node)
     {
       serializedObject.Update();
 
       var refInter = node as Interruptable;
-      bool bAlreadyLinked = _interruptor.linkedInterruptables.Contains(refInter);
+      bool bAlreadyLinked = interruptor.linkedInterruptables.Contains(refInter);
 
       // Works as a toggle, if already linked then unlink.
       if (bAlreadyLinked)
       {
-        _interruptor.linkedInterruptables.Remove(refInter);
+        interruptor.linkedInterruptables.Remove(refInter);
 
       }
 
       // If unlinked, then link.
       else
       {
-        _interruptor.linkedInterruptables.Add(refInter);
+        interruptor.linkedInterruptables.Add(refInter);
       }
 
       serializedObject.ApplyModifiedProperties();
 
       // Update the referenced nodes in the editor.
-      var refs = _interruptor.GetReferencedNodes();
-      parentWindow.Editor.SetReferencedNodes(refs);
+      var refs = interruptor.GetReferencedNodes();
+      ParentWindow.Editor.SetReferencedNodes(refs);
     }
   }
 }

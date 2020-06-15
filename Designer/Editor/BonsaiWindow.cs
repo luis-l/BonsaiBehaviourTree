@@ -1,4 +1,5 @@
 ﻿
+using System.Linq;
 using Bonsai.Core;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -104,6 +105,18 @@ namespace Bonsai.Designer
       {
         Repaint();
       }
+    }
+
+    /// <summary>
+    /// Call to update the editor with new behaviour changes.
+    /// </summary>
+    /// <param name="behaviour"></param>
+    public void BehaviourNodeEdited(BehaviourNode behaviour)
+    {
+      BonsaiNode node = Editor.Canvas.First(n => n.Behaviour == behaviour);
+      node.UpdateGui();
+      node.UpdatePortPositions();
+      Repaint();
     }
 
     private void GoToViewMode()

@@ -436,78 +436,62 @@ namespace Bonsai.Designer
     {
       behaviourNodes = new Dictionary<Type, NodeTypeProperties>();
 
-      IEnumerable<Assembly> scriptAssemblies = AppDomain.CurrentDomain.GetAssemblies().
-          Where((Assembly assembly) => assembly.FullName.Contains("Assembly")
-              && !assembly.FullName.Contains("Editor"));
+      IEnumerable<Type> behaviourTypes = AppDomain.CurrentDomain.GetAssemblies()
+         .Where(asm => asm.FullName.Contains("Assembly") && !asm.FullName.Contains("Editor"))
+         .SelectMany(asm => asm.GetTypes())
+         .Where(t => t.IsSubclassOf(typeof(BehaviourNode)) && !t.IsAbstract);
 
-      Type targetType = typeof(BehaviourNode);
-
-      foreach (Assembly assembly in scriptAssemblies)
+      foreach (Type type in behaviourTypes)
       {
+        var nodeMeta = type.GetCustomAttribute<BonsaiNodeAttribute>(false);
 
-        foreach (Type type in assembly.GetTypes()
-            .Where(T => T.IsClass &&
-            !T.IsAbstract &&
-            T.IsSubclassOf(targetType)))
+        // Default menu path if unspecified.
+        string menuPath = "User/";
+
+        // Service base class is abstract. For Service types, default to Service texture.
+        string texName = typeof(Service).IsAssignableFrom(type) ? "Service" : "Play";
+
+        if (nodeMeta != null)
         {
-
-          object[] nodeProperties = type.GetCustomAttributes(typeof(BonsaiNodeAttribute), false);
-
-          // The attribute is to simply get custom data about the node.
-          // Like menu path and texture.
-          BonsaiNodeAttribute attrib = null;
-          if (nodeProperties.Length > 0)
+          if (!string.IsNullOrEmpty(nodeMeta.menuPath))
           {
-            attrib = nodeProperties[0] as BonsaiNodeAttribute;
+            menuPath = nodeMeta.menuPath;
           }
 
-          string menuPath = "Uncategorized/";
-
-          // Service base class is abstract. For Service types, default to Service texture.
-          string texName = typeof(Service).IsAssignableFrom(type) ? "Service" : "Play";
-
-          if (attrib != null)
+          // Texxture names are optional. Use only if specified.
+          if (!string.IsNullOrEmpty(nodeMeta.texturePath))
           {
-            if (!string.IsNullOrEmpty(attrib.menuPath))
-            {
-              menuPath = attrib.menuPath;
-            }
-
-            // Texxture names are optional. Use only if specified.
-            if (!string.IsNullOrEmpty(attrib.texturePath))
-            {
-              texName = attrib.texturePath;
-            }
+            texName = nodeMeta.texturePath;
           }
-
-          bool bCreateInput = false;
-          bool bCreateOutput = false;
-          bool bCanHaveMultipleChildren = false;
-
-          // Only action nodes have an input and no output.
-          if (type.IsSubclassOf(typeof(Task)))
-          {
-            bCreateInput = true;
-          }
-
-          // Composites and decorators have in and out.
-          else
-          {
-            bCreateInput = true;
-            bCreateOutput = true;
-
-            // Only composites can have more than 1 child.
-            if (type.IsSubclassOf(typeof(Composite)))
-            {
-              bCanHaveMultipleChildren = true;
-            }
-          }
-
-          menuPath += type.Name;
-          var prop = new NodeTypeProperties(menuPath, texName, bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
-
-          behaviourNodes.Add(type, prop);
         }
+
+        bool bCreateInput = false;
+        bool bCreateOutput = false;
+        bool bCanHaveMultipleChildren = false;
+
+        // Only action nodes have an input and no output.
+        if (type.IsSubclassOf(typeof(Task)))
+        {
+          bCreateInput = true;
+        }
+
+        // Composites and decorators have in and out.
+        else
+        {
+          bCreateInput = true;
+          bCreateOutput = true;
+
+          // Only composites can have more than 1 child.
+          if (type.IsSubclassOf(typeof(Composite)))
+          {
+            bCanHaveMultipleChildren = true;
+          }
+        }
+
+        menuPath += type.Name;
+        var prop = new NodeTypeProperties(menuPath, texName, bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
+
+        behaviourNodes.Add(type, prop);
       }
     }
 

@@ -291,9 +291,12 @@ namespace Bonsai.Core
 
     public abstract int MaxChildCount();
 
+    /// <summary>
+    /// A summary description of the node.
+    /// </summary>
     public virtual void Description(StringBuilder builder)
     {
-      // Default adds no description;
+      // Default adds no description
     }
 
     #region Node Editor Meta Data

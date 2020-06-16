@@ -96,6 +96,7 @@ namespace Bonsai.Designer
 
           HandleOnAborterSelected(node);
           HandleOnReferenceContainerSelected(node);
+          window.Repaint();
         }
       };
     }

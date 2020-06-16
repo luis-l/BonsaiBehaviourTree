@@ -51,6 +51,7 @@ Things that cannot be currently edited in Play mode:
 - Viewing a running behaviour tree just requires clicking on a game object with behaviour tree component.
 - Behaviour tree assets can be opened by double clicking on the asset file.
 - Editor Preferences to change editor behaviour. Node look can be customized. Colors, size, and layouts can be changed.
+- View variables when tree is running. e.g. The time left for the Wait Task. 
 
 ### API and Custom Tasks
 
@@ -85,23 +86,23 @@ In order to add custom functionality you can override key methods:
 ```
 Example of a simple, custom Wait task:
 ```csharp
-    [NodeEditorProperties("Tasks/", "Timer")]
+    [BonsaiNode("Tasks/", "Timer")]
     public class Wait : Task
     {
-        private float _timer = 0f;
+        private float timer = 0f;
 
         public float waitTime = 1f;
 
         public override void OnEnter()
         {
-            _timer = 0f;
+            timer = 0f;
         }
 
         public override Status Run()
         {
-            _timer += Time.deltaTime;
+            timer += Time.deltaTime;
 
-            if (_timer >= waitTime) {
+            if (timer >= waitTime) {
                 return Status.Success;
             }
 
@@ -121,10 +122,6 @@ The same benchmark was run on a Linux laptop. Intel i5-6200U @ 2.30 GHz. The "Ti
 ### Limitations
 
 Since the goal of this project was a lightweight system, a complete, built-in functionality for serialization is not provided. The tree and blackboard structure is saved as an asset, but changing data values will not be persistent between game runs. For example, if you have a blackboard variable ["timer", 0.0f] and during the game run, the value goes up to say 10.0, you would need to save and load that value manually so its persistent between game saves.
-
-### Upcoming Features
-- Undo functionality. Any modification to the tree will be undo-able.
-- View node property during Play. (e.g. View time left on Wait Task)
 
 ### Old Screenshots and videos
 

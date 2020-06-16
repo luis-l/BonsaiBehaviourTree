@@ -96,7 +96,12 @@ namespace Bonsai.Designer
 
           HandleOnAborterSelected(node);
           HandleOnReferenceContainerSelected(node);
-          window.Repaint();
+
+          // This is only required when in Play mode. Force repeaint to see changes immediately.
+          if (window.EditorMode == BonsaiWindow.Mode.View)
+          {
+            window.Repaint();
+          }
         }
       };
     }

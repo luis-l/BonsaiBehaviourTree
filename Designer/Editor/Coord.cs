@@ -144,7 +144,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        if (IsInView(node) && IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
         {
           callback(node);
           return true;
@@ -184,7 +184,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (node.Output == null)
+        if (!IsInView(node) || node.Output == null)
         {
           continue;
         }
@@ -208,7 +208,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (node.Input == null)
+        if (!IsInView(node) || node.Input == null)
         {
           continue;
         }
@@ -232,8 +232,8 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        bool bCondition = IsUnderMouse(node.RectPositon) ||
-            (node.Input != null && IsUnderMouse(node.Input.RectPosition));
+        bool bCondition = IsInView(node) && (IsUnderMouse(node.RectPositon) ||
+            (node.Input != null && IsUnderMouse(node.Input.RectPosition)));
 
         if (bCondition)
         {

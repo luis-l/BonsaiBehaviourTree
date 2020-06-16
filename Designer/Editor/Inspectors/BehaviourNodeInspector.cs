@@ -1,5 +1,6 @@
-﻿
+﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Bonsai.Core;
 using UnityEditor;
 using UnityEngine;
@@ -15,12 +16,25 @@ namespace Bonsai.Designer
     // The bonsai window associated with the target's inspector behaviour.
     protected BonsaiWindow ParentWindow { get; private set; }
 
+    private GUIContent runtimeHeading;
+    private GUIStyle runtimeHeaderStyle;
+
+    // BehaviourNode fields to show when the tree is running in Play mode. e.g. The time left on a timer.
+    private Dictionary<string, FieldInfo> runtimeFields = new Dictionary<string, FieldInfo>();
+
     protected virtual void OnEnable()
     {
       var edited = target as BehaviourNode;
 
       // Find the the editor window with the tree associated with this behaviour.
       ParentWindow = Resources.FindObjectsOfTypeAll<BonsaiWindow>().First(w => w.Tree == edited.Tree);
+
+      if (ParentWindow.EditorMode == BonsaiWindow.Mode.View)
+      {
+        runtimeHeading = new GUIContent("Runtime values");
+        runtimeHeaderStyle = new GUIStyle { fontSize = 12, fontStyle = FontStyle.Bold };
+        runtimeFields = GetRuntimeFields(edited);
+      }
     }
 
     public override void OnInspectorGUI()
@@ -33,11 +47,49 @@ namespace Bonsai.Designer
       {
         ParentWindow.BehaviourNodeEdited(target as BehaviourNode);
       }
+
+      if (ParentWindow.EditorMode == BonsaiWindow.Mode.View)
+      {
+        DrawRuntimeValues();
+      }
     }
 
     /// <summary>
     /// Child editors will override to draw the inspector.
     /// </summary>
     protected virtual void OnBehaviourNodeInspectorGUI() { }
+
+    public override bool RequiresConstantRepaint()
+    {
+      // Repaint to see runtime values changes when tree runs.
+      return ParentWindow.EditorMode == BonsaiWindow.Mode.View && runtimeFields.Count != 0;
+    }
+
+    private void DrawRuntimeValues()
+    {
+      if (runtimeFields.Count != 0)
+      {
+        EditorGUILayout.Space();
+        GUILayout.Label(runtimeHeading, runtimeHeaderStyle);
+
+        foreach (var fields in runtimeFields)
+        {
+          EditorGUILayout.LabelField(fields.Key, fields.Value.GetValue(target).ToString());
+        }
+      }
+    }
+
+    private Dictionary<string, FieldInfo> GetRuntimeFields(BehaviourNode target)
+    {
+      return target.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
+        .Where(f => f.GetCustomAttribute<ShowAtRuntimeAttribute>(false) != null)
+        .ToDictionary(f => RuntimeFieldLabel(f), f => f);
+    }
+
+    private static string RuntimeFieldLabel(FieldInfo f)
+    {
+      var view = f.GetCustomAttribute<ShowAtRuntimeAttribute>(false);
+      return ObjectNames.NicifyVariableName(string.IsNullOrEmpty(view.label) ? f.Name : view.label);
+    }
   }
 }

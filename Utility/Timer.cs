@@ -37,6 +37,11 @@ namespace Bonsai.Utility
     public bool IsDone { get { return TimeLeft <= 0f; } }
 
     public bool IsRunning { get { return !IsDone; } }
+
+    public override string ToString()
+    {
+      return TimeLeft.ToString();
+    }
   }
 
 }

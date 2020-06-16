@@ -10,20 +10,21 @@ namespace Bonsai.Standard
   [BonsaiNode("Tasks/", "Timer")]
   public class Wait : Task
   {
-    private float _timer = 0f;
+    [ShowAtRuntime]
+    private float timer = 0f;
 
     public float waitTime = 1f;
 
     public override void OnEnter()
     {
-      _timer = 0f;
+      timer = 0f;
     }
 
     public override Status Run()
     {
-      _timer += Time.deltaTime;
+      timer += Time.deltaTime;
 
-      if (_timer >= waitTime)
+      if (timer >= waitTime)
       {
         return Status.Success;
       }

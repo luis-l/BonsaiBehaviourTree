@@ -15,7 +15,8 @@ namespace Bonsai.Standard
   {
     public float timeLimit = 1f;
 
-    private float counter = 0f;
+    [ShowAtRuntime]
+    private float timer = 0f;
 
     protected override void OnEnable()
     {
@@ -25,18 +26,18 @@ namespace Bonsai.Standard
 
     public override void OnEnter()
     {
-      counter = 0f;
+      timer = 0f;
       base.OnEnter();
     }
 
     public override bool Condition()
     {
-      return counter < timeLimit;
+      return timer < timeLimit;
     }
 
     public override void OnBranchTick()
     {
-      counter += Time.deltaTime;
+      timer += Time.deltaTime;
     }
 
     public override bool CanTickOnBranch()

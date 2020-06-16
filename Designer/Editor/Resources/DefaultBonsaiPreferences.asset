@@ -28,7 +28,7 @@ MonoBehaviour:
   decoratorColor: {r: 0.4553469, g: 0.38719293, b: 0.7264151, a: 1}
   conditionalColor: {r: 0.36663404, g: 0.7264151, b: 0.72088, a: 1}
   serviceColor: {r: 0.990566, g: 0.6200383, b: 0.13550198, a: 1}
-  taskColor: {r: 0.59679204, g: 0.6415094, b: 0.5355998, a: 1}
+  taskColor: {r: 0.59607846, g: 0.6431373, b: 0.5372549, a: 1}
   defaultNodeBackgroundColor: {r: 0.2924528, g: 0.2924528, b: 0.2924528, a: 1}
   selectedColor: {r: 0.3443396, g: 0.62303853, b: 1, a: 1}
   runningColor: {r: 0.2971698, g: 1, b: 0.61701846, a: 1}

@@ -16,6 +16,7 @@ namespace Bonsai.Standard
     [Tooltip("The amount of time to wait at the cooldown decorator.")]
     public float cooldownTime = 1f;
 
+    [ShowAtRuntime]
     private readonly Utility.Timer timer = new Utility.Timer();
 
     public override void OnStart()
@@ -34,8 +35,12 @@ namespace Bonsai.Standard
 
     public override void OnExit()
     {
-      timer.WaitTime = cooldownTime;
-      timer.Start();
+      // Only start time if not yet running 
+      if (timer.IsDone)
+      {
+        timer.WaitTime = cooldownTime;
+        timer.Start();
+      }
     }
 
     // Abort if the cooldown status changed.

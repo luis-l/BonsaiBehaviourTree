@@ -10,6 +10,7 @@ namespace Bonsai.Designer
   /// <summary>
   /// All behaviour tree nodes will use this inspector so GUI changes are reflected immediately in the tree editor.
   /// </summary>
+  [CanEditMultipleObjects]
   [CustomEditor(typeof(BehaviourNode), true)]
   public class BehaviourNodeInspector : Editor
   {

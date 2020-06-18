@@ -1,10 +1,9 @@
 ﻿
 using System;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEditor;
-
+using System.Linq;
 using Bonsai.Core;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
@@ -18,42 +17,13 @@ namespace Bonsai.Designer
     private readonly GenericMenu nodeContextMenu;
     private readonly GenericMenu multiNodeContextMenu;
 
-    private readonly Action<BonsaiNode> onSingleSelected;
     public enum NodeContext { SetAsRoot, Duplicate, ChangeType, Delete, DuplicateSelection, DeleteSelection };
 
-    // The relative position between the node and the mouse when it was click for dragging.
-    private Vector2 singleDragOffset = Vector2.zero;
-    private readonly List<Vector2> multiDragOffsets = new List<Vector2>();
+    public event EventHandler<BonsaiNode> NodeClicked = delegate { };
+    public event EventHandler<BehaviourTree> TreeClicked = delegate { };
 
-    // The nodes that will be dragged.
-    private readonly List<BonsaiNode> draggingSubroots = new List<BonsaiNode>();
-
-    private bool isDragging = false;
-    private Vector2 areaSelectStartPos = Vector2.zero;
-
-    // The node that is currently dragged.
-    private BonsaiNode draggingNode = null;
-
-    // The nodes selected from an area/multi selection.
-    private readonly List<BonsaiNode> selectedNodes = new List<BonsaiNode>();
-    private Type referenceLinkType = typeof(BehaviourNode);
-    private Action<BehaviourNode> onSelectedForLinking = null;
-
-    public bool IsRefLinking { get; private set; } = false;
-    public bool IsMakingConnection { get; private set; } = false;
-    public BonsaiOutputPort OutputToConnect { get; private set; } = null;
-    public bool IsAreaSelecting { get; private set; } = false;
-    public BonsaiNode SelectedNode { get; private set; } = null;
-
-    private void ResetState()
-    {
-      IsAreaSelecting = false;
-      isDragging = false;
-      IsMakingConnection = false;
-
-      draggingNode = null;
-      OutputToConnect = null;
-    }
+    public event EventHandler<float> Zoomed = delegate { };
+    public event EventHandler<Vector2> Panned = delegate { };
 
     public BonsaiInputHandler(BonsaiWindow w)
     {
@@ -79,31 +49,6 @@ namespace Bonsai.Designer
       // Setup area selection context menu.
       multiNodeContextMenu.AddItem(new GUIContent("Duplicate"), false, OnMultiNodeCallback, NodeContext.DuplicateSelection);
       multiNodeContextMenu.AddItem(new GUIContent("Delete"), false, OnMultiNodeCallback, NodeContext.DeleteSelection);
-
-      // Define the actions to take when a single node is selected.
-      onSingleSelected = (node) =>
-      {
-        // Only apply single node selection on a node that is
-        // not currently under area selection.
-        if (!node.isUnderAreaSelection)
-        {
-          window.Editor.ClearReferencedNodes();
-          ClearAreaSelection();
-
-          SelectedNode = node;
-          window.Editor.Canvas.PushToEnd(SelectedNode);
-          Selection.activeObject = node.Behaviour;
-
-          HandleOnAborterSelected(node);
-          HandleOnReferenceContainerSelected(node);
-
-          // This is only required when in Play mode. Force repeaint to see changes immediately.
-          if (window.EditorMode == BonsaiWindow.Mode.View)
-          {
-            window.Repaint();
-          }
-        }
-      };
     }
 
     public void HandleMouseEvents(Event e)
@@ -111,7 +56,9 @@ namespace Bonsai.Designer
       // Mouse must be inside the editor canvas.
       if (!window.CanvasInputRect.Contains(e.mousePosition))
       {
-        ResetState();
+        window.Editor.NodeDragging.EndDrag();
+        window.Editor.NodeAreaSelect.EndAreaSelection();
+        window.Editor.MakingConnection.EndConnection();
         return;
       }
 
@@ -153,34 +100,54 @@ namespace Bonsai.Designer
 
     private void HandleCanvasInputs(Event e)
     {
-      // Zoom
-      if (e.type == EventType.ScrollWheel)
+      if (IsZoomAction(e))
       {
         e.Use();
+        Zoomed(this, e.delta.y);
         window.Editor.Zoom(e.delta.y);
       }
 
-      // Pan
-      if (e.type == EventType.MouseDrag)
+      if (IsPanAction(e))
       {
-        if (e.button == 2)
-        {
-          e.Use();
-          window.Editor.Pan(e.delta);
-        }
+        e.Use();
+        Panned(this, e.delta);
+        window.Editor.Pan(e.delta);
       }
 
-      if (e.type == EventType.MouseDown && e.button == 0)
+      if (IsSelectObjectAction(e))
       {
-        bool bNodeSelected = window.Editor.Coordinates.OnMouseOverNode(onSingleSelected);
+        BonsaiNode node = window.Editor.Coordinates.NodeUnderMouse();
 
-        // Select tree
-        if (!bNodeSelected && (Selection.activeObject != window.Tree))
+        if (node != null)
         {
-          SetTreeAsSelected();
-          ClearAreaSelection();
+          if (!window.Editor.NodeSelection.IsMultiSelection)
+          {
+            NodeClicked(this, node);
+            window.Editor.NodeSelection.SelectSingleNode(node);
+          }
+        }
+
+        else if (Selection.activeObject != window.Tree)
+        {
+          TreeClicked(this, window.Tree);
+          window.Editor.NodeSelection.SelectTree(window.Tree);
         }
       }
+    }
+
+    private static bool IsSelectObjectAction(Event e)
+    {
+      return e.type == EventType.MouseDown && e.button == 0;
+    }
+
+    private static bool IsPanAction(Event e)
+    {
+      return e.type == EventType.MouseDrag && e.button == 2;
+    }
+
+    private static bool IsZoomAction(Event e)
+    {
+      return e.type == EventType.ScrollWheel;
     }
 
     private void HandleNodeConnection(Event e)
@@ -192,8 +159,7 @@ namespace Bonsai.Designer
         bool isMouseOverOuput = window.Editor.Coordinates.OnMouseOverOutput(output =>
         {
           e.Use();
-          IsMakingConnection = true;
-          OutputToConnect = output;
+          window.Editor.MakingConnection.BeginConnection(output);
         });
 
         // Check if we are making connection starting from input
@@ -206,11 +172,7 @@ namespace Bonsai.Designer
             if (input.outputConnection != null)
             {
               e.Use();
-              IsMakingConnection = true;
-              OutputToConnect = input.outputConnection;
-
-              // We disconnect the input since we want to change it to a new input.
-              input.outputConnection.RemoveInputConnection(input);
+              window.Editor.MakingConnection.BeginConnection(input);
             }
           });
         }
@@ -218,19 +180,18 @@ namespace Bonsai.Designer
       }
 
       // Finish making the connection.
-      else if (e.type == EventType.MouseUp && e.button == 0 && IsMakingConnection)
+      else if (e.type == EventType.MouseUp && e.button == 0 && window.Editor.MakingConnection.IsMakingConnection)
       {
         window.Editor.Coordinates.OnMouseOverNodeOrInput(node =>
         {
-          OutputToConnect.Add(node.Input);
+          window.Editor.MakingConnection.OutputToConnect.Add(node.Input);
 
           // When a connection is made, we need to make sure the positional
           // ordering reflects the internal tree structure.
           node.NotifyParentOfPostionalReordering();
         });
 
-        IsMakingConnection = false;
-        OutputToConnect = null;
+        window.Editor.MakingConnection.EndConnection();
       }
     }
 
@@ -247,75 +208,26 @@ namespace Bonsai.Designer
       Selection.activeObject = node.Behaviour;
     }
 
-    private void HandleOnAborterSelected(BonsaiNode node)
-    {
-      // Make sure to keep the order indices updated
-      // so we can get feed back about the abort.
-      // We only do it when clicking on an aborter for efficiency
-      // purposes.
-      var aborter = node.Behaviour as ConditionalAbort;
-      if (aborter && aborter.abortType != AbortType.None)
-      {
-        window.Editor.UpdateOrderIndices();
-      }
-    }
-
-    private void HandleOnReferenceContainerSelected(BonsaiNode node)
-    {
-      Type type = node.Behaviour.GetType();
-
-      bool bIsRefContainer = window.Editor.referenceContainerTypes.Contains(type);
-
-      // Cache referenced nodes for highlighting.
-      if (bIsRefContainer)
-      {
-        var refNodes = node.Behaviour.GetReferencedNodes();
-        window.Editor.SetReferencedNodes(refNodes);
-      }
-    }
-
-    #region Reference Linking
-
     private void HandleLinking(Event e)
     {
-      if (!IsRefLinking) return;
-
-      if (e.type == EventType.MouseDown && e.button == 0)
+      if (window.Editor.NodeLinking.IsLinking)
       {
-        bool bResult = window.Editor.Coordinates.OnMouseOverNode(node =>
+        if (e.type == EventType.MouseDown && e.button == 0)
         {
-          if (node.Behaviour.GetType() == referenceLinkType)
+          bool isOverNode = window.Editor.Coordinates.OnMouseOverNode(node =>
           {
-            onSelectedForLinking(node.Behaviour);
+            window.Editor.NodeLinking.TryLink(node);
+          });
+
+          // Abort linking
+          if (!isOverNode)
+          {
+            window.Editor.NodeLinking.EndLinking();
           }
-        });
-
-        // Abort linking
-        if (!bResult)
-        {
-          EndReferenceLinking();
+          e.Use();
         }
-
-        e.Use();
       }
     }
-
-    public void StartReferenceLinking(Type refType, Action<BehaviourNode> onNodeSelected)
-    {
-      referenceLinkType = refType;
-      onSelectedForLinking = onNodeSelected;
-      IsRefLinking = true;
-    }
-
-    public void EndReferenceLinking()
-    {
-      onSelectedForLinking = null;
-      IsRefLinking = false;
-    }
-
-    #endregion
-
-    #region Context Inputs
 
     private void HandleContextInput(Event e)
     {
@@ -324,14 +236,12 @@ namespace Bonsai.Designer
         return;
       }
 
-      int selectionCount = selectedNodes.Count;
-
-      if (selectionCount == 0)
+      if (!window.Editor.NodeSelection.IsMultiSelection)
       {
         HandleSingleContext(e);
       }
 
-      else
+      if (window.Editor.NodeSelection.IsMultiSelection)
       {
         HandleMultiContext();
         e.Use();
@@ -342,13 +252,14 @@ namespace Bonsai.Designer
     {
       // Show node context menu - delete and duplicate.
       // Context click over the node.
-      bool bClickedNode = window.Editor.Coordinates.OnMouseOverNode(node =>
+      bool isOverNode = window.Editor.Coordinates.OnMouseOverNode(node =>
       {
-        onSingleSelected(node);
+        NodeClicked(this, node);
+        window.Editor.NodeSelection.SelectSingleNode(node);
         nodeContextMenu.ShowAsContext();
       });
 
-      if (!bClickedNode)
+      if (!isOverNode)
       {
         // Display node creation menu.
         nodeTypeSelectionMenu.ShowAsContext();
@@ -365,15 +276,16 @@ namespace Bonsai.Designer
     {
       NodeContext context = (NodeContext)o;
 
-      Type nodeType = SelectedNode.Behaviour.GetType();
+      BonsaiNode selected = window.Editor.NodeSelection.SelectedNode;
 
       switch (context)
       {
         case NodeContext.SetAsRoot:
-          window.Tree.Root = SelectedNode.Behaviour;
+          window.Tree.Root = selected.Behaviour;
           break;
 
         case NodeContext.Duplicate:
+          Type nodeType = selected.Behaviour.GetType();
           OnNodeCreateCallback(nodeType);
           break;
 
@@ -383,7 +295,7 @@ namespace Bonsai.Designer
           break;
 
         case NodeContext.Delete:
-          window.Editor.Canvas.Remove(SelectedNode);
+          window.Editor.Canvas.Remove(selected);
           break;
       }
     }
@@ -395,340 +307,85 @@ namespace Bonsai.Designer
       switch (context)
       {
         case NodeContext.DuplicateSelection:
-
-          BonsaiCanvas canvas = window.Editor.Canvas;
-          BehaviourTree bt = window.Tree;
-
-          for (int i = 0; i < selectedNodes.Count; ++i)
-          {
-            // The original nodes will become selected.
-            BonsaiNode node = selectedNodes[i];
-            node.isUnderAreaSelection = false;
-
-            Type t = node.Behaviour.GetType();
-
-            // Duplicate nodes become selected and are spawned
-            // at offset from their original.
-            BonsaiNode duplicate = canvas.CreateNode(t, bt);
-            duplicate.isUnderAreaSelection = true;
-            duplicate.Position = node.Position + Vector2.one * 40f;
-
-            // Replace in the list with new selections.
-            selectedNodes[i] = duplicate;
-          }
-
-          // Notify inspector about the new selections.
-          SetSelectedInInspector();
+          var duplicates = window.Editor.NodeSelection.Selected.Select(node => DuplicateNode(node));
+          window.Editor.NodeSelection.SetCurrentSelection(duplicates.ToList());
           break;
 
         case NodeContext.DeleteSelection:
-          window.Editor.Canvas.RemoveSelected();
-          ClearAreaSelection();
-          SetTreeAsSelected();
+          window.Editor.Canvas.Remove(node => window.Editor.NodeSelection.IsNodeSelected(node));
+          window.Editor.NodeSelection.SelectTree(window.Tree);
           break;
       }
     }
 
-    #endregion
+    private BonsaiNode DuplicateNode(BonsaiNode original)
+    {
+      BonsaiNode duplicate = window.Editor.Canvas.CreateNode(original.Behaviour.GetType(), window.Tree);
 
-    #region Dragging
+      // Duplicate nodes are placed offset from the original.
+      duplicate.Position = original.Position + Vector2.one * 40f;
+
+      return duplicate;
+    }
 
     private void HandleNodeDragging(Event e)
     {
-      bool bIsMulti = selectedNodes.Count > 0;
-
       // Start node drag.
       if (e.type == EventType.MouseDown && e.button == 0)
       {
-        if (bIsMulti) StartMultiDrag(e);
-        else StartSingleDrag(e);
+        if (window.Editor.Coordinates.IsMouseOverNode())
+        {
+          var selection = window.Editor.NodeSelection.Selected;
+          window.Editor.NodeDragging.BeginDrag(selection, window.Editor.Coordinates.MousePosition());
+          e.Use();
+        }
       }
 
       // End node drag.
-      else if (e.type == EventType.MouseUp && e.button == 0 && isDragging)
+      else if (e.type == EventType.MouseUp && e.button == 0 && window.Editor.NodeDragging.IsDragging)
       {
-        if (bIsMulti) EndMultiDrag();
-        else EndSingleDrag();
+        window.Editor.NodeDragging.EndDrag();
       }
 
       // On Node Drag.
-      if (isDragging && e.type == EventType.MouseDrag)
+      if (window.Editor.NodeDragging.IsDragging && e.type == EventType.MouseDrag)
       {
-        if (bIsMulti) OnMultiDrag();
-        else OnSingleDrag();
+        window.Editor.NodeDragging.Drag(window.Editor.Coordinates.MousePosition());
         e.Use();
       }
     }
-
-    private void StartSingleDrag(Event e)
-    {
-      window.Editor.Coordinates.OnMouseOverNode(node =>
-      {
-        e.Use();
-        isDragging = true;
-        draggingNode = node;
-
-        // Calculate the relative mouse position from the node for dragging.
-        Vector2 mpos = window.Editor.Coordinates.MousePosition();
-        singleDragOffset = mpos - draggingNode.Center;
-      });
-    }
-
-    private void EndSingleDrag()
-    {
-      // After doing a drag, the children order might have changed, so to reflect
-      // what we see in the editor to the internal tree structure, we notify the 
-      // node of a positional reordering.
-      draggingNode.NotifyParentOfPostionalReordering();
-      isDragging = false;
-      draggingNode = null;
-    }
-
-    private void OnSingleDrag()
-    {
-      // Have the node and its subtree follow the mouse.
-      Vector2 mpos = window.Editor.Coordinates.MousePosition();
-      window.Editor.SetSubtreePosition(mpos, singleDragOffset, draggingNode);
-    }
-
-    private void StartMultiDrag(Event e)
-    {
-      // Make sure to drag when clicking on a selected node.
-      bool bStartDrag = false;
-
-      foreach (BonsaiNode node in selectedNodes)
-      {
-        if (window.Editor.Coordinates.IsUnderMouse(node.RectPositon))
-        {
-          bStartDrag = true;
-          break;
-        }
-      }
-
-      if (!bStartDrag)
-      {
-        return;
-      }
-
-      e.Use();
-      isDragging = true;
-
-      draggingSubroots.Clear();
-      multiDragOffsets.Clear();
-
-      // Find the selected roots to apply dragging.
-      foreach (BonsaiNode node in selectedNodes)
-      {
-        // Unparented nodes are roots.
-        // Isolated nodes are their own roots.
-        if (node.Input.outputConnection == null)
-        {
-          draggingSubroots.Add(node);
-        }
-
-        // Nodes that have a selected parent are not selected roots.
-        else if (!node.Input.outputConnection.ParentNode.isUnderAreaSelection)
-        {
-          draggingSubroots.Add(node);
-        }
-      }
-
-      Vector2 mpos = window.Editor.Coordinates.MousePosition();
-
-      foreach (BonsaiNode root in draggingSubroots)
-      {
-        // Calculate the relative mouse position from the node for dragging.
-        Vector2 offset = mpos - root.Center;
-
-        multiDragOffsets.Add(offset);
-      }
-    }
-
-    private void EndMultiDrag()
-    {
-      foreach (BonsaiNode root in draggingSubroots)
-      {
-        root.NotifyParentOfPostionalReordering();
-      }
-
-      draggingSubroots.Clear();
-      multiDragOffsets.Clear();
-      isDragging = false;
-    }
-
-    private void OnMultiDrag()
-    {
-      Vector2 mpos = window.Editor.Coordinates.MousePosition();
-
-      int i = 0;
-      foreach (BonsaiNode root in draggingSubroots)
-      {
-        Vector2 offset = multiDragOffsets[i++];
-        window.Editor.SetSubtreePosition(mpos, offset, root);
-      }
-    }
-
-    #endregion
-
-    #region Area Selection
 
     private void HandleAreaSelection(Event e)
     {
       // Start area selection.
       if (e.type == EventType.MouseDown && e.button == 0)
       {
-        areaSelectStartPos = Event.current.mousePosition;
-        IsAreaSelecting = true;
+        window.Editor.NodeAreaSelect.BeginAreaSelection(Event.current.mousePosition);
         e.Use();
       }
 
       // End area selection
-      else if (e.type == EventType.MouseUp && e.button == 0 && IsAreaSelecting)
+      else if (e.type == EventType.MouseUp && e.button == 0 && window.Editor.NodeAreaSelect.IsSelecting)
       {
-        CollectAreaSelectedNodes();
-        IsAreaSelecting = false;
+        var selected = window.Editor.NodeAreaSelect.NodesUnderSelection(
+          window.Editor.Coordinates,
+          Event.current.mousePosition,
+          window.Editor.Canvas);
+
+        window.Editor.NodeSelection.SetCurrentSelection(selected.ToList());
+        window.Editor.NodeAreaSelect.EndAreaSelection();
       }
 
       // Doing area selection.
-      if (IsAreaSelecting)
+      if (e.type == EventType.MouseMove && window.Editor.NodeAreaSelect.IsSelecting)
       {
-        SetSelectedNodesUnderAreaSelection();
+        //var selected = window.Editor.NodeAreaSelect.NodesUnderSelection(
+        //  window.Editor.Coordinates,
+        //  Event.current.mousePosition,
+        //  window.Editor.Canvas);
+        //window.Editor.NodeSelection.SetCurrentSelection(selected.ToList());
       }
     }
 
-    /// <summary>
-    /// Handles cleaning up after a area selection terminates.
-    /// </summary>
-    private void ClearAreaSelection()
-    {
-      isDragging = false;
-
-      foreach (BonsaiNode node in selectedNodes)
-      {
-        node.isUnderAreaSelection = false;
-      }
-
-      draggingSubroots.Clear();
-      multiDragOffsets.Clear();
-      selectedNodes.Clear();
-    }
-
-    private void SetSelectedInInspector()
-    {
-      // Store all the behaviours into an array so Selection.objects can use it.
-      var selectedBehaviours = new BehaviourNode[selectedNodes.Count];
-
-      int i = 0;
-      foreach (BonsaiNode node in selectedNodes)
-      {
-        selectedBehaviours[i++] = node.Behaviour;
-      }
-
-      if (selectedBehaviours.Length > 0)
-      {
-        Selection.objects = selectedBehaviours;
-      }
-    }
-
-    private void SetSelectedNodesUnderAreaSelection()
-    {
-      Rect selectRect = SelectionCanvasSpace();
-
-      // Mark nodes as selected if they overlap the selection area.
-      foreach (BonsaiNode node in window.Editor.Canvas)
-      {
-        if (node.RectPositon.Overlaps(selectRect))
-        {
-          node.isUnderAreaSelection = true;
-        }
-
-        else
-        {
-          node.isUnderAreaSelection = false;
-        }
-      }
-    }
-
-    private void CollectAreaSelectedNodes()
-    {
-      selectedNodes.Clear();
-      Rect selectionRect = SelectionCanvasSpace();
-
-      // Collect all nodes overlapping the selection rect.
-      foreach (BonsaiNode node in window.Editor.Canvas)
-      {
-        if (node.RectPositon.Overlaps(selectionRect))
-        {
-          node.isUnderAreaSelection = true;
-          selectedNodes.Add(node);
-        }
-      }
-
-      SetSelectedInInspector();
-    }
-
-    #endregion
-
-    private void SetTreeAsSelected()
-    {
-      EndReferenceLinking();
-      window.Editor.ClearReferencedNodes();
-      SelectedNode = null;
-      Selection.activeObject = window.Tree;
-    }
-
-    /// <summary>
-    /// Returns the area selection in screen space.
-    /// </summary>
-    /// <returns></returns>
-    public Rect SelectionScreenSpace()
-    {
-      // The two corners defining the selection rect.
-      Vector2 startPos = areaSelectStartPos;
-      Vector2 mousePos = Event.current.mousePosition;
-
-      // Need to find the proper min and max values to 
-      // create a rect without negative width/height values.
-      float xmin, xmax;
-      float ymin, ymax;
-
-      if (startPos.x < mousePos.x)
-      {
-        xmin = startPos.x;
-        xmax = mousePos.x;
-      }
-
-      else
-      {
-        xmax = startPos.x;
-        xmin = mousePos.x;
-      }
-
-      if (startPos.y < mousePos.y)
-      {
-        ymin = startPos.y;
-        ymax = mousePos.y;
-      }
-
-      else
-      {
-        ymax = startPos.y;
-        ymin = mousePos.y;
-      }
-
-      return Rect.MinMaxRect(xmin, ymin, xmax, ymax);
-    }
-
-    /// <summary>
-    /// Returns the selection rect in canvas space.
-    /// </summary>
-    /// <returns></returns>
-    public Rect SelectionCanvasSpace()
-    {
-      Rect screenRect = SelectionScreenSpace();
-      Vector2 min = window.Editor.Coordinates.ScreenToCanvasSpace(screenRect.min);
-      Vector2 max = window.Editor.Coordinates.ScreenToCanvasSpace(screenRect.max);
-      return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
-    }
   }
 }

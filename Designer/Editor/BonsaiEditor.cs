@@ -20,15 +20,15 @@ namespace Bonsai.Designer
     public BonsaiCanvas Canvas { get; private set; }
     public Coord Coordinates { get; private set; }
 
+    public EditorSelection NodeSelection { get; } = new EditorSelection();
+    public EditorDragging NodeDragging { get; } = new EditorDragging();
+    public EditorAreaSelect NodeAreaSelect { get; } = new EditorAreaSelect();
+    public EditorNodeLinking NodeLinking { get; } = new EditorNodeLinking();
+    public EditorMakingConnection MakingConnection { get; } = new EditorMakingConnection();
+
     private static Dictionary<Type, NodeTypeProperties> behaviourNodes;
 
     private BonsaiNode nodeToPositionUnderMouse = null;
-
-    // Remembers which nodes are currently being referenced by another node.
-    private readonly HashSet<BehaviourNode> referencedNodes = new HashSet<BehaviourNode>();
-
-    // The types of node which can store refs to other nodes.
-    public readonly HashSet<Type> referenceContainerTypes = new HashSet<Type>();
 
     /// <summary>
     /// The multiple that grid snapping rounds to.
@@ -42,9 +42,27 @@ namespace Bonsai.Designer
     public BonsaiEditor(BonsaiWindow window)
     {
       this.window = window;
-      referenceContainerTypes.Add(typeof(Interruptor));
-      referenceContainerTypes.Add(typeof(Guard));
       modeStatusStyle.normal.textColor = new Color(1f, 1f, 1f, 0.2f);
+
+      NodeSelection.SingleSelected += OnSingleSelected;
+      NodeSelection.AbortSelected += OnAbortSelected;
+    }
+
+    private void OnSingleSelected(object sender, BonsaiNode node)
+    {
+      // Push to end so it is rendered above all other nodes.
+      Canvas.PushToEnd(node);
+
+      // This is only required when in Play mode. Force repeaint to see changes immediately.
+      if (window.EditorMode == BonsaiWindow.Mode.View)
+      {
+        window.Repaint();
+      }
+    }
+
+    private void OnAbortSelected(object sender, ConditionalAbort abort)
+    {
+      UpdateOrderIndices();
     }
 
     public void SetBehaviourTree(BehaviourTree tree)
@@ -101,52 +119,6 @@ namespace Bonsai.Designer
       Canvas.zoom.Set(cap, cap);
     }
 
-    /// <summary>
-    /// Sets the position of the subtree at an offset.
-    /// </summary>
-    /// <param name="pos">The position of the subtree. </param>
-    /// <param name="offset">Additional offset.</param>
-    /// <param name="root">The subtree root.</param>
-    public void SetSubtreePosition(Vector2 pos, Vector2 offset, BonsaiNode root)
-    {
-      float min = float.MinValue;
-
-      if (root.Input.outputConnection != null)
-      {
-
-        float nodeTop = root.Input.RectPosition.yMin;
-        float parentBottom = root.Input.outputConnection.RectPosition.yMax;
-
-        // The root cannot be above its parent.
-        if (nodeTop < parentBottom)
-        {
-          min = parentBottom;
-        }
-      }
-
-      // Record the old position so we can know by how much the root moved
-      // so all children can be shifted by the pan delta.
-      Vector2 oldPos = root.Center;
-
-      // Clamp the position so it does not go above the parent.
-      Vector2 diff = pos - offset;
-      diff.y = Mathf.Clamp(diff.y, min, float.MaxValue);
-
-      Vector2 rounded = Coord.SnapPosition(diff, SnapStep);
-      root.Center = rounded;
-
-      // Calculate the change of position of the root.
-      Vector2 pan = root.Center - oldPos;
-
-      // Move the entire subtree of the root.
-      TreeIterator<BonsaiNode>.Traverse(root, node =>
-      {
-        // For all children, pan by the same amount that the parent changed by.
-        if (node != root)
-          node.Center += Coord.SnapPosition(pan, SnapStep);
-      });
-    }
-
     public void UpdateNodeGUI(BehaviourNode behaviour)
     {
       BonsaiNode node = Canvas.First(n => n.Behaviour == behaviour);
@@ -160,25 +132,6 @@ namespace Bonsai.Designer
     public void UpdateOrderIndices()
     {
       window.Tree.CalculateTreeOrders();
-    }
-
-    public void SetReferencedNodes(IEnumerable<BehaviourNode> nodes)
-    {
-      if (nodes == null)
-      {
-        return;
-      }
-
-      referencedNodes.Clear();
-      foreach (BehaviourNode node in nodes)
-      {
-        referencedNodes.Add(node);
-      }
-    }
-
-    public void ClearReferencedNodes()
-    {
-      referencedNodes.Clear();
     }
 
     #endregion
@@ -262,9 +215,9 @@ namespace Bonsai.Designer
     private void DrawConnectionPreview()
     {
       // Draw connection between mouse and the port.
-      if (window.InputHandler.IsMakingConnection)
+      if (MakingConnection.IsMakingConnection)
       {
-        var start = Coordinates.CanvasToScreenSpace(window.InputHandler.OutputToConnect.RectPosition.center);
+        var start = Coordinates.CanvasToScreenSpace(MakingConnection.OutputToConnect.RectPosition.center);
         var end = Event.current.mousePosition;
         Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
         window.Repaint();
@@ -273,10 +226,10 @@ namespace Bonsai.Designer
 
     private void DrawAreaSelection()
     {
-      if (window.InputHandler.IsAreaSelecting)
+      if (NodeAreaSelect.IsSelecting)
       {
         // Construct and display the rect.
-        Rect selectionRect = window.InputHandler.SelectionScreenSpace();
+        Rect selectionRect = NodeAreaSelect.SelectionScreenSpace(Event.current.mousePosition);
         Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
         Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
 
@@ -294,7 +247,7 @@ namespace Bonsai.Designer
         GUI.Label(modeStatusRect, new GUIContent("No Tree Set"), modeStatusStyle);
       }
 
-      else if (window.InputHandler.IsRefLinking)
+      else if (NodeLinking.IsLinking)
       {
         GUI.Label(modeStatusRect, new GUIContent("Link References"), modeStatusStyle);
       }
@@ -322,11 +275,11 @@ namespace Bonsai.Designer
       {
         return Preferences.runningColor;
       }
-      else if (IsNodeSelected(node))
+      else if (NodeSelection.IsNodeSelected(node))
       {
         return Preferences.selectedColor;
       }
-      else if (IsNodeReferenced(node))
+      else if (NodeSelection.IsReferenced(node))
       {
         return Preferences.referenceColor;
       }
@@ -358,7 +311,7 @@ namespace Bonsai.Designer
         return false;
       }
 
-      BonsaiNode selected = window.InputHandler.SelectedNode;
+      BonsaiNode selected = NodeSelection.SelectedNode;
 
       // A node must be selected.
       if (selected == null)
@@ -371,19 +324,6 @@ namespace Bonsai.Designer
 
       // Node can be aborted by the selected aborter.
       return aborter && ConditionalAbort.IsAbortable(aborter, node.Behaviour);
-    }
-
-    // Nodes that are being referenced are highlighted.
-    [Pure]
-    private bool IsNodeReferenced(BonsaiNode node)
-    {
-      return referencedNodes.Contains(node.Behaviour);
-    }
-
-    [Pure]
-    private bool IsNodeSelected(BonsaiNode node)
-    {
-      return node.Behaviour == Selection.activeObject || node.isUnderAreaSelection;
     }
 
     /// <summary>

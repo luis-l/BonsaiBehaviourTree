@@ -37,11 +37,6 @@ namespace Bonsai.Designer
     /// </summary>
     public const float resizePaddingX = 20f;
 
-    /// <summary>
-    /// A flag that helps the editor to highlight if it is selected from area selection.
-    /// </summary>
-    public bool isUnderAreaSelection = false;
-
     [SerializeField]
     private BehaviourNode behaviour;
 

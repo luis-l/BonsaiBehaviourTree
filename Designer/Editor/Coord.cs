@@ -137,6 +137,40 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
+    /// Get the first node detected under the mouse.  
+    /// </summary>
+    /// <returns>Null if there was no node under the mouse.</returns>
+    public BonsaiNode NodeUnderMouse()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        {
+          return node;
+        }
+      }
+
+      // No node under mouse.
+      return null;
+    }
+
+    /// <summary>
+    /// Test if the if the mouse is over any node.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsMouseOverNode()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Executes the callback on the first node that is detected under the mouse.
     /// </summary>
     /// <param name="callback"></param>
@@ -144,7 +178,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (IsInView(node) && IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
         {
           callback(node);
           return true;
@@ -184,7 +218,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (!IsInView(node) || node.Output == null)
+        if (node.Output == null)
         {
           continue;
         }
@@ -208,7 +242,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (!IsInView(node) || node.Input == null)
+        if (node.Input == null)
         {
           continue;
         }
@@ -232,8 +266,8 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        bool bCondition = IsInView(node) && (IsUnderMouse(node.RectPositon) ||
-            (node.Input != null && IsUnderMouse(node.Input.RectPosition)));
+        bool bCondition = IsUnderMouse(node.RectPositon)
+          || (node.Input != null && IsUnderMouse(node.Input.RectPosition));
 
         if (bCondition)
         {

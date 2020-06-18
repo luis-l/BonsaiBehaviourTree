@@ -10,9 +10,8 @@ namespace Bonsai.Designer
 {
   public class EditorSelection
   {
-
-    public event EventHandler<BonsaiNode> SingleSelected = delegate { };
-    public event EventHandler<ConditionalAbort> AbortSelected = delegate { };
+    public event EventHandler<BonsaiNode> SingleSelected;
+    public event EventHandler<ConditionalAbort> AbortSelected;
 
     /// <summary>
     /// The currently selected nodes.
@@ -59,7 +58,7 @@ namespace Bonsai.Designer
       Selected.Clear();
       Selected.Add(newSingleSelected);
       Selection.activeObject = newSingleSelected.Behaviour;
-      SingleSelected(this, newSingleSelected);
+      SingleSelected?.Invoke(this, newSingleSelected);
       NotifyIfAbortSelected(newSingleSelected);
       SelectReferencedNodes(newSingleSelected);
     }
@@ -117,7 +116,7 @@ namespace Bonsai.Designer
       var aborter = node.Behaviour as ConditionalAbort;
       if (aborter && aborter.abortType != AbortType.None)
       {
-        AbortSelected(this, aborter);
+        AbortSelected?.Invoke(this, aborter);
       }
     }
 

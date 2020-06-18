@@ -21,7 +21,7 @@ namespace Bonsai.Designer
     /// <summary>
     /// Referenced nodes of the current selection.
     /// </summary>
-    public HashSet<BehaviourNode> Referenced { get; } = new HashSet<BehaviourNode>();
+    public List<BehaviourNode> Referenced { get; } = new List<BehaviourNode>();
 
     /// <summary>
     /// The single selected node.
@@ -131,7 +131,7 @@ namespace Bonsai.Designer
       BehaviourNode[] refs = node.GetReferencedNodes();
       if (refs != null && refs.Length != 0)
       {
-        Referenced.UnionWith(refs);
+        Referenced.AddRange(refs);
       }
     }
   }

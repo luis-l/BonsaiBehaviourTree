@@ -19,8 +19,8 @@ namespace Bonsai.Designer
 
     public enum NodeContext { SetAsRoot, Duplicate, ChangeType, Delete, DuplicateSelection, DeleteSelection };
 
-    public event EventHandler<BonsaiNode> NodeClicked = delegate { };
-    public event EventHandler<BehaviourTree> TreeClicked = delegate { };
+    public event EventHandler<BonsaiNode> NodeClicked;
+    public event EventHandler<BehaviourTree> TreeClicked;
 
     public event EventHandler<float> Zoomed = delegate { };
     public event EventHandler<Vector2> Panned = delegate { };
@@ -122,14 +122,14 @@ namespace Bonsai.Designer
         {
           if (!window.Editor.NodeSelection.IsMultiSelection)
           {
-            NodeClicked(this, node);
+            NodeClicked?.Invoke(this, node);
             window.Editor.NodeSelection.SelectSingleNode(node);
           }
         }
 
         else if (Selection.activeObject != window.Tree)
         {
-          TreeClicked(this, window.Tree);
+          TreeClicked?.Invoke(this, window.Tree);
           window.Editor.NodeSelection.SelectTree(window.Tree);
         }
       }
@@ -254,7 +254,7 @@ namespace Bonsai.Designer
       // Context click over the node.
       bool isOverNode = window.Editor.Coordinates.OnMouseOverNode(node =>
       {
-        NodeClicked(this, node);
+        NodeClicked?.Invoke(this, node);
         window.Editor.NodeSelection.SelectSingleNode(node);
         nodeContextMenu.ShowAsContext();
       });

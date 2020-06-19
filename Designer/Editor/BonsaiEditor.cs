@@ -430,11 +430,8 @@ namespace Bonsai.Designer
     {
       foreach (var node in Canvas.NodesInDrawOrder)
       {
-        if (Coordinates.IsInView(node))
-        {
-          Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
-          Drawer.DrawPorts(Coordinates, node);
-        }
+        Drawer.DrawNode(Coordinates, node, NodeStatusColor(node));
+        Drawer.DrawPorts(Coordinates, node);
       }
     }
 

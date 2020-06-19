@@ -96,21 +96,15 @@ namespace Bonsai.Designer
       }
     }
 
-    public void RemoveSelected()
+    public void Remove(Predicate<BonsaiNode> match)
     {
-      Predicate<BonsaiNode> match = (node) =>
-      {
-        bool bRemove = node.isUnderAreaSelection;
-
-        if (bRemove)
-        {
-          node.Destroy();
-        }
-
-        return bRemove;
-      };
-
+      List<BonsaiNode> nodesToDestroy = nodes.FindAll(match);
       nodes.RemoveAll(match);
+
+      foreach (BonsaiNode node in nodesToDestroy)
+      {
+        node.Destroy();
+      }
     }
 
     public float ZoomScale

@@ -54,7 +54,7 @@ namespace Bonsai.Designer
       saveFsm.AddTransition(savedTree, tempTree, IsNewRequested, CreateNewOnto_Window_WithSavedCanvas);
 
       // Consume the save operation even after the transition is made.
-      saveFsm.OnStateChangedEvent += () => { requestedSaveOp = SaveOp.None; };
+      saveFsm.StateChanged += () => { requestedSaveOp = SaveOp.None; };
 
       InitState();
     }
@@ -65,7 +65,7 @@ namespace Bonsai.Designer
     public void InitState()
     {
       // If the window has a valid canvas and editable.
-      if (window.Tree != null && window.EditorMode == BonsaiWindow.Mode.Edit)
+      if (window.Tree != null && window.EditorMode.Value == BonsaiWindow.Mode.Edit)
       {
         string path = GetCurrentTreePath();
 
@@ -270,7 +270,7 @@ namespace Bonsai.Designer
     {
       string path = GetSaveFilePath();
 
-      if (path != null)
+      if (!string.IsNullOrEmpty(path))
       {
 
         AssetDatabase.MoveAsset(GetCurrentTreePath(), path);
@@ -283,7 +283,7 @@ namespace Bonsai.Designer
     {
       string path = GetSaveFilePath();
 
-      if (path != null)
+      if (!string.IsNullOrEmpty(path))
       {
         // There seems to be a bug in the AssetDatabase.Copy
         // The asset hierarchy is not preserved since it follows a 
@@ -335,7 +335,7 @@ namespace Bonsai.Designer
     public void OnCleanup()
     {
       // Only save/delete things if we are in edit mode.
-      if (window.EditorMode != BonsaiWindow.Mode.Edit)
+      if (window.EditorMode.Value != BonsaiWindow.Mode.Edit)
       {
         return;
       }

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics.Contracts;
-using UnityEditor;
 using UnityEngine;
 
 namespace Bonsai.Designer
@@ -137,6 +136,124 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
+    /// Get the first node detected under the mouse.  
+    /// Ports are not counted as part of the node.
+    /// </summary>
+    /// <returns>Null if there was no node under the mouse.</returns>
+    public BonsaiNode NodeUnderMouseExcludePorts()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        {
+          return node;
+        }
+      }
+
+      // No node under mouse.
+      return null;
+    }
+
+    /// <summary>
+    /// Get the first node detected under the mouse. Ports are counted as port of the check.
+    /// </summary>
+    /// <returns></returns>
+    public BonsaiNode NodeUnderMouse()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (IsUnderMouse(node.RectPositon))
+        {
+          return node;
+        }
+      }
+
+      // No node under mouse.
+      return null;
+
+    }
+
+    public enum MouseQueryResult
+    {
+      Nothing,
+      Node,
+      Input,
+      Output
+    }
+
+    public MouseQueryResult QueryUnderMouse(out BonsaiNode node, out BonsaiInputPort input, out BonsaiOutputPort output)
+    {
+      input = null;
+      output = null;
+      node = NodeUnderMouse();
+
+      if (node == null)
+      {
+        return MouseQueryResult.Nothing;
+      }
+
+      input = InputUnderMouse(node);
+
+      if (input != null)
+      {
+        return MouseQueryResult.Input;
+      }
+
+      output = OutputUnderMouse(node);
+      if (output != null)
+      {
+        return MouseQueryResult.Output;
+      }
+
+      return MouseQueryResult.Node;
+    }
+
+    /// <summary>
+    /// Get the input for the node if under the mouse.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public BonsaiInputPort InputUnderMouse(BonsaiNode node)
+    {
+      if (node.Input != null && IsUnderMouse(node.Input.RectPosition))
+      {
+        return node.Input;
+      }
+
+      return null;
+    }
+
+    /// <summary>
+    /// Get the ouput for the node if under the mouse.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    public BonsaiOutputPort OutputUnderMouse(BonsaiNode node)
+    {
+      if (node.Output != null && IsUnderMouse(node.Output.RectPosition))
+      {
+        return node.Output;
+      }
+      return null;
+    }
+
+    /// <summary>
+    /// Test if the if the mouse is over any node.
+    /// </summary>
+    /// <returns></returns>
+    public bool IsMouseOverNode()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    /// <summary>
     /// Executes the callback on the first node that is detected under the mouse.
     /// </summary>
     /// <param name="callback"></param>
@@ -144,7 +261,7 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        if (IsInView(node) && IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
+        if (IsUnderMouse(node.RectPositon) && !IsMouseOverNodePorts(node))
         {
           callback(node);
           return true;
@@ -153,6 +270,49 @@ namespace Bonsai.Designer
 
       // No node under mouse.
       return false;
+    }
+
+    /// <summary>
+    /// Get the first ouptut port detected under the mouse.
+    /// </summary>
+    /// <returns>null if nothing is found</returns>
+    public BonsaiOutputPort OutputUnderMouse()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (node.Output == null)
+        {
+          continue;
+        }
+
+        if (IsUnderMouse(node.Output.RectPosition))
+        {
+          return node.Output;
+        }
+      }
+
+      return null;
+    }
+
+    /// <summary>
+    /// Get the first input port detected under the mouse.
+    /// </summary>
+    /// <returns>null if nothing is found</returns>
+    public BonsaiInputPort InputUnderMouse()
+    {
+      foreach (BonsaiNode node in canvas)
+      {
+        if (node.Input == null)
+        {
+          continue;
+        }
+
+        if (IsUnderMouse(node.Input.RectPosition))
+        {
+          return node.Input;
+        }
+      }
+      return null;
     }
 
     /// <summary>
@@ -182,20 +342,12 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public bool OnMouseOverOutput(Action<BonsaiOutputPort> callback)
     {
-      foreach (BonsaiNode node in canvas)
+      BonsaiOutputPort port = OutputUnderMouse();
+      if (port != null)
       {
-        if (!IsInView(node) || node.Output == null)
-        {
-          continue;
-        }
-
-        if (IsUnderMouse(node.Output.RectPosition))
-        {
-          callback(node.Output);
-          return true;
-        }
+        callback(port);
+        return true;
       }
-
       return false;
     }
 
@@ -206,20 +358,12 @@ namespace Bonsai.Designer
     /// <returns></returns>
     public bool OnMouseOverInput(Action<BonsaiInputPort> callback)
     {
-      foreach (BonsaiNode node in canvas)
+      BonsaiInputPort port = InputUnderMouse();
+      if (port != null)
       {
-        if (!IsInView(node) || node.Input == null)
-        {
-          continue;
-        }
-
-        if (IsUnderMouse(node.Input.RectPosition))
-        {
-          callback(node.Input);
-          return true;
-        }
+        callback(port);
+        return true;
       }
-
       return false;
     }
 
@@ -232,8 +376,8 @@ namespace Bonsai.Designer
     {
       foreach (BonsaiNode node in canvas)
       {
-        bool bCondition = IsInView(node) && (IsUnderMouse(node.RectPositon) ||
-            (node.Input != null && IsUnderMouse(node.Input.RectPosition)));
+        bool bCondition = IsUnderMouse(node.RectPositon)
+          || (node.Input != null && IsUnderMouse(node.Input.RectPosition));
 
         if (bCondition)
         {

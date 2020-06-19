@@ -21,8 +21,10 @@ namespace Bonsai.Designer
 
     void OnDestroy()
     {
-      // Make sure to cleanup.
-      ParentWindow.InputHandler.EndReferenceLinking();
+      if (isLinking)
+      {
+        ParentWindow.Editor.CancelAction();
+      }
     }
 
     protected override void OnBehaviourNodeInspectorGUI()
@@ -50,21 +52,20 @@ namespace Bonsai.Designer
         if (isLinking)
         {
 
-          ParentWindow.InputHandler.StartReferenceLinking(typeof(Interruptable), OnNodeSelectedForLinking);
+          ParentWindow.Editor.StartLink(typeof(Interruptable), OnNodeSelectedForLinking);
           ParentWindow.Repaint();
         }
 
         else
         {
-
-          ParentWindow.InputHandler.EndReferenceLinking();
+          ParentWindow.Editor.CancelAction();
           ParentWindow.Repaint();
         }
       }
 
       if (ParentWindow)
       {
-        isLinking = ParentWindow.InputHandler.IsRefLinking;
+        isLinking = ParentWindow.Editor.IsExternalActionActive;
       }
 
       EditorGUILayout.EndVertical();
@@ -93,8 +94,7 @@ namespace Bonsai.Designer
       serializedObject.ApplyModifiedProperties();
 
       // Update the referenced nodes in the editor.
-      var refs = interruptor.GetReferencedNodes();
-      ParentWindow.Editor.SetReferencedNodes(refs);
+      ParentWindow.Editor.NodeSelection.SetReferenced(interruptor);
     }
   }
 }

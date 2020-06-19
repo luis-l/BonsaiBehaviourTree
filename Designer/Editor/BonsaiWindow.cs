@@ -1,6 +1,8 @@
 ﻿
-using System.Linq;
+using System;
+using System.Runtime.CompilerServices;
 using Bonsai.Core;
+using Bonsai.Utility;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -27,11 +29,11 @@ namespace Bonsai.Designer
     public BehaviourTree Tree { get { return behaviourTree; } }
 
     public BonsaiEditor Editor { get; private set; }
-    public BonsaiInputHandler InputHandler { get; private set; }
+    public BonsaiInput Input { get; private set; }
     public BonsaiSaveManager SaveManager { get; private set; }
 
     public enum Mode { Edit, View };
-    public Mode EditorMode { get; private set; }
+    public ReactiveValue<Mode> EditorMode = new ReactiveValue<Mode>();
 
     void OnEnable()
     {
@@ -40,8 +42,34 @@ namespace Bonsai.Designer
       Editor = new BonsaiEditor(this);
       BonsaiEditor.FetchBehaviourNodes();
 
-      InputHandler = new BonsaiInputHandler(this);
+      EditorMode.ValueChanged += Editor.EditorStatusChanged;
+
+      Input = new BonsaiInput(this);
       SaveManager = new BonsaiSaveManager(this);
+
+      Input.SaveRequest += Save;
+      Input.Pan += (s, pan) => Editor.Pan(pan);
+      Input.Zoom += (s, zoom) => Editor.Zoom(zoom);
+
+      Input.NodeClick += Editor.NodeClicked;
+      Input.NodeClick += (sender, e) => Repaint();
+
+      Input.CanvasLostFocus += Editor.CanvasLostFocus;
+      Input.InputClick += Editor.InputClicked;
+      Input.OutputClick += Editor.OutputClicked;
+
+      Input.Unclick += Editor.Unclicked;
+      Input.NodeUnclick += Editor.NodeUnclicked;
+      Input.Unclick += (sender, e) => Repaint();
+
+      Input.CanvasClicked += (sender, e) =>
+      {
+        Editor.NodeSelection.SelectTree(Tree);
+        Editor.CanvasClicked(sender, e);
+        Repaint();
+      };
+
+      Editor.RepaintRequired += (sender, e) => Repaint();
 
       BuildCanvas();
 
@@ -50,7 +78,7 @@ namespace Bonsai.Designer
       // The only way it can be in view mode is if the window is
       // already opened and the user selects a game object with a
       // behaviour tree component.
-      EditorMode = Mode.Edit;
+      EditorMode.Value = Mode.Edit;
     }
 
     void OnDisable()
@@ -64,7 +92,7 @@ namespace Bonsai.Designer
       {
         Editor.DrawStaticGrid();
         Editor.DrawMode();
-        EditorMode = Mode.Edit;
+        EditorMode.Value = Mode.Edit;
 
         // Asset removed.
         if (!SaveManager.IsInNoCanvasState())
@@ -81,8 +109,9 @@ namespace Bonsai.Designer
           BuildCanvas();
         }
 
+        Editor.Update();
         Editor.Draw();
-        InputHandler.HandleMouseEvents(Event.current);
+        Input.HandleMouseEvents(Event.current, CanvasInputRect);
       }
 
       // Always draw the toolbar.
@@ -99,7 +128,7 @@ namespace Bonsai.Designer
       // This is to quicky update all changes of the tree.
       bool bConditions =
           Tree &&
-          EditorMode == Mode.View &&
+          EditorMode.Value == Mode.View &&
           EditorApplication.isPlaying &&
           Tree.IsRunning();
 
@@ -121,14 +150,14 @@ namespace Bonsai.Designer
 
     private void GoToViewMode()
     {
-      if (!EditorApplication.isPlaying || !Selection.activeTransform)
+      if (!EditorApplication.isPlaying || !Selection.activeGameObject)
       {
         return;
       }
 
       BehaviourTree treeToView = null;
 
-      var btc = Selection.activeTransform.gameObject.GetComponent<BonsaiTreeComponent>();
+      var btc = Selection.activeGameObject.GetComponent<BonsaiTreeComponent>();
 
       if (btc)
       {
@@ -189,7 +218,7 @@ namespace Bonsai.Designer
     {
       behaviourTree = bt;
       BuildCanvas();
-      EditorMode = mode;
+      EditorMode.Value = mode;
     }
 
     private void DrawToolbar()
@@ -198,7 +227,7 @@ namespace Bonsai.Designer
 
       if (GUILayout.Button("File", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
-        if (EditorMode == Mode.Edit)
+        if (EditorMode.Value == Mode.Edit)
         {
           CreateFileMenuEditable();
         }
@@ -277,6 +306,21 @@ namespace Bonsai.Designer
       // Reload preferences.
       BonsaiPreferences.Instance = BonsaiPreferences.LoadDefaultPreferences();
       BuildCanvas();
+    }
+
+    private void Save(object sender, EventArgs e)
+    {
+      var state = SaveManager.CurrentState();
+
+      if (state == BonsaiSaveManager.SaveState.TempTree)
+      {
+        SaveManager.RequestSaveAs();
+      }
+
+      else if (state == BonsaiSaveManager.SaveState.SavedTree)
+      {
+        SaveManager.RequestSave();
+      }
     }
 
     /// <summary>

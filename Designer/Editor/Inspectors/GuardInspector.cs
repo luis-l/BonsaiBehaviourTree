@@ -21,8 +21,10 @@ namespace Bonsai.Designer
 
     void OnDestroy()
     {
-      // Make sure to cleanup.
-      ParentWindow.InputHandler.EndReferenceLinking();
+      if (isLinking)
+      {
+        ParentWindow.Editor.CancelAction();
+      }
     }
 
     protected override void OnBehaviourNodeInspectorGUI()
@@ -49,22 +51,23 @@ namespace Bonsai.Designer
 
         if (isLinking)
         {
-
-          ParentWindow.InputHandler.StartReferenceLinking(typeof(Guard), OnNodeSelectedForLinking);
+          Coord c = ParentWindow.Editor.Coordinates;
+          ParentWindow.Editor.StartLink(typeof(Guard), OnNodeSelectedForLinking);
           ParentWindow.Repaint();
         }
 
         else
         {
-
-          ParentWindow.InputHandler.EndReferenceLinking();
+          ParentWindow.Editor.CancelAction();
           ParentWindow.Repaint();
         }
       }
 
+      // Since clicking on link node can reset the Inspector,
+      // keep the link flag synchronized with the editor status.
       if (ParentWindow)
       {
-        isLinking = ParentWindow.InputHandler.IsRefLinking;
+        isLinking = ParentWindow.Editor.IsExternalActionActive;
       }
 
       EditorGUILayout.EndVertical();
@@ -98,7 +101,6 @@ namespace Bonsai.Designer
       // Works as a toggle, if already linked then unlink.
       if (bAlreadyLinked)
       {
-
         guard.linkedGuards.Remove(refGuard);
 
         // The rest of the guards forget about this unlinked guard too.
@@ -114,7 +116,6 @@ namespace Bonsai.Designer
       // If unlinked, then link.
       else
       {
-
         // The other guards must reference the new linked guard too.
         foreach (Guard link in guard.linkedGuards)
         {
@@ -134,8 +135,7 @@ namespace Bonsai.Designer
       serializedObject.ApplyModifiedProperties();
 
       // Update the referenced nodes in the editor.
-      var refs = guard.GetReferencedNodes();
-      ParentWindow.Editor.SetReferencedNodes(refs);
+      ParentWindow.Editor.NodeSelection.SetReferenced(guard);
     }
   }
 }

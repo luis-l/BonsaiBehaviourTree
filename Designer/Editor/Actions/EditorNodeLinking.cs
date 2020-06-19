@@ -4,33 +4,14 @@ using Bonsai.Core;
 
 namespace Bonsai.Designer
 {
-  public class EditorNodeLinking
+  public static class EditorNodeLinking
   {
-    private Type referenceLinkType;
-
-    public bool IsLinking { get; private set; }
-
-    private Action<BehaviourNode> onLink;
-
-    public void BeginLinking(Type linkType, Action<BehaviourNode> onLink)
+    public static void ApplyLink(BonsaiNode node, Type linkType, Action<BehaviourNode> linker)
     {
-      referenceLinkType = linkType;
-      IsLinking = true;
-      this.onLink = onLink;
-    }
-
-    public void TryLink(BonsaiNode node)
-    {
-      if (IsLinking && node.Behaviour.GetType() == referenceLinkType)
+      if (node != null && node.Behaviour.GetType() == linkType)
       {
-        onLink?.Invoke(node.Behaviour);
+        linker?.Invoke(node.Behaviour);
       }
-    }
-
-    public void EndLinking()
-    {
-      IsLinking = false;
-      onLink = null;
     }
   }
 }

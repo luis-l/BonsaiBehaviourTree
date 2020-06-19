@@ -1,6 +1,6 @@
-﻿using UnityEngine;
-using System;
+﻿using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace Bonsai.Utility
 {
@@ -13,25 +13,17 @@ namespace Bonsai.Utility
     /// <summary>
     /// Called when the machine finishes transitioning to another state.
     /// </summary>
-    public Action OnStateChangedEvent = delegate { };
+    public Action StateChanged;
 
-    protected Dictionary<T, State> _states = new Dictionary<T, State>();
+    protected readonly Dictionary<T, State> states = new Dictionary<T, State>();
 
     /// <summary>
     /// Get all the state data.
     /// </summary>
     /// <returns></returns>
-    public IEnumerable<T> Data()
-    {
-      return _states.Keys;
-    }
+    public IEnumerable<T> Data => states.Keys;
 
-    protected State _currentState;
-
-    public State CurrentState
-    {
-      get { return _currentState; }
-    }
+    public State CurrentState { get; protected set; }
 
     /// <summary>
     /// Adds a state to the machine.
@@ -40,18 +32,20 @@ namespace Bonsai.Utility
     public void AddState(T data)
     {
       var s = new State(data);
-      _states.Add(data, s); ;
+      states.Add(data, s); ;
     }
 
     public void AddState(State s)
     {
-      _states.Add(s.Value, s);
+      states.Add(s.Value, s);
     }
 
     public void AddTransition(State start, State end, Func<bool> condition, Action onMakingTransition)
     {
-      var t = new Transition(condition);
-      t.onMakingTransition = onMakingTransition;
+      var t = new Transition(condition)
+      {
+        Transitioned = onMakingTransition
+      };
 
       AddTransition(start, end, t);
     }
@@ -113,9 +107,9 @@ namespace Bonsai.Utility
     /// <returns></returns>
     public State GetState(T data)
     {
-      if (_states.ContainsKey(data))
+      if (states.ContainsKey(data))
       {
-        return _states[data];
+        return states[data];
       }
 
       return null;
@@ -127,7 +121,6 @@ namespace Bonsai.Utility
     /// <param name="data"></param>
     public void SetCurrentState(T data)
     {
-
       var state = GetState(data);
 
       if (state == null)
@@ -137,7 +130,7 @@ namespace Bonsai.Utility
 
       else
       {
-        _currentState = state;
+        CurrentState = state;
       }
     }
 
@@ -146,7 +139,7 @@ namespace Bonsai.Utility
     /// </summary>
     public void Update()
     {
-      if (_currentState == null)
+      if (CurrentState == null)
       {
         return;
       }
@@ -154,35 +147,25 @@ namespace Bonsai.Utility
       Transition validTrans = null;
 
       // Pick the next state if the transition conditions are met.
-      for (int i = 0; i < _currentState.Transitions.Count; i++)
+      for (int i = 0; i < CurrentState.Transitions.Count; i++)
       {
-
-        if (_currentState.Transitions[i].AllConditionsMet())
+        if (CurrentState.Transitions[i].AllConditionsMet())
         {
-          validTrans = _currentState.Transitions[i];
+          validTrans = CurrentState.Transitions[i];
           break;
         }
       }
 
       if (validTrans != null)
       {
+        // Exit current state.
+        CurrentState.StateExited?.Invoke();
+        validTrans.Transitioned?.Invoke();
 
-        // Call on state exit.
-        if (_currentState.onStateExit != null)
-          _currentState.onStateExit();
-
-        // Call on making transition/
-        if (validTrans.onMakingTransition != null)
-          validTrans.onMakingTransition();
-
-        // Change the state to the next one.
-        _currentState = validTrans.NextState;
-
-        // Call on state enter.
-        if (_currentState.onStateEnter != null)
-          _currentState.onStateEnter();
-
-        OnStateChangedEvent();
+        // Enter new state.
+        CurrentState = validTrans.NextState;
+        CurrentState.StateEntered?.Invoke();
+        StateChanged?.Invoke();
       }
     }
 
@@ -192,13 +175,12 @@ namespace Bonsai.Utility
     /// </summary>
     public class Transition
     {
-      private State _nextState = null;
-      private List<Func<bool>> _conditions = new List<Func<bool>>();
+      private readonly List<Func<bool>> conditions = new List<Func<bool>>();
 
       /// <summary>
       /// Called after the 'from' state exits and before the 'to' state enters.
       /// </summary>
-      public Action onMakingTransition;
+      public Action Transitioned;
 
       public Transition()
       {
@@ -223,7 +205,7 @@ namespace Bonsai.Utility
       /// <param name="cond"></param>
       public void AddCondition(Func<bool> cond)
       {
-        _conditions.Add(cond);
+        conditions.Add(cond);
       }
 
       /// <summary>
@@ -232,10 +214,9 @@ namespace Bonsai.Utility
       /// <returns></returns>
       public bool AllConditionsMet()
       {
-        for (int i = 0; i < _conditions.Count; i++)
+        for (int i = 0; i < conditions.Count; i++)
         {
-
-          if (!_conditions[i]()) return false;
+          if (!conditions[i]()) return false;
         }
 
         // All conditions returned true.
@@ -248,16 +229,13 @@ namespace Bonsai.Utility
       /// <param name="next"></param>
       public void SetNextState(State next)
       {
-        _nextState = next;
+        NextState = next;
       }
 
       /// <summary>
       /// The state that transition goes to.
       /// </summary>
-      public State NextState
-      {
-        get { return _nextState; }
-      }
+      public State NextState { get; private set; } = null;
     }
 
     /// <summary>
@@ -265,18 +243,15 @@ namespace Bonsai.Utility
     /// </summary>
     public class State
     {
-      private T _data;
-      private List<Transition> _transitions = new List<Transition>();
-
       /// <summary>
       /// Executes when the machine transitions into this state.
       /// </summary>
-      public Action onStateEnter;
+      public Action StateEntered;
 
       /// <summary>
       /// Executes when the machine transitions out of this state.
       /// </summary>
-      public Action onStateExit;
+      public Action StateExited;
 
       /// <summary>
       /// Construct a state with its data.
@@ -284,7 +259,7 @@ namespace Bonsai.Utility
       /// <param name="data"></param>
       public State(T data)
       {
-        _data = data;
+        Value = data;
       }
 
       /// <summary>
@@ -293,18 +268,18 @@ namespace Bonsai.Utility
       /// <param name="t"></param>
       public void Add(Transition t)
       {
-        _transitions.Add(t);
+        Transitions.Add(t);
       }
 
       /// <summary>
       /// The data held by the state.
       /// </summary>
-      public T Value { get { return _data; } }
+      public T Value { get; }
 
       /// <summary>
       /// The transitions connected to the state.
       /// </summary>
-      public List<Transition> Transitions { get { return _transitions; } }
+      public List<Transition> Transitions { get; } = new List<Transition>();
     }
   }
 }

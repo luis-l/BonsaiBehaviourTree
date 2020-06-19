@@ -30,7 +30,7 @@ namespace Bonsai.Designer
       // Find the the editor window with the tree associated with this behaviour.
       ParentWindow = Resources.FindObjectsOfTypeAll<BonsaiWindow>().First(w => w.Tree == edited.Tree);
 
-      if (ParentWindow.EditorMode == BonsaiWindow.Mode.View)
+      if (ParentWindow.EditorMode.Value == BonsaiWindow.Mode.View)
       {
         runtimeHeading = new GUIContent("Runtime values");
         runtimeHeaderStyle = new GUIStyle { fontSize = 12, fontStyle = FontStyle.Bold };
@@ -49,7 +49,7 @@ namespace Bonsai.Designer
         ParentWindow.BehaviourNodeEdited(target as BehaviourNode);
       }
 
-      if (ParentWindow.EditorMode == BonsaiWindow.Mode.View)
+      if (ParentWindow.EditorMode.Value == BonsaiWindow.Mode.View)
       {
         DrawRuntimeValues();
       }
@@ -63,7 +63,7 @@ namespace Bonsai.Designer
     public override bool RequiresConstantRepaint()
     {
       // Repaint to see runtime values changes when tree runs.
-      return ParentWindow.EditorMode == BonsaiWindow.Mode.View && runtimeFields.Count != 0;
+      return ParentWindow.EditorMode.Value == BonsaiWindow.Mode.View && runtimeFields.Count != 0;
     }
 
     private void DrawRuntimeValues()

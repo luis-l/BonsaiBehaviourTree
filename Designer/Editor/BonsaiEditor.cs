@@ -5,7 +5,6 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Reflection;
 using Bonsai.Core;
-using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
 
@@ -21,14 +20,6 @@ namespace Bonsai.Designer
     public Coord Coordinates { get; private set; }
 
     public EditorSelection NodeSelection { get; } = new EditorSelection();
-    public EditorDragging NodeDragging { get; } = new EditorDragging();
-    public EditorAreaSelect NodeAreaSelect { get; } = new EditorAreaSelect();
-    public EditorNodeLinking NodeLinking { get; } = new EditorNodeLinking();
-    public EditorMakingConnection MakingConnection { get; } = new EditorMakingConnection();
-
-    private static Dictionary<Type, NodeTypeProperties> behaviourNodes;
-
-    private BonsaiNode nodeToPositionUnderMouse = null;
 
     /// <summary>
     /// The multiple that grid snapping rounds to.
@@ -36,8 +27,40 @@ namespace Bonsai.Designer
     /// </summary>
     public static float SnapStep { get { return Preferences.snapStep; } }
 
+    /// <summary>
+    /// An external action is an action that starts outside the editor. e.g. Inspectors.
+    /// Only one external action can be active at a time.
+    /// </summary>
+    public bool IsExternalActionActive { get; private set; } = false;
+
+    public event EventHandler RepaintRequired;
+
+    private static Dictionary<Type, NodeTypeProperties> behaviourNodes;
+
+    private BonsaiNode nodeToPositionUnderMouse = null;
+
     private readonly GUIStyle modeStatusStyle = new GUIStyle { fontSize = 36, fontStyle = FontStyle.Bold };
     private readonly Rect modeStatusRect = new Rect(20f, 20f, 250f, 150f);
+
+    private string editorModeLabel = "No Tree Set";
+
+    private class EditorAction
+    {
+      public Action Apply;
+      public Action Update = delegate { };
+      public Action Draw = delegate { };
+      public Action DrawOverlay = delegate { };
+
+      public bool IsOneShot { get; set; } = true;
+      public bool IsExternalAllowed { get; set; } = false;
+    }
+
+    private readonly static EditorAction emptyAction = new EditorAction
+    {
+      Apply = delegate { },
+    };
+
+    private EditorAction currentAction = emptyAction;
 
     public BonsaiEditor(BonsaiWindow window)
     {
@@ -48,21 +71,223 @@ namespace Bonsai.Designer
       NodeSelection.AbortSelected += OnAbortSelected;
     }
 
+    public void CancelAction()
+    {
+      currentAction = emptyAction;
+      EditorStatusChanged(this, window.EditorMode.Value);
+      IsExternalActionActive = false;
+    }
+
+    public void CanvasLostFocus(object sender, EventArgs e)
+    {
+      // External actions can be active when the editor is out of focus.
+      if (!currentAction.IsExternalAllowed)
+      {
+        CancelAction();
+      }
+    }
+
+    public void NodeClicked(object sender, BonsaiNode node)
+    {
+      // Not doing any action.
+      if (currentAction == emptyAction)
+      {
+        // If we are not multi selecting, we can select the single node right now.
+        // This condition is necessary, so multi-dragging works when clicking on a node under multi-select.
+        if (!NodeSelection.IsMultiSelection)
+        {
+          NodeSelection.SelectSingleNode(node);
+        }
+
+        StartDrag();
+      }
+    }
+
+    public void NodeUnclicked(object sender, BonsaiNode node)
+    {
+      // Quickly clicked a node when in multi-selection.
+      // Select the single node.
+      if (NodeSelection.IsMultiSelection)
+      {
+        NodeSelection.SelectSingleNode(node);
+      }
+    }
+
+    public void InputClicked(object sender, BonsaiInputPort input)
+    {
+      // Connecting is only allowed in edit mode.
+      if (IsEditMode)
+      {
+        StartConnection(EditorNodeConnecting.StartConnection(input));
+      }
+    }
+
+    public void OutputClicked(object sender, BonsaiOutputPort output)
+    {
+      // Connecting is only allowed in edit mode.
+      if (IsEditMode)
+      {
+        StartConnection(output);
+      }
+    }
+
+    public void CanvasClicked(object sender, EventArgs args)
+    {
+      StartAreaSelection();
+    }
+
+    /// <summary>
+    /// Apply the current action on unlick.
+    /// </summary>
+    /// <param name="sender"></param>
+    /// <param name="args"></param>
+    public void Unclicked(object sender, Event args)
+    {
+      currentAction.Apply();
+
+      if (currentAction.IsOneShot)
+      {
+        currentAction = emptyAction;
+      }
+    }
+
     private void OnSingleSelected(object sender, BonsaiNode node)
     {
       // Push to end so it is rendered above all other nodes.
       Canvas.PushToEnd(node);
-
-      // This is only required when in Play mode. Force repeaint to see changes immediately.
-      if (window.EditorMode == BonsaiWindow.Mode.View)
-      {
-        window.Repaint();
-      }
     }
 
     private void OnAbortSelected(object sender, ConditionalAbort abort)
     {
       UpdateOrderIndices();
+    }
+
+    private void StartAreaSelection()
+    {
+      Vector2 start = Event.current.mousePosition;
+      SetAction(new EditorAction
+      {
+        Apply = () =>
+        {
+          Vector2 end = Event.current.mousePosition;
+          var areaSelection = EditorAreaSelect.NodesUnderArea(Coordinates, Canvas, start, end);
+          NodeSelection.SetCurrentSelection(areaSelection.ToList());
+        },
+        DrawOverlay = () =>
+        {
+          // Construct and display the rect.
+          Vector2 end = Event.current.mousePosition;
+          Rect selectionRect = EditorAreaSelect.SelectionScreenSpace(start, end);
+          Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
+          Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
+          OnRepaintRequired();
+        }
+      });
+    }
+
+    private void StartConnection(BonsaiOutputPort output)
+    {
+      if (output != null)
+      {
+        SetAction(new EditorAction
+        {
+          Apply = () =>
+          {
+            EditorNodeConnecting.FinishConnection(Coordinates, output);
+          },
+          Draw = () =>
+          {
+            var start = Coordinates.CanvasToScreenSpace(output.RectPosition.center);
+            var end = Event.current.mousePosition;
+            Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
+            OnRepaintRequired();
+          }
+        });
+      }
+    }
+
+    private void StartDrag()
+    {
+      // Dragging is only only allowed in edit mode.
+      if (IsEditMode)
+      {
+        if (NodeSelection.IsSingleSelection)
+        {
+          StartSingleDrag();
+        }
+
+        else if (NodeSelection.IsMultiSelection)
+        {
+          StartMultiDrag();
+        }
+      }
+    }
+
+    private void StartSingleDrag()
+    {
+      BonsaiNode node = NodeSelection.SelectedNode;
+      Vector2 offset = EditorSingleDrag.StartDrag(node, Coordinates.MousePosition());
+      SetAction(new EditorAction
+      {
+        Apply = () => EditorSingleDrag.FinishDrag(node),
+        Update = () =>
+        {
+          if (Event.current.type == EventType.MouseDrag)
+          {
+            EditorSingleDrag.Drag(node, Coordinates.MousePosition(), offset);
+            OnRepaintRequired();
+          }
+        }
+      });
+    }
+
+    private void StartMultiDrag()
+    {
+      var nodes = EditorMultiDrag.StartDrag(NodeSelection.Selected, Coordinates.MousePosition());
+      SetAction(new EditorAction
+      {
+        Apply = () => EditorMultiDrag.FinishDrag(nodes),
+        Update = () =>
+        {
+          if (Event.current.type == EventType.MouseDrag)
+          {
+            EditorMultiDrag.Drag(Coordinates.MousePosition(), nodes);
+            OnRepaintRequired();
+          }
+        }
+      });
+    }
+
+    public void StartLink(Type linkType, Action<BehaviourNode> linker)
+    {
+      SetAction(new EditorAction
+      {
+        Apply = () =>
+        {
+          BonsaiNode node = Coordinates.NodeUnderMouse();
+          if (node != null)
+          {
+            EditorNodeLinking.ApplyLink(node, linkType, linker);
+          }
+          else
+          {
+            // Clicked canvas, cancel action.
+            CancelAction();
+          }
+        },
+
+        IsOneShot = false,
+        IsExternalAllowed = true
+      });
+
+      IsExternalActionActive = true;
+      editorModeLabel = "Link References";
+    }
+
+    private void SetAction(EditorAction action)
+    {
+      CancelAction();
+      currentAction = action;
     }
 
     public void SetBehaviourTree(BehaviourTree tree)
@@ -74,6 +299,16 @@ namespace Bonsai.Designer
     private static BonsaiPreferences Preferences
     {
       get { return BonsaiPreferences.Instance; }
+    }
+
+    private bool IsEditMode
+    {
+      get { return window.EditorMode.Value == BonsaiWindow.Mode.Edit; }
+    }
+
+    public void Update()
+    {
+      currentAction.Update();
     }
 
     public void Draw()
@@ -89,6 +324,18 @@ namespace Bonsai.Designer
       }
 
       DrawCanvasContents();
+    }
+
+    public void EditorStatusChanged(object sender, BonsaiWindow.Mode status)
+    {
+      if (!window.Tree)
+      {
+        editorModeLabel = "No Tree Set";
+      }
+      else
+      {
+        editorModeLabel = status == BonsaiWindow.Mode.Edit ? "Edit" : "View";
+      }
     }
 
     #region Editing
@@ -138,6 +385,11 @@ namespace Bonsai.Designer
 
     #region Drawing
 
+    protected virtual void OnRepaintRequired()
+    {
+      RepaintRequired?.Invoke(this, EventArgs.Empty);
+    }
+
     public void DrawStaticGrid()
     {
       Drawer.DrawStaticGrid(window.CanvasRect, Preferences.gridTexture);
@@ -152,19 +404,19 @@ namespace Bonsai.Designer
     {
       ScaleUtility.BeginScale(window.CanvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
 
-      DrawConnectionPreview();
+      currentAction.Draw();
       DrawPortConnections();
       DrawNodes();
 
       ScaleUtility.EndScale(window.CanvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
 
-      // Selection overlays and independent of zoom.
-      DrawAreaSelection();
+      // Overlays and idependent of zoom.
+      currentAction.DrawOverlay();
     }
 
     private void DrawNodes()
     {
-      if (window.EditorMode == BonsaiWindow.Mode.Edit)
+      if (window.EditorMode.Value == BonsaiWindow.Mode.Edit)
       {
         DrawNodesInEditMode();
       }
@@ -210,57 +462,11 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
-    /// Draws the preview connection from the selected output port and the mouse.
-    /// </summary>
-    private void DrawConnectionPreview()
-    {
-      // Draw connection between mouse and the port.
-      if (MakingConnection.IsMakingConnection)
-      {
-        var start = Coordinates.CanvasToScreenSpace(MakingConnection.OutputToConnect.RectPosition.center);
-        var end = Event.current.mousePosition;
-        Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
-        window.Repaint();
-      }
-    }
-
-    private void DrawAreaSelection()
-    {
-      if (NodeAreaSelect.IsSelecting)
-      {
-        // Construct and display the rect.
-        Rect selectionRect = NodeAreaSelect.SelectionScreenSpace(Event.current.mousePosition);
-        Color selectionColor = new Color(0f, 0.5f, 1f, 0.1f);
-        Handles.DrawSolidRectangleWithOutline(selectionRect, selectionColor, Color.blue);
-
-        window.Repaint();
-      }
-    }
-
-    /// <summary>
     /// Draw the window mode in the background.
     /// </summary>
     public void DrawMode()
     {
-      if (!window.Tree)
-      {
-        GUI.Label(modeStatusRect, new GUIContent("No Tree Set"), modeStatusStyle);
-      }
-
-      else if (NodeLinking.IsLinking)
-      {
-        GUI.Label(modeStatusRect, new GUIContent("Link References"), modeStatusStyle);
-      }
-
-      else if (window.EditorMode == BonsaiWindow.Mode.Edit)
-      {
-        GUI.Label(modeStatusRect, new GUIContent("Edit"), modeStatusStyle);
-      }
-
-      else
-      {
-        GUI.Label(modeStatusRect, new GUIContent("View"), modeStatusStyle);
-      }
+      GUI.Label(modeStatusRect, editorModeLabel, modeStatusStyle);
     }
 
     #endregion

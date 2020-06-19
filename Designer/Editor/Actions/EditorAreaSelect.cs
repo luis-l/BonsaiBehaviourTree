@@ -5,70 +5,59 @@ using UnityEngine;
 
 namespace Bonsai.Designer
 {
-  public class EditorAreaSelect
+  public static class EditorAreaSelect
   {
-    public Vector2 StartPosition { get; private set; }
-
-    public bool IsSelecting { get; private set; }
-
-    public void BeginAreaSelection(Vector2 start)
+    /// <summary>
+    /// Returns the nodes under the area.
+    /// </summary>
+    /// <param name="coord"></param>
+    /// <param name="nodes"></param>
+    /// <param name="startScreenSpace"></param>
+    /// <param name="endScreenSpace"></param>
+    /// <returns></returns>
+    public static IEnumerable<BonsaiNode> NodesUnderArea(
+      Coord coord,
+      IEnumerable<BonsaiNode> nodes,
+      Vector2 startScreenSpace,
+      Vector2 endScreenSpace)
     {
-      StartPosition = start;
-      IsSelecting = true;
-    }
-
-    public void EndAreaSelection()
-    {
-      IsSelecting = false;
-    }
-
-    public IEnumerable<BonsaiNode> NodesUnderSelection(
-      Coord c,
-      Vector2 endPosition,
-      IEnumerable<BonsaiNode> allNodes)
-    {
-      if (IsSelecting)
-      {
-        Rect selectionArea = SelectionCanvasSpace(c, endPosition);
-        return allNodes.Where(node => selectionArea.Overlaps(node.RectPositon));
-      }
-
-      return Enumerable.Empty<BonsaiNode>();
+      Rect selectionArea = SelectionCanvasSpace(coord, startScreenSpace, endScreenSpace);
+      return nodes.Where(node => selectionArea.Overlaps(node.RectPositon));
     }
 
     /// <summary>
     /// Returns the area selection in screen space.
     /// </summary>
     /// <returns></returns>
-    public Rect SelectionScreenSpace(Vector2 endPosition)
+    public static Rect SelectionScreenSpace(Vector2 start, Vector2 end)
     {
       // Need to find the proper min and max values to 
       // create a rect without negative width/height values.
       float xmin, xmax;
       float ymin, ymax;
 
-      if (StartPosition.x < endPosition.x)
+      if (start.x < end.x)
       {
-        xmin = StartPosition.x;
-        xmax = endPosition.x;
+        xmin = start.x;
+        xmax = end.x;
       }
 
       else
       {
-        xmax = StartPosition.x;
-        xmin = endPosition.x;
+        xmax = start.x;
+        xmin = end.x;
       }
 
-      if (StartPosition.y < endPosition.y)
+      if (start.y < end.y)
       {
-        ymin = StartPosition.y;
-        ymax = endPosition.y;
+        ymin = start.y;
+        ymax = end.y;
       }
 
       else
       {
-        ymax = StartPosition.y;
-        ymin = endPosition.y;
+        ymax = start.y;
+        ymin = end.y;
       }
 
       return Rect.MinMaxRect(xmin, ymin, xmax, ymax);
@@ -78,9 +67,9 @@ namespace Bonsai.Designer
     /// Returns the selection rect in canvas space.
     /// </summary>
     /// <returns></returns>
-    public Rect SelectionCanvasSpace(Coord c, Vector2 endPosition)
+    public static Rect SelectionCanvasSpace(Coord c, Vector2 start, Vector2 end)
     {
-      Rect screenRect = SelectionScreenSpace(endPosition);
+      Rect screenRect = SelectionScreenSpace(start, end);
       Vector2 min = c.ScreenToCanvasSpace(screenRect.min);
       Vector2 max = c.ScreenToCanvasSpace(screenRect.max);
       return Rect.MinMaxRect(min.x, min.y, max.x, max.y);

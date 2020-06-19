@@ -21,7 +21,10 @@ namespace Bonsai.Designer
 
     void OnDestroy()
     {
-      ParentWindow.Editor.NodeLinking.EndLinking();
+      if (isLinking)
+      {
+        ParentWindow.Editor.CancelAction();
+      }
     }
 
     protected override void OnBehaviourNodeInspectorGUI()
@@ -49,21 +52,20 @@ namespace Bonsai.Designer
         if (isLinking)
         {
 
-          ParentWindow.Editor.NodeLinking.BeginLinking(typeof(Interruptable), OnNodeSelectedForLinking);
+          ParentWindow.Editor.StartLink(typeof(Interruptable), OnNodeSelectedForLinking);
           ParentWindow.Repaint();
         }
 
         else
         {
-
-          ParentWindow.Editor.NodeLinking.EndLinking();
+          ParentWindow.Editor.CancelAction();
           ParentWindow.Repaint();
         }
       }
 
       if (ParentWindow)
       {
-        isLinking = ParentWindow.Editor.NodeLinking.IsLinking;
+        isLinking = ParentWindow.Editor.IsExternalActionActive;
       }
 
       EditorGUILayout.EndVertical();

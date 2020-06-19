@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Bonsai.Utility;
 using UnityEditor;
@@ -217,7 +218,7 @@ namespace Bonsai.Designer
       bool isOverNode = window.Editor.Coordinates.OnMouseOverNode(node =>
       {
         //NodeClicked?.Invoke(this, node);
-        window.Editor.NodeSelection.SelectSingleNode(node);
+        window.Editor.NodeSelection.SetSingleSelection(node);
         nodeContextMenu.ShowAsContext();
       });
 
@@ -238,7 +239,7 @@ namespace Bonsai.Designer
     {
       NodeContext context = (NodeContext)o;
 
-      BonsaiNode selected = window.Editor.NodeSelection.SelectedNode;
+      BonsaiNode selected = window.Editor.NodeSelection.SingleSelectedNode;
 
       switch (context)
       {
@@ -269,25 +270,32 @@ namespace Bonsai.Designer
       switch (context)
       {
         case NodeContext.DuplicateSelection:
-          var duplicates = window.Editor.NodeSelection.Selected.Select(node => DuplicateNode(node));
-          window.Editor.NodeSelection.SetCurrentSelection(duplicates.ToList());
+          if (window.Editor.NodeSelection.IsMultiSelection)
+          {
+            var duplicates = MultiDuplicateNodes(window.Editor.NodeSelection.SelectedNodes);
+            window.Editor.NodeSelection.SetMultiSelection(duplicates);
+          }
+          else if (window.Editor.NodeSelection.IsSingleSelection)
+          {
+            var duplicate = DuplicateNode(window.Editor.NodeSelection.SingleSelectedNode);
+            window.Editor.NodeSelection.SetSingleSelection(duplicate);
+          }
           break;
-
         case NodeContext.DeleteSelection:
           window.Editor.Canvas.Remove(node => window.Editor.NodeSelection.IsNodeSelected(node));
-          window.Editor.NodeSelection.SelectTree(window.Tree);
+          window.Editor.NodeSelection.SetTreeSelection(window.Tree);
           break;
       }
     }
 
     private BonsaiNode DuplicateNode(BonsaiNode original)
     {
-      BonsaiNode duplicate = window.Editor.Canvas.CreateNode(original.Behaviour.GetType(), window.Tree);
+      return EditorDuplicateNode.DuplicateSingle(window.Editor.Canvas, window.Tree, original);
+    }
 
-      // Duplicate nodes are placed offset from the original.
-      duplicate.Position = original.Position + Vector2.one * 40f;
-
-      return duplicate;
+    private List<BonsaiNode> MultiDuplicateNodes(List<BonsaiNode> originals)
+    {
+      return EditorDuplicateNode.DuplicateMultiple(window.Editor.Canvas, window.Tree, originals);
     }
 
     public void Dispose()

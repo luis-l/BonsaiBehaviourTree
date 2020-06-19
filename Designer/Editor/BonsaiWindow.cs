@@ -64,7 +64,7 @@ namespace Bonsai.Designer
 
       Input.CanvasClicked += (sender, e) =>
       {
-        Editor.NodeSelection.SelectTree(Tree);
+        Editor.NodeSelection.SetTreeSelection(Tree);
         Editor.CanvasClicked(sender, e);
         Repaint();
       };

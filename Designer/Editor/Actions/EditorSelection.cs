@@ -16,7 +16,7 @@ namespace Bonsai.Designer
     /// <summary>
     /// The currently selected nodes.
     /// </summary>
-    public List<BonsaiNode> Selected { get; } = new List<BonsaiNode>();
+    public List<BonsaiNode> SelectedNodes { get; } = new List<BonsaiNode>();
 
     /// <summary>
     /// Referenced nodes of the current selection.
@@ -27,43 +27,43 @@ namespace Bonsai.Designer
     /// The single selected node.
     /// null if there is no selection.
     /// </summary>
-    public BonsaiNode SelectedNode
+    public BonsaiNode SingleSelectedNode
     {
       get
       {
-        return Selected.FirstOrDefault();
+        return SelectedNodes.FirstOrDefault();
       }
     }
 
-    public void SetCurrentSelection(List<BonsaiNode> newSelection)
+    public void SetMultiSelection(List<BonsaiNode> newSelection)
     {
       if (newSelection.Count == 1)
       {
-        SelectSingleNode(newSelection[0]);
+        SetSingleSelection(newSelection[0]);
       }
       else
       {
-        Selected.Clear();
+        SelectedNodes.Clear();
 
         if (newSelection.Count > 0)
         {
-          Selected.AddRange(newSelection);
+          SelectedNodes.AddRange(newSelection);
           Selection.objects = newSelection.Select(node => node.Behaviour).ToArray();
         }
       }
     }
 
-    public void SelectSingleNode(BonsaiNode newSingleSelected)
+    public void SetSingleSelection(BonsaiNode newSingleSelected)
     {
-      Selected.Clear();
-      Selected.Add(newSingleSelected);
+      SelectedNodes.Clear();
+      SelectedNodes.Add(newSingleSelected);
       Selection.activeObject = newSingleSelected.Behaviour;
       SingleSelected?.Invoke(this, newSingleSelected);
       NotifyIfAbortSelected(newSingleSelected);
       SelectReferencedNodes(newSingleSelected);
     }
 
-    public void SelectTree(BehaviourTree tree)
+    public void SetTreeSelection(BehaviourTree tree)
     {
       Referenced.Clear();
       ClearSelection();
@@ -72,37 +72,37 @@ namespace Bonsai.Designer
 
     public void ClearSelection()
     {
-      Selected.Clear();
+      SelectedNodes.Clear();
     }
 
     [Pure]
     public bool IsNodeSelected(BonsaiNode node)
     {
-      return Selected.Contains(node);
+      return SelectedNodes.Contains(node);
     }
 
     [Pure]
     public int SelectedCount
     {
-      get { return Selected.Count; }
+      get { return SelectedNodes.Count; }
     }
 
     [Pure]
     public bool IsNoneSelected
     {
-      get { return Selected.Count == 0; }
+      get { return SelectedNodes.Count == 0; }
     }
 
     [Pure]
     public bool IsSingleSelection
     {
-      get { return Selected.Count == 1; }
+      get { return SelectedNodes.Count == 1; }
     }
 
     [Pure]
     public bool IsMultiSelection
     {
-      get { return Selected.Count > 1; }
+      get { return SelectedNodes.Count > 1; }
     }
 
     [Pure]

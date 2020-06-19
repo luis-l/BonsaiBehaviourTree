@@ -96,7 +96,7 @@ namespace Bonsai.Designer
         // This condition is necessary, so multi-dragging works when clicking on a node under multi-select.
         if (!NodeSelection.IsMultiSelection)
         {
-          NodeSelection.SelectSingleNode(node);
+          NodeSelection.SetSingleSelection(node);
         }
 
         StartDrag();
@@ -109,7 +109,7 @@ namespace Bonsai.Designer
       // Select the single node.
       if (NodeSelection.IsMultiSelection)
       {
-        NodeSelection.SelectSingleNode(node);
+        NodeSelection.SetSingleSelection(node);
       }
     }
 
@@ -171,7 +171,7 @@ namespace Bonsai.Designer
         {
           Vector2 end = Event.current.mousePosition;
           var areaSelection = EditorAreaSelect.NodesUnderArea(Coordinates, Canvas, start, end);
-          NodeSelection.SetCurrentSelection(areaSelection.ToList());
+          NodeSelection.SetMultiSelection(areaSelection.ToList());
         },
         DrawOverlay = () =>
         {
@@ -225,7 +225,7 @@ namespace Bonsai.Designer
 
     private void StartSingleDrag()
     {
-      BonsaiNode node = NodeSelection.SelectedNode;
+      BonsaiNode node = NodeSelection.SingleSelectedNode;
       Vector2 offset = EditorSingleDrag.StartDrag(node, Coordinates.MousePosition());
       SetAction(new EditorAction
       {
@@ -243,7 +243,7 @@ namespace Bonsai.Designer
 
     private void StartMultiDrag()
     {
-      var nodes = EditorMultiDrag.StartDrag(NodeSelection.Selected, Coordinates.MousePosition());
+      var nodes = EditorMultiDrag.StartDrag(NodeSelection.SelectedNodes, Coordinates.MousePosition());
       SetAction(new EditorAction
       {
         Apply = () => EditorMultiDrag.FinishDrag(nodes),
@@ -514,7 +514,7 @@ namespace Bonsai.Designer
         return false;
       }
 
-      BonsaiNode selected = NodeSelection.SelectedNode;
+      BonsaiNode selected = NodeSelection.SingleSelectedNode;
 
       // A node must be selected.
       if (selected == null)

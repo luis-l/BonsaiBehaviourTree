@@ -15,7 +15,7 @@ MonoBehaviour:
   snapStep: 12
   zoomDelta: 0.2
   minZoom: 1
-  maxZoom: 5
+  maxZoom: 8
   panSpeed: 1.2
   gridTexture: {fileID: 2800000, guid: 4ab4e605fe422164da65569c46a161d2, type: 3}
   failureSymbol: {fileID: 2800000, guid: 8db2b847ab6b6434c9da1e0cf721fd8e, type: 3}

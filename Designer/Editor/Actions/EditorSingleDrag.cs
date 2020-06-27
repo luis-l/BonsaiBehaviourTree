@@ -58,7 +58,7 @@ namespace Bonsai.Designer
 
       float snap = BonsaiPreferences.Instance.snapStep;
 
-      Vector2 rounded = Coord.SnapPosition(diff, snap);
+      Vector2 rounded = Utility.MathExtensions.SnapPosition(diff, snap);
       root.Center = rounded;
 
       // Calculate the change of position of the root.
@@ -69,7 +69,7 @@ namespace Bonsai.Designer
       {
         // For all children, pan by the same amount that the parent changed by.
         if (node != root)
-          node.Center += Coord.SnapPosition(pan, snap);
+          node.Center += Utility.MathExtensions.SnapPosition(pan, snap);
       });
     }
   }

@@ -1,5 +1,6 @@
 ﻿
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Bonsai.Designer
@@ -18,7 +19,7 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="nodes"></param>
     /// <param name="dragStartPosition"></param>
-    public static List<DraggingNode> StartDrag(List<BonsaiNode> nodes, Vector2 dragStartPosition)
+    public static IReadOnlyList<DraggingNode> StartDrag(IReadOnlyList<BonsaiNode> nodes, Vector2 dragStartPosition)
     {
       var draggingSubroots = new List<DraggingNode>();
 
@@ -56,7 +57,7 @@ namespace Bonsai.Designer
       return draggingSubroots;
     }
 
-    public static void Drag(Vector2 dragPosition, List<DraggingNode> nodes)
+    public static void Drag(Vector2 dragPosition, IReadOnlyList<DraggingNode> nodes)
     {
       foreach (DraggingNode root in nodes)
       {
@@ -64,7 +65,7 @@ namespace Bonsai.Designer
       }
     }
 
-    public static void FinishDrag(List<DraggingNode> nodes)
+    public static void FinishDrag(IReadOnlyList<DraggingNode> nodes)
     {
       foreach (DraggingNode node in nodes)
       {

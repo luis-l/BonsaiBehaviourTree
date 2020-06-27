@@ -6,7 +6,10 @@ using System.Linq;
 
 namespace Bonsai.Designer
 {
-  public static class EditorDuplicateNode
+  /// <summary>
+  /// Handles creation and deletion of nodes.
+  /// </summary>
+  public static class EditorNodeCreation
   {
     public static BonsaiNode DuplicateSingle(BonsaiCanvas canvas, BehaviourTree tree, BonsaiNode original)
     {
@@ -28,7 +31,7 @@ namespace Bonsai.Designer
     public static List<BonsaiNode> DuplicateMultiple(
       BonsaiCanvas canvas,
       BehaviourTree tree,
-      IEnumerable<BonsaiNode> originals)
+     IEnumerable<BonsaiNode> originals)
     {
       var duplicateMap = originals.ToDictionary(og => og, og => DuplicateSingle(canvas, tree, og));
 

@@ -1,8 +1,6 @@
 ﻿
 using System;
-using System.Runtime.CompilerServices;
 using Bonsai.Core;
-using Bonsai.Utility;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEngine;
@@ -29,47 +27,24 @@ namespace Bonsai.Designer
     public BehaviourTree Tree { get { return behaviourTree; } }
 
     public BonsaiEditor Editor { get; private set; }
-    public BonsaiInput Input { get; private set; }
+    public BonsaiViewer Viewer { get; private set; }
     public BonsaiSaveManager SaveManager { get; private set; }
-
-    public enum Mode { Edit, View };
-    public ReactiveValue<Mode> EditorMode = new ReactiveValue<Mode>();
 
     void OnEnable()
     {
       BonsaiPreferences.Instance = BonsaiPreferences.LoadDefaultPreferences();
-
-      Editor = new BonsaiEditor(this);
       BonsaiEditor.FetchBehaviourNodes();
 
-      EditorMode.ValueChanged += Editor.EditorStatusChanged;
+      Editor = new BonsaiEditor();
+      Viewer = new BonsaiViewer();
 
-      Input = new BonsaiInput(this);
       SaveManager = new BonsaiSaveManager(this);
 
-      Input.SaveRequest += Save;
-      Input.Pan += (s, pan) => Editor.Pan(pan);
-      Input.Zoom += (s, zoom) => Editor.Zoom(zoom);
-
-      Input.NodeClick += Editor.NodeClicked;
-      Input.NodeClick += (sender, e) => Repaint();
-
-      Input.CanvasLostFocus += Editor.CanvasLostFocus;
-      Input.InputClick += Editor.InputClicked;
-      Input.OutputClick += Editor.OutputClicked;
-
-      Input.Unclick += Editor.Unclicked;
-      Input.NodeUnclick += Editor.NodeUnclicked;
-      Input.Unclick += (sender, e) => Repaint();
-
-      Input.CanvasClicked += (sender, e) =>
-      {
-        Editor.NodeSelection.SetTreeSelection(Tree);
-        Editor.CanvasClicked(sender, e);
-        Repaint();
-      };
-
-      Editor.RepaintRequired += (sender, e) => Repaint();
+      Editor.Viewer = Viewer;
+      Editor.Input.SaveRequest += Save;
+      Editor.CanvasChanged += (s, e) => Repaint();
+      Editor.Input.MouseDown += (s, e) => Repaint();
+      Editor.Input.MouseUp += (s, e) => Repaint();
 
       BuildCanvas();
 
@@ -78,7 +53,7 @@ namespace Bonsai.Designer
       // The only way it can be in view mode is if the window is
       // already opened and the user selects a game object with a
       // behaviour tree component.
-      EditorMode.Value = Mode.Edit;
+      Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
     }
 
     void OnDisable()
@@ -90,9 +65,9 @@ namespace Bonsai.Designer
     {
       if (Tree == null)
       {
-        Editor.DrawStaticGrid();
-        Editor.DrawMode();
-        EditorMode.Value = Mode.Edit;
+        Viewer.DrawStaticGrid(position.size);
+        Viewer.DrawMode();
+        Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
 
         // Asset removed.
         if (!SaveManager.IsInNoCanvasState())
@@ -109,9 +84,9 @@ namespace Bonsai.Designer
           BuildCanvas();
         }
 
-        Editor.Update();
-        Editor.Draw();
-        Input.HandleMouseEvents(Event.current, CanvasInputRect);
+        CanvasTransform t = Transform;
+        Editor.PollInput(Event.current, t, CanvasInputRect);
+        Viewer.Draw(t);
       }
 
       // Always draw the toolbar.
@@ -128,7 +103,7 @@ namespace Bonsai.Designer
       // This is to quicky update all changes of the tree.
       bool bConditions =
           Tree &&
-          EditorMode.Value == Mode.View &&
+          Editor.EditorMode.Value == BonsaiEditor.Mode.View &&
           EditorApplication.isPlaying &&
           Tree.IsRunning();
 
@@ -183,7 +158,7 @@ namespace Bonsai.Designer
           else if (!w.Tree)
           {
             w.Repaint();
-            w.SetTree(treeToView, Mode.View);
+            w.SetTree(treeToView, BonsaiEditor.Mode.View);
             return;
           }
         }
@@ -193,7 +168,7 @@ namespace Bonsai.Designer
         // Cleanup window before putting new tree.
         SaveManager.OnCleanup();
 
-        SetTree(treeToView, Mode.View);
+        SetTree(treeToView, BonsaiEditor.Mode.View);
       }
     }
 
@@ -214,11 +189,11 @@ namespace Bonsai.Designer
       }
     }
 
-    public void SetTree(BehaviourTree bt, Mode mode = Mode.Edit)
+    public void SetTree(BehaviourTree bt, BonsaiEditor.Mode mode = BonsaiEditor.Mode.Edit)
     {
       behaviourTree = bt;
       BuildCanvas();
-      EditorMode.Value = mode;
+      Editor.EditorMode.Value = mode;
     }
 
     private void DrawToolbar()
@@ -227,7 +202,7 @@ namespace Bonsai.Designer
 
       if (GUILayout.Button("File", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
-        if (EditorMode.Value == Mode.Edit)
+        if (Editor.EditorMode.Value == BonsaiEditor.Mode.Edit)
         {
           CreateFileMenuEditable();
         }
@@ -326,9 +301,22 @@ namespace Bonsai.Designer
     /// <summary>
     /// The size of the window.
     /// </summary>
-    public Rect CanvasRect
+    //public Rect CanvasRect
+    //{
+    //  get { return new Rect(Vector2.zero, position.size); }
+    //}
+
+    private CanvasTransform Transform
     {
-      get { return new Rect(Vector2.zero, position.size); }
+      get
+      {
+        return new CanvasTransform
+        {
+          pan = Editor.Canvas.panOffset,
+          zoom = Editor.Canvas.ZoomScale,
+          size = position.size
+        };
+      }
     }
 
     /// <summary>
@@ -339,11 +327,9 @@ namespace Bonsai.Designer
     {
       get
       {
-        var rect = CanvasRect;
-
+        var rect = new Rect(Vector2.zero, position.size);
         rect.y += toolbarHeight;
         rect.height -= toolbarHeight;
-
         return rect;
       }
     }

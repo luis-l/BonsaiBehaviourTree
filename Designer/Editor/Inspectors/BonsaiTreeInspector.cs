@@ -116,14 +116,14 @@ namespace Bonsai.Designer
         EditorGUILayout.Space();
         EditorGUILayout.BeginVertical();
 
-        showBlackboardGUI(bb);
+        ShowBlackboardGUI(bb);
 
         EditorGUILayout.EndVertical();
         EditorGUILayout.EndHorizontal();
       }
     }
 
-    private void showBlackboardGUI(Blackboard bb)
+    private void ShowBlackboardGUI(Blackboard bb)
     {
       // Before any rendering is done, update the tree type selection (this removes/adds buttons).
       // If this step is not done here, it will cause a GUI Layout error.
@@ -132,7 +132,7 @@ namespace Bonsai.Designer
         _typeSelectionInputTree.UpdateParentChildren();
       }
 
-      addVariableGUI(bb);
+      AddVariableGUI(bb);
 
       EditorGUILayout.Space();
       EditorGUILayout.Space();
@@ -200,7 +200,7 @@ namespace Bonsai.Designer
       EditorGUIUtility.labelWidth = originalLabelWidth;
     }
 
-    private void addVariableToBlackboard(Blackboard bb)
+    private void AddVariableToBlackboard(Blackboard bb)
     {
       Type typeInput = _typeSelectionInputTree.GetCompleteType();
 
@@ -217,7 +217,7 @@ namespace Bonsai.Designer
     }
 
     // Handles adding variables to the blackboard.
-    private void addVariableGUI(Blackboard bb)
+    private void AddVariableGUI(Blackboard bb)
     {
       _bAddVariableFoldout = EditorGUILayout.Foldout(_bAddVariableFoldout, "Add Variable", true);
 
@@ -226,11 +226,11 @@ namespace Bonsai.Designer
 
         EditorGUILayout.BeginVertical(DarkBackgroundStyle);
 
-        getVariableInfo();
+        GetVariableInfo();
 
         if (GUILayout.Button("Add"))
         {
-          addVariableToBlackboard(bb);
+          AddVariableToBlackboard(bb);
         }
 
         EditorGUILayout.EndVertical();
@@ -238,16 +238,16 @@ namespace Bonsai.Designer
     }
 
     // Gets the key and type of the variable.
-    private void getVariableInfo()
+    private void GetVariableInfo()
     {
       string helpMsg = "To add a variable, enter a key name and specify its type from the drop box.";
       EditorGUILayout.HelpBox(helpMsg, MessageType.Info);
 
-      getKeyInput();
-      getTypeInput();
+      GetKeyInput();
+      GetTypeInput();
     }
 
-    private void getKeyInput()
+    private void GetKeyInput()
     {
       // Display the label key along with the text field to enter a key name.
       EditorGUILayout.BeginHorizontal();
@@ -259,7 +259,7 @@ namespace Bonsai.Designer
       EditorGUILayout.EndHorizontal();
     }
 
-    private void getTypeInput()
+    private void GetTypeInput()
     {
       // Display the label "type" along with the button drop down to select the type.
       EditorGUILayout.BeginHorizontal();
@@ -277,10 +277,9 @@ namespace Bonsai.Designer
     /// </summary>
     private class TypeSelectionTree
     {
-      private TypeSelectionNode _root = new TypeSelectionNode();
-
-      private List<TypeSelectionNode> _parentsToClearChildren = new List<TypeSelectionNode>();
-      private List<TypeSelectionNode> _parentsToSetChildren = new List<TypeSelectionNode>();
+      private readonly TypeSelectionNode root = new TypeSelectionNode();
+      private readonly List<TypeSelectionNode> parentsToClearChildren = new List<TypeSelectionNode>();
+      private readonly List<TypeSelectionNode> parentsToSetChildren = new List<TypeSelectionNode>();
 
       /// <summary>
       /// Get the complete type definition from the entire tree.
@@ -292,7 +291,7 @@ namespace Bonsai.Designer
       {
         try
         {
-          return getType(_root).type;
+          return GetType(root).type;
         }
 
         catch (Exception e)
@@ -302,7 +301,7 @@ namespace Bonsai.Designer
         }
       }
 
-      private TypeSelectionNode getType(TypeSelectionNode node)
+      private TypeSelectionNode GetType(TypeSelectionNode node)
       {
         if (node.type != null && node.type.IsGenericType)
         {
@@ -313,7 +312,7 @@ namespace Bonsai.Designer
           int i = 0;
           foreach (var child in node.children)
           {
-            types[i++] = getType(child).type;
+            types[i++] = GetType(child).type;
           }
 
           node.type = node.type.MakeGenericType(types);
@@ -326,11 +325,11 @@ namespace Bonsai.Designer
 
       public void OnGUI()
       {
-        onGUI(_root, 0);
+        OnGUI(root, 0);
       }
 
       // Recursive drawer that idents children under its parent.
-      private void onGUI(TypeSelectionNode node, int depth)
+      private void OnGUI(TypeSelectionNode node, int depth)
       {
         // Indent based on the depth of the node.
         EditorGUILayout.BeginHorizontal();
@@ -350,7 +349,7 @@ namespace Bonsai.Designer
           foreach (TypeSelectionNode child in node.children)
           {
 
-            onGUI(child, depth);
+            OnGUI(child, depth);
           }
 
           EditorGUILayout.EndVertical();
@@ -362,15 +361,15 @@ namespace Bonsai.Designer
       /// </summary>
       public void UpdateParentChildren()
       {
-        _parentsToSetChildren.Clear();
-        _parentsToClearChildren.Clear();
+        parentsToSetChildren.Clear();
+        parentsToClearChildren.Clear();
 
-        TreeIterator<TypeSelectionNode>.Traverse(_root, markAdditionsAndRemovals);
-        setParentChildren();
-        clearParentChildren();
+        TreeIterator<TypeSelectionNode>.Traverse(root, MarkAdditionsAndRemovals);
+        SetParentChildren();
+        ClearParentChildren();
       }
 
-      private void markAdditionsAndRemovals(TypeSelectionNode node)
+      private void MarkAdditionsAndRemovals(TypeSelectionNode node)
       {
         Type t = node.type;
 
@@ -378,21 +377,21 @@ namespace Bonsai.Designer
         {
 
           // Generic types needs to have children to define the generic type argument.
-          _parentsToSetChildren.Add(node);
+          parentsToSetChildren.Add(node);
         }
 
         else if ((t == null || !t.IsGenericType) && node.children.Count != 0)
         {
 
           // Not generic but has children means this node changed to a non-generic from a generic
-          _parentsToClearChildren.Add(node);
+          parentsToClearChildren.Add(node);
         }
       }
 
-      private void setParentChildren()
+      private void SetParentChildren()
       {
         // Add children generic type args for generic type parents.
-        foreach (TypeSelectionNode parent in _parentsToSetChildren)
+        foreach (TypeSelectionNode parent in parentsToSetChildren)
         {
 
           parent.children.Clear();
@@ -404,10 +403,10 @@ namespace Bonsai.Designer
         }
       }
 
-      private void clearParentChildren()
+      private void ClearParentChildren()
       {
         // Remove children for parents that became non-generic.
-        foreach (TypeSelectionNode parent in _parentsToClearChildren)
+        foreach (TypeSelectionNode parent in parentsToClearChildren)
         {
           parent.children.Clear();
         }

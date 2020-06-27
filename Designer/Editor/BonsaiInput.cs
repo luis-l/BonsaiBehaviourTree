@@ -2,21 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Bonsai.Utility;
 using UnityEditor;
 using UnityEngine;
 
 namespace Bonsai.Designer
 {
   /// <summary>
-  /// Handles inputs and stores input states.
+  /// Emits inputs events for the editor.
   /// </summary>
   public class BonsaiInput : IDisposable
   {
-    private readonly BonsaiWindow window;
     private readonly GenericMenu nodeTypeSelectionMenu = new GenericMenu();
-    private readonly GenericMenu nodeContextMenu = new GenericMenu();
-    private readonly GenericMenu multiNodeContextMenu = new GenericMenu();
 
     public enum NodeContext
     {
@@ -28,26 +24,27 @@ namespace Bonsai.Designer
       DeleteSelection
     };
 
-    public event EventHandler<BonsaiNode> NodeClick;
-    public event EventHandler<BonsaiOutputPort> OutputClick;
-    public event EventHandler<BonsaiInputPort> InputClick;
-    public event EventHandler CanvasClicked;
-    public event EventHandler<Event> Unclick;
-    public event EventHandler<BonsaiNode> NodeUnclick;
+    public event EventHandler<BonsaiInputEvent> MouseDown;
+    public event EventHandler<BonsaiInputEvent> Click;
+    public event EventHandler<BonsaiInputEvent> MouseUp;
+    public event EventHandler<BonsaiNode> NodeContextClick;
+    public event EventHandler CanvasContextClick;
+    public event EventHandler<Type> CreateNodeRequest;
+    public event EventHandler<NodeContext> NodeActionRequest;
+    public event EventHandler<NodeContext> MultiNodeActionRequest;
 
     public event EventHandler SaveRequest;
     public event EventHandler CanvasLostFocus;
 
-    public event EventHandler<float> Zoom = delegate { };
-    public event EventHandler<Vector2> Pan = delegate { };
-
     // Keeps track of time between mouse down and mouse up to determine if the event was a click.
     private readonly System.Timers.Timer clickTimer = new System.Timers.Timer(100);
 
-    public BonsaiInput(BonsaiWindow w)
-    {
-      window = w;
+    public IReadOnlySelection selection;
 
+    public bool EditInputEnabled { get; set; }
+
+    public BonsaiInput()
+    {
       // Clicks are one-shot events.
       clickTimer.AutoReset = false;
 
@@ -56,21 +53,17 @@ namespace Bonsai.Designer
       {
         Type nodeType = kvp.Key;
         BonsaiEditor.NodeTypeProperties prop = kvp.Value;
-        nodeTypeSelectionMenu.AddItem(new GUIContent(prop.path), false, OnNodeCreateCallback, nodeType);
+        nodeTypeSelectionMenu.AddItem(new GUIContent(prop.path), false, OnCreateNodeRequest, nodeType);
       }
 
       // Setup node context menu.
-      nodeContextMenu.AddItem(new GUIContent("Set As Root"), false, OnNodeContextCallback, NodeContext.SetAsRoot);
-      nodeContextMenu.AddItem(new GUIContent("Duplicate"), false, OnNodeContextCallback, NodeContext.Duplicate);
-      nodeContextMenu.AddItem(new GUIContent("Change Type"), false, OnNodeContextCallback, NodeContext.ChangeType);
-      nodeContextMenu.AddItem(new GUIContent("Delete"), false, OnNodeContextCallback, NodeContext.Delete);
-
-      // Setup area selection context menu.
-      multiNodeContextMenu.AddItem(new GUIContent("Duplicate"), false, OnMultiNodeCallback, NodeContext.DuplicateSelection);
-      multiNodeContextMenu.AddItem(new GUIContent("Delete"), false, OnMultiNodeCallback, NodeContext.DeleteSelection);
     }
 
-    public void HandleMouseEvents(Event e, Rect inputRect)
+    public void HandleMouseEvents(
+      Event e,
+      CanvasTransform transform,
+      IEnumerable<BonsaiNode> nodes,
+      Rect inputRect)
     {
       // Mouse must be inside the editor canvas.
       if (!inputRect.Contains(e.mousePosition))
@@ -79,13 +72,17 @@ namespace Bonsai.Designer
         return;
       }
 
-      HandleCanvasInputs(e);
-      HandleClickActions(e);
+      HandleClickActions(transform, nodes, e);
 
-      if (window.EditorMode.Value == BonsaiWindow.Mode.Edit)
+      if (EditInputEnabled)
       {
         HandleEditorShortcuts(e);
-        HandleContextInput(e);
+
+        if (e.type == EventType.ContextClick)
+        {
+          HandleContextInput(transform, nodes);
+          e.Use();
+        }
       }
     }
 
@@ -98,64 +95,27 @@ namespace Bonsai.Designer
       }
     }
 
-    private void HandleCanvasInputs(Event e)
-    {
-      if (IsZoomAction(e))
-      {
-        e.Use();
-        Zoom(this, e.delta.y);
-      }
-
-      if (IsPanAction(e))
-      {
-        e.Use();
-        Pan(this, e.delta);
-      }
-    }
-
-    private void HandleClickActions(Event e)
+    private void HandleClickActions(CanvasTransform t, IEnumerable<BonsaiNode> nodes, Event e)
     {
       if (IsClickAction(e))
       {
         clickTimer.Start();
-        Coord.MouseQueryResult result = window.Editor.Coordinates.QueryUnderMouse(
-          out BonsaiNode node,
-          out BonsaiInputPort input,
-          out BonsaiOutputPort output);
-
-        switch (result)
-        {
-          case Coord.MouseQueryResult.Node:
-            NodeClick?.Invoke(this, node);
-            break;
-          case Coord.MouseQueryResult.Input:
-            InputClick?.Invoke(this, input);
-            break;
-          case Coord.MouseQueryResult.Output:
-            OutputClick?.Invoke(this, output);
-            break;
-          default:
-            CanvasClicked?.Invoke(this, EventArgs.Empty);
-            break;
-        }
+        MouseDown?.Invoke(this, CreateInputEvent(t, nodes));
       }
+
       else if (IsUnlickAction(e))
       {
+        BonsaiInputEvent inputEvent = CreateInputEvent(t, nodes);
+
         // A node click is registered if below a time threshold.
         if (clickTimer.Enabled)
         {
-          // Process node unlicks first, then general unclick event.
-          BonsaiNode node = window.Editor.Coordinates.NodeUnderMouse();
-          if (node != null)
-          {
-            NodeUnclick?.Invoke(this, node);
-          }
+          Click?.Invoke(this, inputEvent);
         }
 
         // Reset for next click.
         clickTimer.Stop();
-
-        Unclick?.Invoke(this, e);
+        MouseUp?.Invoke(this, inputEvent);
       }
     }
 
@@ -169,12 +129,12 @@ namespace Bonsai.Designer
       return e.type == EventType.MouseUp && e.button == 0;
     }
 
-    private static bool IsPanAction(Event e)
+    public static bool IsPanAction(Event e)
     {
       return e.type == EventType.MouseDrag && e.button == 2;
     }
 
-    private static bool IsZoomAction(Event e)
+    public static bool IsZoomAction(Event e)
     {
       return e.type == EventType.ScrollWheel;
     }
@@ -183,119 +143,154 @@ namespace Bonsai.Designer
     /// The callback to create the node via typename.
     /// </summary>
     /// <param name="o">The typename as a string.</param>
-    private void OnNodeCreateCallback(object o)
+    private void OnCreateNodeRequest(object o)
     {
-      var node = window.Editor.Canvas.CreateNode(o as Type, window.Tree);
-      window.Editor.SetNewNodeToPositionUnderMouse(node);
-
-      // Make the created node the current focus of selection.
-      Selection.activeObject = node.Behaviour;
+      CreateNodeRequest?.Invoke(this, o as Type);
     }
 
-    private void HandleContextInput(Event e)
+    private void HandleContextInput(CanvasTransform t, IEnumerable<BonsaiNode> nodes)
     {
-      if (e.type != EventType.ContextClick)
-      {
-        return;
-      }
-
-      if (!window.Editor.NodeSelection.IsMultiSelection)
-      {
-        HandleSingleContext(e);
-      }
-
-      if (window.Editor.NodeSelection.IsMultiSelection)
+      if (selection.IsMultiSelection)
       {
         HandleMultiContext();
-        e.Use();
+      }
+      else
+      {
+        HandleSingleContext(t, nodes);
       }
     }
 
-    private void HandleSingleContext(Event e)
+    private void HandleSingleContext(CanvasTransform t, IEnumerable<BonsaiNode> nodes)
     {
-      // Show node context menu - delete and duplicate.
-      // Context click over the node.
-      bool isOverNode = window.Editor.Coordinates.OnMouseOverNode(node =>
-      {
-        //NodeClicked?.Invoke(this, node);
-        window.Editor.NodeSelection.SetSingleSelection(node);
-        nodeContextMenu.ShowAsContext();
-      });
+      BonsaiNode node = NodeUnderMouse(t, nodes);
 
-      if (!isOverNode)
+      if (node != null)
       {
-        // Display node creation menu.
+        NodeContextClick?.Invoke(this, node);
+        CreateSingleSelectionContextMenu().ShowAsContext();
+      }
+
+      else
+      {
+        CanvasContextClick?.Invoke(this, EventArgs.Empty);
         nodeTypeSelectionMenu.ShowAsContext();
-        e.Use();
       }
     }
 
     private void HandleMultiContext()
     {
-      multiNodeContextMenu.ShowAsContext();
+      CreateMultiSelectionContextMenu().ShowAsContext();
     }
 
-    private void OnNodeContextCallback(object o)
+    private void OnNodeAction(object o)
     {
-      NodeContext context = (NodeContext)o;
+      NodeActionRequest?.Invoke(this, (NodeContext)o);
+    }
 
-      BonsaiNode selected = window.Editor.NodeSelection.SingleSelectedNode;
+    private void OnMultiNodeAction(object o)
+    {
+      MultiNodeActionRequest?.Invoke(this, (NodeContext)o);
+    }
 
-      switch (context)
+    private GenericMenu CreateSingleSelectionContextMenu()
+    {
+      var menu = new GenericMenu();
+      menu.AddItem(new GUIContent("Set As Root"), false, OnNodeAction, NodeContext.SetAsRoot);
+      menu.AddItem(new GUIContent("Duplicate"), false, OnNodeAction, NodeContext.Duplicate);
+      menu.AddItem(new GUIContent("Change Type"), false, OnNodeAction, NodeContext.ChangeType);
+      menu.AddSeparator("");
+      menu.AddItem(new GUIContent("Delete"), false, OnNodeAction, NodeContext.Delete);
+      return menu;
+    }
+
+    private GenericMenu CreateMultiSelectionContextMenu()
+    {
+      // Setup area selection context menu.
+      var menu = new GenericMenu();
+      menu.AddItem(new GUIContent("Duplicate"), false, OnMultiNodeAction, NodeContext.DuplicateSelection);
+      menu.AddItem(new GUIContent("Delete"), false, OnMultiNodeAction, NodeContext.DeleteSelection);
+      return menu;
+    }
+
+    /// <summary>
+    /// Returns the mouse position in canvas space.
+    /// </summary>
+    /// <returns></returns>
+    public static Vector2 MousePosition(CanvasTransform transform)
+    {
+      return transform.ScreenToCanvasSpace(Event.current.mousePosition);
+    }
+
+    /// <summary>
+    /// Tests if the rect is under the mouse.
+    /// </summary>
+    /// <param name="r"></param>
+    /// <returns></returns>
+    public static bool IsUnderMouse(CanvasTransform transform, Rect r)
+    {
+      return r.Contains(MousePosition(transform));
+    }
+
+    /// <summary>
+    /// Get the first node detected under the mouse. Ports are counted as port of the check.
+    /// </summary>
+    /// <returns></returns>
+    private static BonsaiNode NodeUnderMouse(CanvasTransform transform, IEnumerable<BonsaiNode> nodes)
+    {
+      return nodes.FirstOrDefault(node => IsUnderMouse(transform, node.RectPositon));
+    }
+
+    private static BonsaiInputEvent CreateInputEvent(
+      CanvasTransform transform,
+      IEnumerable<BonsaiNode> nodes)
+    {
+      BonsaiInputPort input = null;
+      BonsaiOutputPort output = null;
+      BonsaiNode node = NodeUnderMouse(transform, nodes);
+
+      if (node != null)
       {
-        case NodeContext.SetAsRoot:
-          window.Tree.Root = selected.Behaviour;
-          break;
-
-        case NodeContext.Duplicate:
-          Type nodeType = selected.Behaviour.GetType();
-          OnNodeCreateCallback(nodeType);
-          break;
-
-        case NodeContext.ChangeType:
-          // TODO
-          BonsaiWindow.LogNotImplemented("Change Type");
-          break;
-
-        case NodeContext.Delete:
-          window.Editor.Canvas.Remove(selected);
-          break;
+        input = InputUnderMouse(transform, node);
+        output = OutputUnderMouse(transform, node);
       }
-    }
 
-    private void OnMultiNodeCallback(object o)
-    {
-      NodeContext context = (NodeContext)o;
-
-      switch (context)
+      return new BonsaiInputEvent
       {
-        case NodeContext.DuplicateSelection:
-          if (window.Editor.NodeSelection.IsMultiSelection)
-          {
-            var duplicates = MultiDuplicateNodes(window.Editor.NodeSelection.SelectedNodes);
-            window.Editor.NodeSelection.SetMultiSelection(duplicates);
-          }
-          else if (window.Editor.NodeSelection.IsSingleSelection)
-          {
-            var duplicate = DuplicateNode(window.Editor.NodeSelection.SingleSelectedNode);
-            window.Editor.NodeSelection.SetSingleSelection(duplicate);
-          }
-          break;
-        case NodeContext.DeleteSelection:
-          window.Editor.Canvas.Remove(node => window.Editor.NodeSelection.IsNodeSelected(node));
-          window.Editor.NodeSelection.SetTreeSelection(window.Tree);
-          break;
+        transform = transform,
+        canvasMousePostion = MousePosition(transform),
+        node = node,
+        inputPort = input,
+        outputPort = output
+      };
+    }
+
+    /// <summary>
+    /// Get the input for the node if under the mouse.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    private static BonsaiInputPort InputUnderMouse(CanvasTransform t, BonsaiNode node)
+    {
+      if (node.Input != null && IsUnderMouse(t, node.Input.RectPosition))
+      {
+        return node.Input;
       }
+
+      return null;
     }
 
-    private BonsaiNode DuplicateNode(BonsaiNode original)
+    /// <summary>
+    /// Get the ouput for the node if under the mouse.
+    /// </summary>
+    /// <param name="node"></param>
+    /// <returns></returns>
+    private static BonsaiOutputPort OutputUnderMouse(CanvasTransform t, BonsaiNode node)
     {
-      return EditorDuplicateNode.DuplicateSingle(window.Editor.Canvas, window.Tree, original);
-    }
-
-    private List<BonsaiNode> MultiDuplicateNodes(List<BonsaiNode> originals)
-    {
-      return EditorDuplicateNode.DuplicateMultiple(window.Editor.Canvas, window.Tree, originals);
+      if (node.Output != null && IsUnderMouse(t, node.Output.RectPosition))
+      {
+        return node.Output;
+      }
+      return null;
     }
 
     public void Dispose()

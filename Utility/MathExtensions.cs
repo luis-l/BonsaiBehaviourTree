@@ -13,6 +13,30 @@ namespace Bonsai.Utility
     {
       return new Rect(Round(r.position), Round(r.size));
     }
+
+    /// <summary>
+    /// Rounds the position to the nearest grid coordinate.
+    /// </summary>
+    /// <param name="p"></param>
+    /// <returns></returns>
+    public static Vector2 SnapPosition(Vector2 p, float snapStep)
+    {
+      return SnapPosition(p.x, p.y, snapStep);
+    }
+
+    /// <summary>
+    /// Rounds the position to the nearest grid coordinate.
+    /// </summary>
+    /// <param name="x"></param>
+    /// <param name="y"></param>
+    /// <returns></returns>
+    public static Vector2 SnapPosition(float x, float y, float snapStep)
+    {
+      x = Mathf.Round(x / snapStep) * snapStep;
+      y = Mathf.Round(y / snapStep) * snapStep;
+
+      return new Vector2(x, y);
+    }
   }
 
 }

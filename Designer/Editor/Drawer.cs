@@ -65,13 +65,13 @@ namespace Bonsai.Designer
     }
 
     public static void DrawNode(
-      Coord coord,
+      CanvasTransform t,
       BonsaiNode node,
       Color statusColor)
     {
       // Convert the node rect from canvas to screen space.
       Rect screenRect = node.RectPositon;
-      screenRect.position = coord.CanvasToScreenSpace(screenRect.position);
+      screenRect.position = t.CanvasToScreenSpace(screenRect.position);
 
       // Remember the original color that way it is reset when the function exits.
       Color originalColor = GUI.color;
@@ -187,7 +187,7 @@ namespace Bonsai.Designer
       }
     }
 
-    public static void DrawPorts(Coord coord, BonsaiNode node)
+    public static void DrawPorts(CanvasTransform t, BonsaiNode node)
     {
       //Rect nodeRect = node.bodyRect;
       BonsaiOutputPort output = node.Output;
@@ -195,23 +195,23 @@ namespace Bonsai.Designer
 
       if (input != null)
       {
-        DrawPort(coord, input.RectPosition);
+        DrawPort(t, input.RectPosition);
       }
 
       if (output != null)
       {
-        DrawPort(coord, output.RectPosition);
+        DrawPort(t, output.RectPosition);
       }
     }
 
-    public static void DrawPort(Coord c, Rect portRect)
+    public static void DrawPort(CanvasTransform t, Rect portRect)
     {
       // Convert the body rect from canvas to screen space.
-      portRect.position = c.CanvasToScreenSpace(portRect.position);
+      portRect.position = t.CanvasToScreenSpace(portRect.position);
       GUI.DrawTexture(portRect, BonsaiPreferences.Instance.portTexture, ScaleMode.StretchToFill);
     }
 
-    public static void DrawDefaultPortConnections(Coord coord, BonsaiNode node)
+    public static void DrawDefaultPortConnections(CanvasTransform t, BonsaiNode node)
     {
       if (node.Output.InputCount() == 0)
       {
@@ -253,14 +253,14 @@ namespace Bonsai.Designer
 
       // Draw the lines from the calculated positions.
       DrawLineCanvasSpace(
-        coord,
+        t,
         parentAnchorTip,
         parentAnchorLineConnection,
         connectionColor,
         connectionWidth);
 
       DrawLineCanvasSpace(
-        coord,
+        t,
         anchorLineStart,
         anchorLineEnd,
         prefs.defaultConnectionColor,
@@ -276,7 +276,7 @@ namespace Bonsai.Designer
         if (input.ParentNode.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
         {
           DrawLineCanvasSpace(
-            coord,
+            t,
             center,
             anchorLineConnection,
             prefs.runningStatusColor,
@@ -284,7 +284,7 @@ namespace Bonsai.Designer
 
           // Hightlight the portion of the anchorline between the running child and parent node.
           DrawLineCanvasSpace(
-            coord,
+            t,
             anchorLineConnection,
             parentAnchorLineConnection,
             prefs.runningStatusColor,
@@ -294,7 +294,7 @@ namespace Bonsai.Designer
         {
           // The node is not running, draw a default connection.
           DrawLineCanvasSpace(
-            coord,
+            t,
             anchorLineConnection,
             center,
             prefs.defaultConnectionColor,
@@ -365,18 +365,18 @@ namespace Bonsai.Designer
       GUI.DrawTexture(r, tex, ScaleMode.ScaleToFit, true, 0f, c, 0f, 0f);
     }
 
-    public static void DrawLineCanvasSpace(Coord c, Vector2 start, Vector2 end, Color color)
+    public static void DrawLineCanvasSpace(CanvasTransform t, Vector2 start, Vector2 end, Color color)
     {
-      start = c.CanvasToScreenSpace(start);
-      end = c.CanvasToScreenSpace(end);
+      start = t.CanvasToScreenSpace(start);
+      end = t.CanvasToScreenSpace(end);
       DrawLineScreenSpace(start, end, color);
     }
 
-    public static void DrawLineCanvasSpace(Coord c, Vector2 start, Vector2 end, Color color, float width)
+    public static void DrawLineCanvasSpace(CanvasTransform t, Vector2 start, Vector2 end, Color color, float width)
     {
-      start = c.CanvasToScreenSpace(start);
-      end = c.CanvasToScreenSpace(end);
-      if (c.IsScreenAxisLineInView(start, end))
+      start = t.CanvasToScreenSpace(start);
+      end = t.CanvasToScreenSpace(end);
+      if (t.IsScreenAxisLineInView(start, end))
       {
         DrawLineScreenSpace(start, end, color, width);
       }

@@ -1,4 +1,6 @@
 ﻿
+using UnityEngine;
+
 namespace Bonsai.Designer
 {
   public static class EditorNodeConnecting
@@ -29,16 +31,10 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="coord"></param>
     /// <param name="output"></param>
-    public static void FinishConnection(Coord coord, BonsaiOutputPort output)
+    public static void FinishConnection(BonsaiNode node, BonsaiOutputPort output)
     {
-      coord.OnMouseOverNodeOrInput(node =>
-      {
-        output.Add(node.Input);
-
-        // When a connection is made, we need to make sure the positional
-        // ordering reflects the internal tree structure.
-        node.NotifyParentOfPostionalReordering();
-      });
+      output.Add(node.Input);
+      node.NotifyParentOfPostionalReordering();
     }
 
   }

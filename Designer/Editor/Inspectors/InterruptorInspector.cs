@@ -1,5 +1,4 @@
 ﻿
-using Bonsai.Core;
 using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
@@ -9,92 +8,21 @@ namespace Bonsai.Designer
   [CustomEditor(typeof(Interruptor))]
   public class InterruptorInspector : BehaviourNodeInspector
   {
-    private bool isLinking = false;
-
-    private Interruptor interruptor;
+    private readonly GUIStyle linkStyle = new GUIStyle();
 
     protected override void OnEnable()
     {
       base.OnEnable();
-      interruptor = target as Interruptor;
-    }
-
-    void OnDestroy()
-    {
-      if (isLinking)
-      {
-        ParentWindow.Editor.CancelAction();
-      }
+      linkStyle.alignment = TextAnchor.MiddleCenter;
+      linkStyle.fontStyle = FontStyle.Bold;
     }
 
     protected override void OnBehaviourNodeInspectorGUI()
     {
       EditorGUILayout.BeginVertical();
-
-      string message;
-
-      if (isLinking)
-      {
-        message = "Finish Linking";
-      }
-
-      else
-      {
-        message = "Link Interruptables";
-      }
-
-      if (GUILayout.Button(message))
-      {
-
-        // Toggle
-        isLinking = !isLinking;
-
-        if (isLinking)
-        {
-
-          ParentWindow.Editor.StartLink(typeof(Interruptable), OnNodeSelectedForLinking);
-          ParentWindow.Repaint();
-        }
-
-        else
-        {
-          ParentWindow.Editor.CancelAction();
-          ParentWindow.Repaint();
-        }
-      }
-
-      if (ParentWindow)
-      {
-        isLinking = ParentWindow.Editor.IsExternalActionActive;
-      }
-
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField("Shift + Click to link Interruptables", linkStyle);
       EditorGUILayout.EndVertical();
-    }
-
-    private void OnNodeSelectedForLinking(BehaviourNode node)
-    {
-      serializedObject.Update();
-
-      var refInter = node as Interruptable;
-      bool bAlreadyLinked = interruptor.linkedInterruptables.Contains(refInter);
-
-      // Works as a toggle, if already linked then unlink.
-      if (bAlreadyLinked)
-      {
-        interruptor.linkedInterruptables.Remove(refInter);
-
-      }
-
-      // If unlinked, then link.
-      else
-      {
-        interruptor.linkedInterruptables.Add(refInter);
-      }
-
-      serializedObject.ApplyModifiedProperties();
-
-      // Update the referenced nodes in the editor.
-      ParentWindow.Editor.NodeSelection.SetReferenced(interruptor);
     }
   }
 }

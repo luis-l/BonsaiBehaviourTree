@@ -21,7 +21,7 @@ namespace Bonsai.Standard
     [Tooltip("When the guard does not wait, should we return success of failure when skipping it?")]
     public bool returnSuccessOnSkip = false;
 
-    [Tooltip("Linked guards to test against.")]
+    [HideInInspector]
     public List<Guard> linkedGuards = new List<Guard>();
 
     private int _runningGuards = 0;

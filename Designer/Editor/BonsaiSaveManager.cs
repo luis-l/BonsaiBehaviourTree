@@ -65,7 +65,7 @@ namespace Bonsai.Designer
     public void InitState()
     {
       // If the window has a valid canvas and editable.
-      if (window.Tree != null && window.EditorMode.Value == BonsaiWindow.Mode.Edit)
+      if (window.Tree != null && window.Editor.EditorMode.Value == BonsaiEditor.Mode.Edit)
       {
         string path = GetCurrentTreePath();
 
@@ -215,7 +215,7 @@ namespace Bonsai.Designer
     private Core.BehaviourTree CreateNew()
     {
       window.ShowNotification(new GUIContent("New Tree Created"));
-      return CreateBehaviourTree(getTemporaryPath());
+      return CreateBehaviourTree(GetTemporaryPath());
     }
 
     // Create a new temp canvas on an empty window or with a temp canvas..
@@ -335,7 +335,7 @@ namespace Bonsai.Designer
     public void OnCleanup()
     {
       // Only save/delete things if we are in edit mode.
-      if (window.EditorMode.Value != BonsaiWindow.Mode.Edit)
+      if (window.Editor.EditorMode.Value != BonsaiEditor.Mode.Edit)
       {
         return;
       }
@@ -371,7 +371,7 @@ namespace Bonsai.Designer
     public void RequestSave() { requestedSaveOp = SaveOp.Save; saveFsm.Update(); }
     public void RequestSaveAs() { requestedSaveOp = SaveOp.SaveAs; saveFsm.Update(); }
 
-    private string getTemporaryPath()
+    private string GetTemporaryPath()
     {
       return kTempCanvasPath + kTempFileName + window.GetInstanceID().ToString() + ".asset";
     }

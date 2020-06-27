@@ -278,6 +278,11 @@ namespace Bonsai.Designer
       UpdatePortPositions();
     }
 
+    public void SetIcon(Texture icon)
+    {
+      HeaderContent.image = icon;
+    }
+
     private string HeaderText()
     {
       string text = behaviour.title;

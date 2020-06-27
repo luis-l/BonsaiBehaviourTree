@@ -8,7 +8,7 @@ using UnityEngine;
 namespace Bonsai.Designer
 {
   /// <summary>
-  /// Holds node data and property data like current pan and zoom.
+  /// The canvas holds the nodes of the behaviour tree.
   /// </summary>
   public class BonsaiCanvas : IEnumerable<BonsaiNode>
   {
@@ -27,12 +27,15 @@ namespace Bonsai.Designer
       get { return nodes; }
     }
 
+    public BehaviourTree Tree { get; }
+
     /// <summary>
     /// Builds the canvas given the behaviour tree.
     /// </summary>
     /// <param name="treeBehaviours"></param>
     public BonsaiCanvas(BehaviourTree tree)
     {
+      Tree = tree;
       var nodeMap = ReconstructEditorNodes(tree.AllNodes);
       ReconstructEditorConnections(nodeMap);
       zoom = tree.zoomPosition;

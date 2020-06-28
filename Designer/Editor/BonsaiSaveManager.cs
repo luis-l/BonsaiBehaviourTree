@@ -294,7 +294,7 @@ namespace Bonsai.Designer
         // asset in the copy while the original main asset becomes a subasset.
 
         // Rename subassets such that they are lexicographically after the main asset.
-        foreach (var node in window.Editor.Canvas)
+        foreach (var node in window.Editor.Canvas.Nodes)
         {
           node.Behaviour.name = window.Tree.name + node.Behaviour.GetType().Name;
         }
@@ -318,7 +318,7 @@ namespace Bonsai.Designer
 
     private void SaveTreeMetaData()
     {
-      foreach (var editorNode in window.Editor.Canvas)
+      foreach (var editorNode in window.Editor.Canvas.Nodes)
       {
         editorNode.Behaviour.bonsaiNodePosition = editorNode.Position;
       }

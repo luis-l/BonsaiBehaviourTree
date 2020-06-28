@@ -1,7 +1,7 @@
 ﻿
-using UnityEngine;
-using UnityEditor;
 using System;
+using UnityEditor;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
@@ -67,7 +67,7 @@ namespace Bonsai.Designer
       ScaleUtility.BeginScale(canvasRect, ZoomScale, BonsaiWindow.toolbarHeight);
 
       CustomDraw?.Invoke(t);
-      DrawPortConnections(t);
+      DrawConnections(t);
       DrawNodes(t);
 
       ScaleUtility.EndScale(canvasRect, ZoomScale, BonsaiWindow.toolbarHeight);
@@ -90,8 +90,10 @@ namespace Bonsai.Designer
 
     private void DrawNodesInEditMode(CanvasTransform t)
     {
-      foreach (var node in Canvas.NodesInDrawOrder)
+      var nodes = Canvas.Nodes;
+      for (int i = 0; i < nodes.Count; i++)
       {
+        BonsaiNode node = nodes[i];
         Drawer.DrawNode(t, node, NodeStatusColor(node));
         Drawer.DrawPorts(t, node);
       }
@@ -100,8 +102,10 @@ namespace Bonsai.Designer
     // Does not render ports in view mode since nodes cannot be changed.
     private void DrawNodesInViewMode(CanvasTransform t)
     {
-      foreach (var node in Canvas.NodesInDrawOrder)
+      var nodes = Canvas.Nodes;
+      for (int i = 0; i < nodes.Count; i++)
       {
+        BonsaiNode node = nodes[i];
         if (t.InView(node.RectPositon))
         {
           Drawer.DrawNode(t, node, NodeStatusColor(node));
@@ -109,13 +113,16 @@ namespace Bonsai.Designer
       }
     }
 
-    private void DrawPortConnections(CanvasTransform t)
+    private void DrawConnections(CanvasTransform t)
     {
-      foreach (var node in Canvas.NodesInDrawOrder)
+      var nodes = Canvas.Nodes;
+      for (int i = 0; i < nodes.Count; i++)
       {
+        BonsaiNode node = nodes[i];
+
         if (node.Output != null)
         {
-          Drawer.DrawDefaultPortConnections(t, node);
+          Drawer.DrawNodeConnections(t, node);
         }
       }
     }

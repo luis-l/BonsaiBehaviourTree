@@ -10,11 +10,11 @@ namespace Bonsai.Designer
   /// <summary>
   /// The canvas holds the nodes of the behaviour tree.
   /// </summary>
-  public class BonsaiCanvas : IEnumerable<BonsaiNode>
+  public class BonsaiCanvas
   {
     private readonly List<BonsaiNode> nodes = new List<BonsaiNode>();
 
-    public IEnumerable<BonsaiNode> Nodes
+    public IReadOnlyList<BonsaiNode> Nodes
     {
       get { return nodes; }
     }
@@ -67,7 +67,6 @@ namespace Bonsai.Designer
     private BonsaiNode AddEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren, Texture icon = null)
     {
       var node = new BonsaiNode(bCreateInput, bCreateOutput, bCanHaveMultipleChildren, icon);
-
       nodes.Add(node);
       return node;
     }
@@ -100,32 +99,32 @@ namespace Bonsai.Designer
       }
     }
 
-    /// <summary>
-    /// Iterate through the nodes in the proper draw order
-    /// where the last element renders on top of all nodes.
-    /// </summary>
-    public IEnumerable<BonsaiNode> NodesInDrawOrder
-    {
-      get { return nodes; }
-    }
+    ///// <summary>
+    ///// Iterate through the nodes in the proper draw order
+    ///// where the last element renders on top of all nodes.
+    ///// </summary>
+    //public IEnumerable<BonsaiNode> NodesInDrawOrder
+    //{
+    //  get { return nodes; }
+    //}
 
-    /// <summary>
-    /// Iterates through the nodes in reverse for input purposes
-    /// so the top rendering node receives events first.
-    /// </summary>
-    /// <returns></returns>
-    public IEnumerator<BonsaiNode> GetEnumerator()
-    {
-      for (int i = nodes.Count - 1; i >= 0; --i)
-      {
-        yield return nodes[i];
-      }
-    }
+    ///// <summary>
+    ///// Iterates through the nodes in reverse for input purposes
+    ///// so the top rendering node receives events first.
+    ///// </summary>
+    ///// <returns></returns>
+    //public IEnumerator<BonsaiNode> GetEnumerator()
+    //{
+    //  for (int i = nodes.Count - 1; i >= 0; --i)
+    //  {
+    //    yield return nodes[i];
+    //  }
+    //}
 
-    IEnumerator IEnumerable.GetEnumerator()
-    {
-      return GetEnumerator();
-    }
+    //IEnumerator IEnumerable.GetEnumerator()
+    //{
+    //  return GetEnumerator();
+    //}
 
     // Reconstruct editor nodes from the tree.
     private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes(IEnumerable<BehaviourNode> treeBehaviours)
@@ -147,7 +146,7 @@ namespace Bonsai.Designer
     private void ReconstructEditorConnections(Dictionary<BehaviourNode, BonsaiNode> nodeMap)
     {
       // Create the connections
-      foreach (BonsaiNode node in Nodes)
+      foreach (BonsaiNode node in nodes)
       {
         for (int i = 0; i < node.Behaviour.ChildCount(); ++i)
         {

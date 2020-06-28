@@ -231,7 +231,7 @@ namespace Bonsai.Designer
       ApplyAction = (BonsaiInputEvent applyEvent) =>
       {
         Vector2 end = applyEvent.canvasMousePostion;
-        var areaSelection = EditorAreaSelect.NodesUnderArea(Canvas, start, end);
+        var areaSelection = EditorAreaSelect.NodesUnderArea(Canvas.Nodes, start, end);
         NodeSelection.SetMultiSelection(areaSelection.ToList());
       };
 
@@ -342,7 +342,7 @@ namespace Bonsai.Designer
         OnCanvasChanged();
       }
 
-      Input.HandleMouseEvents(e, t, Canvas, inputRect);
+      Input.HandleMouseEvents(e, t, Canvas.Nodes, inputRect);
     }
 
     public bool IsEditMode { get { return EditorMode.Value == Mode.Edit; } }
@@ -375,7 +375,7 @@ namespace Bonsai.Designer
 
     public void UpdateNodeGUI(BehaviourNode behaviour)
     {
-      BonsaiNode node = Canvas.First(n => n.Behaviour == behaviour);
+      BonsaiNode node = Canvas.Nodes.First(n => n.Behaviour == behaviour);
       node.UpdateGui();
       node.UpdatePortPositions();
 

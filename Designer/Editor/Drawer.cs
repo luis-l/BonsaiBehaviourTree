@@ -211,7 +211,7 @@ namespace Bonsai.Designer
       GUI.DrawTexture(portRect, BonsaiPreferences.Instance.portTexture, ScaleMode.StretchToFill);
     }
 
-    public static void DrawDefaultPortConnections(CanvasTransform t, BonsaiNode node)
+    public static void DrawNodeConnections(CanvasTransform t, BonsaiNode node)
     {
       if (node.Output.InputCount() == 0)
       {

@@ -185,7 +185,7 @@ namespace Bonsai.Designer
     {
       if (Tree && Editor.Canvas != null)
       {
-        Formatter.PositionNodesNicely(Tree, Editor.Canvas);
+        Formatter.PositionNodesNicely(Tree, Editor.Canvas.Nodes);
       }
     }
 

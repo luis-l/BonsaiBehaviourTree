@@ -1,7 +1,6 @@
 ﻿
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -65,7 +64,7 @@ namespace Bonsai.Designer
     public void HandleMouseEvents(
       Event e,
       CanvasTransform transform,
-      IEnumerable<BonsaiNode> nodes,
+      IReadOnlyList<BonsaiNode> nodes,
       Rect inputRect)
     {
       // Mouse must be inside the editor canvas.
@@ -98,7 +97,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private void HandleClickActions(CanvasTransform t, IEnumerable<BonsaiNode> nodes, Event e)
+    private void HandleClickActions(CanvasTransform t, IReadOnlyList<BonsaiNode> nodes, Event e)
     {
       if (IsClickAction(e))
       {
@@ -151,7 +150,7 @@ namespace Bonsai.Designer
       CreateNodeRequest?.Invoke(this, o as Type);
     }
 
-    private void HandleContextInput(CanvasTransform t, IEnumerable<BonsaiNode> nodes)
+    private void HandleContextInput(CanvasTransform t, IReadOnlyList<BonsaiNode> nodes)
     {
       if (selection.IsMultiSelection)
       {
@@ -163,7 +162,7 @@ namespace Bonsai.Designer
       }
     }
 
-    private void HandleSingleContext(CanvasTransform t, IEnumerable<BonsaiNode> nodes)
+    private void HandleSingleContext(CanvasTransform t, IReadOnlyList<BonsaiNode> nodes)
     {
       BonsaiNode node = NodeUnderMouse(t, nodes);
 
@@ -242,14 +241,22 @@ namespace Bonsai.Designer
     /// Get the first node detected under the mouse. Ports are counted as port of the check.
     /// </summary>
     /// <returns></returns>
-    private static BonsaiNode NodeUnderMouse(CanvasTransform transform, IEnumerable<BonsaiNode> nodes)
+    private static BonsaiNode NodeUnderMouse(CanvasTransform transform, IReadOnlyList<BonsaiNode> nodes)
     {
-      return nodes.FirstOrDefault(node => IsUnderMouse(transform, node.RectPositon));
+      // Iterate in reverse so the last drawn node (top) receives input first.
+      for (int i = nodes.Count - 1; i >= 0; i--)
+      {
+        BonsaiNode node = nodes[i];
+        if (IsUnderMouse(transform, node.RectPositon))
+        {
+          return node;
+        }
+      }
+
+      return null;
     }
 
-    private static BonsaiInputEvent CreateInputEvent(
-      CanvasTransform transform,
-      IEnumerable<BonsaiNode> nodes)
+    private static BonsaiInputEvent CreateInputEvent(CanvasTransform transform, IReadOnlyList<BonsaiNode> nodes)
     {
       BonsaiInputPort input = null;
       BonsaiOutputPort output = null;

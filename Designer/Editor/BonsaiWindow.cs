@@ -312,8 +312,8 @@ namespace Bonsai.Designer
       {
         return new CanvasTransform
         {
-          pan = Editor.Canvas.panOffset,
-          zoom = Editor.Canvas.ZoomScale,
+          pan = Viewer.panOffset,
+          zoom = Viewer.ZoomScale,
           size = position.size
         };
       }

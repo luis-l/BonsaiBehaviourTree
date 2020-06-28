@@ -323,8 +323,8 @@ namespace Bonsai.Designer
         editorNode.Behaviour.bonsaiNodePosition = editorNode.Position;
       }
 
-      window.Tree.panPosition = window.Editor.Canvas.panOffset;
-      window.Tree.zoomPosition = window.Editor.Canvas.zoom;
+      window.Tree.panPosition = window.Viewer.panOffset;
+      window.Tree.zoomPosition = window.Viewer.zoom;
     }
 
     #endregion

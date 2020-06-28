@@ -304,6 +304,8 @@ namespace Bonsai.Designer
       Canvas = new BonsaiCanvas(tree);
       Viewer.Canvas = Canvas;
       Viewer.NodeSelection = NodeSelection;
+      Viewer.zoom = tree.zoomPosition;
+      Viewer.panOffset = tree.panPosition;
     }
 
     private static BonsaiPreferences Preferences
@@ -351,11 +353,11 @@ namespace Bonsai.Designer
     /// <param name="delta">The amount to translate the canvas.</param>
     public void Pan(Vector2 delta)
     {
-      Canvas.panOffset += delta * Canvas.ZoomScale * BonsaiCanvas.PanSpeed;
+      Viewer.panOffset += delta * Viewer.ZoomScale * BonsaiViewer.PanSpeed;
 
       // Round to keep panning sharp.
-      Canvas.panOffset.x = Mathf.Round(Canvas.panOffset.x);
-      Canvas.panOffset.y = Mathf.Round(Canvas.panOffset.y);
+      Viewer.panOffset.x = Mathf.Round(Viewer.panOffset.x);
+      Viewer.panOffset.y = Mathf.Round(Viewer.panOffset.y);
     }
 
     /// <summary>
@@ -364,11 +366,11 @@ namespace Bonsai.Designer
     /// <param name="zoomDirection">+1 to zoom in and -1 to zoom out.</param>
     public void Zoom(float zoomDirection)
     {
-      float scale = (zoomDirection < 0f) ? (1f - BonsaiCanvas.ZoomDelta) : (1f + BonsaiCanvas.ZoomDelta);
-      Canvas.zoom *= scale;
+      float scale = (zoomDirection < 0f) ? (1f - BonsaiViewer.ZoomDelta) : (1f + BonsaiViewer.ZoomDelta);
+      Viewer.zoom *= scale;
 
-      float cap = Mathf.Clamp(Canvas.zoom.x, BonsaiCanvas.MinZoom, BonsaiCanvas.MaxZoom);
-      Canvas.zoom.Set(cap, cap);
+      float cap = Mathf.Clamp(Viewer.zoom.x, BonsaiViewer.MinZoom, BonsaiViewer.MaxZoom);
+      Viewer.zoom.Set(cap, cap);
     }
 
     public void UpdateNodeGUI(BehaviourNode behaviour)

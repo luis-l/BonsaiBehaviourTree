@@ -12,14 +12,6 @@ namespace Bonsai.Designer
   /// </summary>
   public class BonsaiCanvas : IEnumerable<BonsaiNode>
   {
-    public static float ZoomDelta { get { return BonsaiPreferences.Instance.zoomDelta; } }
-    public static float MinZoom { get { return BonsaiPreferences.Instance.minZoom; } }
-    public static float MaxZoom { get { return BonsaiPreferences.Instance.maxZoom; } }
-    public static float PanSpeed { get { return BonsaiPreferences.Instance.panSpeed; } }
-
-    public Vector2 zoom = Vector2.one;
-    public Vector2 panOffset = Vector2.zero;
-
     private readonly List<BonsaiNode> nodes = new List<BonsaiNode>();
 
     public IEnumerable<BonsaiNode> Nodes
@@ -38,8 +30,6 @@ namespace Bonsai.Designer
       Tree = tree;
       var nodeMap = ReconstructEditorNodes(tree.AllNodes);
       ReconstructEditorConnections(nodeMap);
-      zoom = tree.zoomPosition;
-      panOffset = tree.panPosition;
     }
 
     /// <summary>
@@ -108,11 +98,6 @@ namespace Bonsai.Designer
       {
         node.Destroy();
       }
-    }
-
-    public float ZoomScale
-    {
-      get { return zoom.x; }
     }
 
     /// <summary>

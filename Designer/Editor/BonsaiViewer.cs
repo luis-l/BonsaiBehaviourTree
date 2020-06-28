@@ -7,6 +7,15 @@ namespace Bonsai.Designer
 {
   public class BonsaiViewer
   {
+    public static float ZoomDelta { get { return BonsaiPreferences.Instance.zoomDelta; } }
+    public static float MinZoom { get { return BonsaiPreferences.Instance.minZoom; } }
+    public static float MaxZoom { get { return BonsaiPreferences.Instance.maxZoom; } }
+    public static float PanSpeed { get { return BonsaiPreferences.Instance.panSpeed; } }
+
+    public Vector2 zoom = Vector2.one;
+    public Vector2 panOffset = Vector2.zero;
+    public float ZoomScale { get { return zoom.x; } }
+
     public BonsaiCanvas Canvas { get; set; }
     public EditorSelection NodeSelection { get; set; }
 
@@ -49,19 +58,19 @@ namespace Bonsai.Designer
     private void DrawGrid(CanvasTransform t)
     {
       var canvasRect = new Rect(Vector2.zero, t.size);
-      Drawer.DrawGrid(canvasRect, Preferences.gridTexture, Canvas.ZoomScale, Canvas.panOffset);
+      Drawer.DrawGrid(canvasRect, Preferences.gridTexture, ZoomScale, panOffset);
     }
 
     private void DrawCanvasContents(CanvasTransform t)
     {
       var canvasRect = new Rect(Vector2.zero, t.size);
-      ScaleUtility.BeginScale(canvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
+      ScaleUtility.BeginScale(canvasRect, ZoomScale, BonsaiWindow.toolbarHeight);
 
       CustomDraw?.Invoke(t);
       DrawPortConnections(t);
       DrawNodes(t);
 
-      ScaleUtility.EndScale(canvasRect, Canvas.ZoomScale, BonsaiWindow.toolbarHeight);
+      ScaleUtility.EndScale(canvasRect, ZoomScale, BonsaiWindow.toolbarHeight);
 
       // Overlays and independent of zoom.
       CustomOverlayDraw?.Invoke();

@@ -11,9 +11,9 @@ namespace Bonsai.Designer
   /// </summary>
   public static class EditorNodeCreation
   {
-    public static BonsaiNode DuplicateSingle(BonsaiCanvas canvas, BehaviourTree tree, BonsaiNode original)
+    public static BonsaiNode DuplicateSingle(BonsaiCanvas canvas, BonsaiNode original)
     {
-      BonsaiNode duplicate = canvas.CreateNode(original.Behaviour.GetType(), tree);
+      BonsaiNode duplicate = canvas.CreateNode(original.Behaviour.GetType());
 
       // Duplicate nodes are placed offset from the original.
       duplicate.Position = original.Position + Vector2.one * 40f;
@@ -28,12 +28,9 @@ namespace Bonsai.Designer
     /// <param name="tree"></param>
     /// <param name="originals"></param>
     /// <returns></returns>
-    public static List<BonsaiNode> DuplicateMultiple(
-      BonsaiCanvas canvas,
-      BehaviourTree tree,
-     IEnumerable<BonsaiNode> originals)
+    public static List<BonsaiNode> DuplicateMultiple(BonsaiCanvas canvas, IEnumerable<BonsaiNode> originals)
     {
-      var duplicateMap = originals.ToDictionary(og => og, og => DuplicateSingle(canvas, tree, og));
+      var duplicateMap = originals.ToDictionary(og => og, og => DuplicateSingle(canvas, og));
 
       // Reconstruct connection in clone nodes.
       foreach (BonsaiNode original in originals)

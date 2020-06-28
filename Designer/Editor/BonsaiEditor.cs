@@ -70,7 +70,7 @@ namespace Bonsai.Designer
 
     private void CreateNodeFromType(object sender, Type type)
     {
-      BonsaiNode node = Canvas.CreateNode(type, Canvas.Tree);
+      BonsaiNode node = Canvas.CreateNode(type);
       NodeSelection.SetSingleSelection(node);
       lastCreatedNodeToPosition = node;
     }
@@ -85,7 +85,7 @@ namespace Bonsai.Designer
 
         case BonsaiInput.NodeContext.Duplicate:
           Type nodeType = NodeSelection.SingleSelectedNode.Behaviour.GetType();
-          EditorNodeCreation.DuplicateSingle(Canvas, Canvas.Tree, NodeSelection.SingleSelectedNode);
+          EditorNodeCreation.DuplicateSingle(Canvas, NodeSelection.SingleSelectedNode);
           break;
 
         case BonsaiInput.NodeContext.ChangeType:
@@ -104,7 +104,7 @@ namespace Bonsai.Designer
       switch (actionType)
       {
         case BonsaiInput.NodeContext.DuplicateSelection:
-          var duplicates = EditorNodeCreation.DuplicateMultiple(Canvas, Canvas.Tree, NodeSelection.SelectedNodes);
+          var duplicates = EditorNodeCreation.DuplicateMultiple(Canvas, NodeSelection.SelectedNodes);
           NodeSelection.SetMultiSelection(duplicates);
           break;
         case BonsaiInput.NodeContext.DeleteSelection:

@@ -36,9 +36,9 @@ namespace Bonsai.Designer
     /// Create a node and its behaviour from the type.
     /// </summary>
     /// <param name="nodeTypename"></param>
-    public BonsaiNode CreateNode(Type behaviourType, BehaviourTree bt)
+    public BonsaiNode CreateNode(Type behaviourType)
     {
-      var behaviour = BonsaiSaveManager.CreateBehaviourNode(behaviourType, bt);
+      var behaviour = BonsaiSaveManager.CreateBehaviourNode(behaviourType, Tree);
       return CreateNode(behaviour);
     }
 

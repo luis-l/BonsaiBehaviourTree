@@ -1,29 +1,20 @@
 ﻿
-using UnityEngine;
-
 namespace Bonsai.Designer
 {
   public static class EditorNodeConnecting
   {
     /// <summary>
-    /// Get the output for the input to do the connection.
-    /// The input is disconnected.
+    /// Get the parent to begin the connection.
     /// </summary>
-    /// <param name="input"></param>
+    /// <param name="child">The child to orphan.</param>
     /// <returns></returns>
-    public static BonsaiOutputPort StartConnection(BonsaiInputPort input)
+    public static BonsaiNode StartConnection(BonsaiNode child)
     {
-      // Check if we are making connection starting from input
-      // Starting a connection from input means that its connected output will change its input.
-      BonsaiOutputPort output = input.outputConnection;
-
-      if (output != null)
-      {
-        // We disconnect the input since we want to change it to a new input.
-        output.RemoveInputConnection(input);
-      }
-
-      return output;
+      // Starting a connection from a child means that its parent will make a new connection.
+      // So the child becomes orphaned.
+      BonsaiNode parent = child.Parent;
+      child.SetParent(null);
+      return parent;
     }
 
     /// <summary>
@@ -31,11 +22,9 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="coord"></param>
     /// <param name="output"></param>
-    public static void FinishConnection(BonsaiNode node, BonsaiOutputPort output)
+    public static void FinishConnection(BonsaiCanvas canvas, BonsaiNode parent, BonsaiNode child)
     {
-      output.Add(node.Input);
-      node.NotifyParentOfPostionalReordering();
+      canvas.AddChild(parent, child);
     }
-
   }
 }

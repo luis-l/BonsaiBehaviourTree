@@ -32,10 +32,12 @@ namespace Bonsai.Utility
     /// <returns></returns>
     public static Vector2 SnapPosition(float x, float y, float snapStep)
     {
-      x = Mathf.Round(x / snapStep) * snapStep;
-      y = Mathf.Round(y / snapStep) * snapStep;
+      return new Vector2(Snap(x, snapStep), Snap(y, snapStep));
+    }
 
-      return new Vector2(x, y);
+    public static float Snap(float x, float snapStep)
+    {
+      return Mathf.Round(x / snapStep) * snapStep;
     }
   }
 

@@ -8,12 +8,12 @@ namespace Bonsai.Designer
     public CanvasTransform transform;
     public Vector2 canvasMousePostion;
     public BonsaiNode node;
-    public BonsaiInputPort inputPort;
-    public BonsaiOutputPort outputPort;
+    public bool isInputFocused;
+    public bool isOutputFocused;
 
     public bool IsPortFocused()
     {
-      return inputPort != null || outputPort != null;
+      return isInputFocused || isOutputFocused;
     }
 
     public bool IsNodeFocused()

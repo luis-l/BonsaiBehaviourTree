@@ -40,9 +40,7 @@ namespace Bonsai.Designer
           if (duplicateMap.TryGetValue(original.GetChildAt(i), out BonsaiNode cloneChild))
           {
             BonsaiNode cloneParent = duplicateMap[original];
-
-            // Connect parent/child clones.
-            cloneParent.Output.Add(cloneChild.Input);
+            cloneChild.SetParent(cloneParent);
           }
         }
       }

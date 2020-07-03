@@ -4,28 +4,29 @@ using System.Collections.Generic;
 namespace Bonsai.Core
 {
   public enum Traversal { PreOrder, PostOrder, LevelOrder };
+  public enum TraversalSkip { None, Root }
 
   public class TreeIterator<T> where T : IIterableNode<T>
   {
     // For Pre and Post order.
-    private Stack<T> _stackPath;
+    private readonly Stack<T> stackPath;
 
     // For level order.
-    private Queue<T> _queuePath;
+    private readonly Queue<T> queuePath;
 
     // Used for PostOrder
-    private HashSet<T> _visited;
+    private readonly HashSet<T> visited;
 
     // The type of traversal the iterator is doing.
-    private Traversal _traversal;
+    private readonly Traversal traversal;
 
     // The current level that the tree is currently in (For level order traversal only).
-    private int _currentLevel = 0;
+    private int currentLevel = 0;
 
     // Used in level traversal to know when we reached a new tree level.
-    private int _queueNodeCount = 0;
+    private int queueNodeCount = 0;
 
-    private Func<T, bool> _skipFilter;
+    private Func<T, bool> SkipFilter;
 
     public TreeIterator(T root, Traversal type = Traversal.PreOrder)
     {
@@ -34,22 +35,22 @@ namespace Bonsai.Core
         return;
       }
 
-      _traversal = type;
+      traversal = type;
 
       if (type == Traversal.LevelOrder)
       {
-        _queuePath = new Queue<T>();
-        _queuePath.Enqueue(root);
+        queuePath = new Queue<T>();
+        queuePath.Enqueue(root);
       }
 
       else
       {
-        _stackPath = new Stack<T>();
-        _stackPath.Push(root);
+        stackPath = new Stack<T>();
+        stackPath.Push(root);
 
         if (type == Traversal.PostOrder)
         {
-          _visited = new HashSet<T>();
+          visited = new HashSet<T>();
         }
       }
     }
@@ -60,88 +61,83 @@ namespace Bonsai.Core
     /// <returns></returns>
     public T Next()
     {
-      switch (_traversal)
+      switch (traversal)
       {
-
         case Traversal.PreOrder:
-          return preOrderNext();
+          return PreOrderNext();
 
         case Traversal.PostOrder:
-          return postOrderNext();
+          return PostOrderNext();
 
-        default: return levelOrderNext();
+        default: return LevelOrderNext();
       }
     }
 
-    private T preOrderNext()
+    private T PreOrderNext()
     {
-      T current = _stackPath.Pop();
+      T current = stackPath.Pop();
 
       for (int i = current.ChildCount() - 1; i >= 0; --i)
       {
-
         T child = current.GetChildAt(i);
 
-        if (_skipFilter != null && _skipFilter(child))
+        if (SkipFilter != null && SkipFilter(child))
         {
           continue;
         }
 
-        _stackPath.Push(child);
+        stackPath.Push(child);
       }
 
       return current;
     }
 
-    private T postOrderNext()
+    private T PostOrderNext()
     {
-      T current = _stackPath.Peek();
+      T current = stackPath.Peek();
 
       // Keep pushing until we reach a leaf.
       // Also do not re-traverse nodes that already had their children added.
-      while (!_visited.Contains(current) && current.ChildCount() != 0)
+      while (!visited.Contains(current) && current.ChildCount() != 0)
       {
 
         for (int i = current.ChildCount() - 1; i >= 0; --i)
         {
-
           T child = current.GetChildAt(i);
 
-          _stackPath.Push(child);
+          stackPath.Push(child);
         }
 
-        _visited.Add(current);
-        current = _stackPath.Peek();
+        visited.Add(current);
+        current = stackPath.Peek();
       }
 
-      return _stackPath.Pop();
+      return stackPath.Pop();
     }
 
-    private T levelOrderNext()
+    private T LevelOrderNext()
     {
       // Keep dequeuing from the current level.
-      if (_queueNodeCount > 0)
+      if (queueNodeCount > 0)
       {
-        _queueNodeCount -= 1;
+        queueNodeCount -= 1;
       }
 
       // Once we dequeued the entire level, we go down a level.
-      if (_queueNodeCount == 0)
+      if (queueNodeCount == 0)
       {
-
         // Don't forget to adjust for skipping from filter in order
         // to keep the proper level.
-        _queueNodeCount = _queuePath.Count;
-        _currentLevel += 1;
+        queueNodeCount = queuePath.Count;
+        currentLevel += 1;
       }
 
-      T current = _queuePath.Dequeue();
+      T current = queuePath.Dequeue();
 
       for (int i = 0; i < current.ChildCount(); ++i)
       {
-
         var child = current.GetChildAt(i);
-        _queuePath.Enqueue(child);
+        queuePath.Enqueue(child);
       }
 
       return current;
@@ -153,8 +149,8 @@ namespace Bonsai.Core
     /// <returns></returns>
     public bool HasNext()
     {
-      if (_stackPath != null) return _stackPath.Count != 0;
-      if (_queuePath != null) return _queuePath.Count != 0;
+      if (stackPath != null) return stackPath.Count != 0;
+      if (queuePath != null) return queuePath.Count != 0;
       return false;
     }
 
@@ -165,7 +161,7 @@ namespace Bonsai.Core
     /// </summary>
     public int CurrentLevel
     {
-      get { return _currentLevel - 1; }
+      get { return currentLevel - 1; }
     }
 
     /// <summary>
@@ -174,13 +170,21 @@ namespace Bonsai.Core
     /// <param name="root">The travseral start.</param>
     /// <param name="onNext">The action to execute per node.</param>
     /// <param name="traversal">The type of DFS traversal.</param>
-    public static void Traverse(T root, Action<T> onNext, Traversal traversal = Traversal.PreOrder)
+    public static void Traverse(
+      T root,
+      Action<T> onNext,
+      Traversal traversal = Traversal.PreOrder,
+      TraversalSkip skip = TraversalSkip.None)
     {
       var itr = new TreeIterator<T>(root, traversal);
 
+      if (skip == TraversalSkip.Root)
+      {
+        itr.Next();
+      }
+
       while (itr.HasNext())
       {
-
         var node = itr.Next();
         onNext(node);
       }
@@ -199,7 +203,6 @@ namespace Bonsai.Core
 
       while (itr.HasNext())
       {
-
         var node = itr.Next();
         onNext(node, itr);
       }
@@ -219,10 +222,8 @@ namespace Bonsai.Core
     {
       var itr = new TreeIterator<T>(root, traversal);
 
-
       while (itr.HasNext())
       {
-
         var node = itr.Next();
         initial = accumulator(initial, node);
       }
@@ -244,13 +245,13 @@ namespace Bonsai.Core
         return;
       }
 
-      var itr = new TreeIterator<T>(root);
-
-      itr._skipFilter = skipFilter;
+      var itr = new TreeIterator<T>(root)
+      {
+        SkipFilter = skipFilter
+      };
 
       while (itr.HasNext())
       {
-
         var node = itr.Next();
         onNext(node);
       }

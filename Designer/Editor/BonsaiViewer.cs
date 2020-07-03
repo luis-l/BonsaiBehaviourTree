@@ -120,7 +120,7 @@ namespace Bonsai.Designer
       {
         BonsaiNode node = nodes[i];
 
-        if (node.Output != null)
+        if (node.HasOutput)
         {
           Drawer.DrawNodeConnections(t, node);
         }

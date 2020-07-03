@@ -1,4 +1,5 @@
 ﻿
+using System.Collections.Generic;
 using System.Text;
 using Bonsai.Core;
 using Bonsai.Utility;
@@ -9,6 +10,10 @@ namespace Bonsai.Designer
 {
   public class BonsaiNode : IIterableNode<BonsaiNode>
   {
+    public BonsaiNode Parent { get; private set; }
+    private readonly List<BonsaiNode> children;
+    public IReadOnlyList<BonsaiNode> Children { get { return children; } }
+
     private Rect rectPosition;
 
     /// <summary>
@@ -24,13 +29,10 @@ namespace Bonsai.Designer
     public GUIContent HeaderContent { get; } = new GUIContent();
     public GUIContent BodyContent { get; } = new GUIContent();
 
-    protected BonsaiInputPort inputPort;
-    protected BonsaiOutputPort outputPort;
+    public bool HasOutput { get; }
 
     // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
     public static readonly Vector2 kDefaultSize = Vector2.one * 100;
-
-    public readonly bool bCanHaveMultipleChildren = true;
 
     /// <summary>
     /// How much additional offset to apply when resizing.
@@ -53,21 +55,16 @@ namespace Bonsai.Designer
     /// <summary>
     /// Create a new node for the first time.
     /// </summary>
-    /// <param name="bCreateInput">If the node should have an input.</param>
-    /// <param name="bCreateOuput">If the node should have an output.</param>
-    public BonsaiNode(bool bCreateInput, bool bCreateOuput, bool bCanHaveMultipleChildren, Texture icon = null)
+    /// <param name="addInput">If the node should have an input.</param>
+    /// <param name="addOutput">If the node should have an output.</param>
+    public BonsaiNode(bool addOutput, Texture icon = null)
     {
-      if (bCreateInput)
-      {
-        inputPort = new BonsaiInputPort(this);
-      }
+      HasOutput = addOutput;
 
-      if (bCreateOuput)
+      if (HasOutput)
       {
-        outputPort = new BonsaiOutputPort(this);
+        children = new List<BonsaiNode>();
       }
-
-      this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
 
       if (icon)
       {
@@ -78,193 +75,181 @@ namespace Bonsai.Designer
     public Vector2 Position
     {
       get { return rectPosition.position; }
-      set
-      {
-        rectPosition.position = value;
-        UpdatePortPositions();
-      }
-    }
-
-    public Vector2 Size
-    {
-      get { return rectPosition.size; }
-      set
-      {
-        rectPosition.size = value;
-        UpdatePortPositions();
-      }
+      set { rectPosition.position = value; }
     }
 
     public Vector2 Center
     {
       get { return rectPosition.center; }
-      set
+      set { rectPosition.center = value; }
+    }
+
+    public Rect InputRect
+    {
+      get
       {
-        rectPosition.center = value;
-        UpdatePortPositions();
+        float w = rectPosition.width - BonsaiPreferences.Instance.portWidthTrim;
+        float h = BonsaiPreferences.Instance.portHeight;
+        float x = rectPosition.x + (rectPosition.width - w) * 0.5f;
+        float y = rectPosition.yMin;
+        return new Rect(x, y, w, h);
       }
     }
 
-    /// <summary>
-    /// Called when the output port had an input connection removed.
-    /// </summary>
-    /// <param name="removedInputConnection"></param>
-    public void OnInputConnectionRemoved(BonsaiInputPort removedInputConnection)
+    public Rect OutputRect
     {
-      var disconnectedNode = removedInputConnection.ParentNode;
-      RemoveChild(disconnectedNode.behaviour);
-    }
-
-    /// <summary>
-    /// Called when the output port made a connection to an input port.
-    /// </summary>
-    /// <param name="newInput"></param>
-    public void OnNewInputConnection(BonsaiInputPort newInput)
-    {
-      var newChild = newInput.ParentNode.behaviour;
-
-      // If already connected, this occurs when 
-      // building canvas from a loaded tree.
-      if (ContainsChild(newChild))
+      get
       {
-        return;
+        float w = rectPosition.width - BonsaiPreferences.Instance.portWidthTrim;
+        float h = BonsaiPreferences.Instance.portHeight;
+        float x = rectPosition.x + (rectPosition.width - w) * 0.5f;
+        float y = rectPosition.yMax - h;
+        return new Rect(x, y, w, h);
       }
-
-      if (!CanAddChild(newChild))
-      {
-        Unparent(newChild);
-      }
-
-      AddChild(newChild);
-    }
-
-    public void NotifyParentOfPostionalReordering()
-    {
-      if (!behaviour.Parent) return;
-
-      inputPort.outputConnection.SyncOrdering();
     }
 
     public void Destroy()
     {
-      RemoveAllChildren();
-      Unparent(behaviour);
-      Object.DestroyImmediate(behaviour, true);
+      // Unregister with previous parent.
+      SetParent(null);
 
-      if (inputPort != null)
+      // Orphan children.
+      if (HasOutput)
       {
-        inputPort.OnDestroy();
+        foreach (BonsaiNode child in children)
+        {
+          child.Parent = null;
+        }
       }
-    }
 
-    public BonsaiInputPort Input
-    {
-      get { return inputPort; }
-    }
+      children.Clear();
 
-    public BonsaiOutputPort Output
-    {
-      get { return outputPort; }
+      Object.DestroyImmediate(behaviour, true);
     }
 
     public BonsaiNode GetChildAt(int index)
     {
-      return outputPort?.GetInput(index).ParentNode;
+      return HasOutput ? children[index] : null;
     }
 
     public int ChildCount()
     {
-      return outputPort == null ? 0 : outputPort.InputCount();
+      return HasOutput ? children.Count : 0;
+
     }
 
-    #region Behaviour Node Operations
-
-    private bool CanAddChild(BehaviourNode child)
+    public bool Contains(BonsaiNode child)
     {
-      if (behaviour && child)
+      return HasOutput && children.Contains(child);
+    }
+
+    public bool IsOrphan()
+    {
+      return Parent == null;
+    }
+
+    public void SetParent(BonsaiNode newParent)
+    {
+      // Remove from previous parent.
+      if (Parent != null)
       {
-        return behaviour.CanAddChild(child);
+        Parent.children.Remove(this);
       }
 
-      return false;
+      // Register with new parent.
+      if (newParent != null)
+      {
+        newParent.children.Add(this);
+      }
+
+      // Set new parent
+      Parent = newParent;
     }
 
-    private bool ContainsChild(BehaviourNode child)
+
+    /// <summary>
+    /// Sorts child based on their position along the x-axis.
+    /// Left most children will come first in the list.
+    /// </summary>
+    public void SortChildren()
     {
-      return child.Parent == behaviour;
+      children.Sort((BonsaiNode left, BonsaiNode right) => left.Center.x.CompareTo(right.Center.x));
+    }
+
+
+    /// <summary>
+    /// Syncs the ordering of the inputs with the internal tree structure.
+    /// </summary>
+    //public void SyncOrdering()
+    //{
+    //  var composite = Behaviour as Composite;
+    //  if (!composite) return;
+
+    //  SortChildren();
+
+
+    //  for (int i = 0; i < children.Count; ++i)
+    //  {
+    //    BehaviourNode b = children[i].Behaviour;
+
+    //    // We can do this without destroying the association between parent and children nodes
+    //    // since all we are doing is modifying the ordering of the child nodes in the children array.
+    //    composite.SetChildAtIndex(b, i);
+    //  }
+
+    //  // Just make sure to sync the index ordering after swapping children.
+    //  composite.UpdateIndexOrders();
+    //}
+
+    /// <summary>
+    /// Returns the y coordinate of the nearest input port on the y axis.
+    /// </summary>
+    /// <returns></returns>
+    public float GetNearestInputY()
+    {
+      float nearestY = float.MaxValue;
+      float nearestDist = float.MaxValue;
+
+      foreach (BonsaiNode child in children)
+      {
+        Vector2 childPosition = child.RectPositon.position;
+        Vector2 toChild = childPosition - Position;
+
+        float yDist = Mathf.Abs(toChild.y);
+
+        if (yDist < nearestDist)
+        {
+          nearestDist = yDist;
+          nearestY = childPosition.y;
+        }
+      }
+
+      return nearestY;
     }
 
     /// <summary>
-    /// Attempts to parent the child.
+    /// Gets the max and min x coordinates between the children and the parent.
     /// </summary>
-    /// <param name="parent"></param>
-    /// <param name="child"></param>
-    private void AddChild(BehaviourNode child)
+    /// <param name="minX"></param>
+    /// <param name="maxX"></param>
+    public void GetBoundsX(out float minX, out float maxX)
     {
-      if (behaviour && child)
+      minX = Center.x;
+      maxX = Center.x;
+
+      foreach (BonsaiNode child in children)
       {
-        behaviour.AddChild(child);
-      }
-    }
+        float x = child.Center.x;
 
-    /// <summary>
-    /// Remove the child from its parent.
-    /// </summary>
-    /// <param name="parent"></param>
-    /// <param name="child"></param>
-    private void Unparent(BehaviourNode child)
-    {
-      if (child && child.Parent)
-      {
+        if (x < minX)
+        {
+          minX = x;
+        }
 
-        child.Parent.RemoveChild(child);
-        Input.outputConnection.RemoveInputConnection(Input);
-      }
-    }
-
-    /// <summary>
-    /// Removes the child from this behaviour.
-    /// </summary>
-    /// <param name="parent"></param>
-    /// <param name="child"></param>
-    private void RemoveChild(BehaviourNode child)
-    {
-      if (behaviour && child)
-      {
-        behaviour.RemoveChild(child);
-      }
-    }
-
-    private void RemoveAllChildren()
-    {
-      if (behaviour && behaviour.ChildCount() > 0)
-      {
-        behaviour.ClearChildren();
-        Output.RemoveAllInputs();
-      }
-    }
-
-    #endregion
-
-
-    public void UpdatePortPositions()
-    {
-      float w = rectPosition.width - BonsaiPreferences.Instance.portWidthTrim;
-      float h = BonsaiPreferences.Instance.portHeight;
-
-      if (Input != null)
-      {
-        float x = rectPosition.x + (rectPosition.width - Input.RectPosition.width) / 2f;
-        float y = rectPosition.yMin;
-        Input.RectPosition = new Rect(x, y, w, h);
-
-      }
-
-      if (Output != null)
-      {
-        float x = rectPosition.x + (rectPosition.width - Output.RectPosition.width) / 2f;
-        float y = rectPosition.yMax - Output.RectPosition.height;
-        Output.RectPosition = new Rect(x, y, w, h);
+        else if (x > maxX)
+        {
+          maxX = x;
+        }
       }
     }
 
@@ -275,7 +260,6 @@ namespace Bonsai.Designer
       HeaderContent.text = HeaderText();
       BodyContent.text = BodyText();
       ResizeToFitContent();
-      UpdatePortPositions();
     }
 
     public void SetIcon(Texture icon)

@@ -189,18 +189,12 @@ namespace Bonsai.Designer
 
     public static void DrawPorts(CanvasTransform t, BonsaiNode node)
     {
-      //Rect nodeRect = node.bodyRect;
-      BonsaiOutputPort output = node.Output;
-      BonsaiInputPort input = node.Input;
+      // There is always an input port.
+      DrawPort(t, node.InputRect);
 
-      if (input != null)
+      if (node.HasOutput)
       {
-        DrawPort(t, input.RectPosition);
-      }
-
-      if (output != null)
-      {
-        DrawPort(t, output.RectPosition);
+        DrawPort(t, node.OutputRect);
       }
     }
 
@@ -213,7 +207,7 @@ namespace Bonsai.Designer
 
     public static void DrawNodeConnections(CanvasTransform t, BonsaiNode node)
     {
-      if (node.Output.InputCount() == 0)
+      if (node.ChildCount() == 0)
       {
         return;
       }
@@ -234,12 +228,12 @@ namespace Bonsai.Designer
 
       // Calculate the anchor position.
       float anchorX = node.RectPositon.center.x;
-      float anchorY = (yoffset + node.Output.GetNearestInputY()) / 2f;
+      float anchorY = (yoffset + node.GetNearestInputY()) / 2f;
 
       // Anchor line, between the first and last child.
 
       // Find the min and max X coords between the children and the parent.
-      node.Output.GetBoundsX(out float anchorLineStartX, out float anchorLineEndX);
+      node.GetBoundsX(out float anchorLineStartX, out float anchorLineEndX);
 
       // Get start and end positions of the anchor line (The common line where the parent and children connect).
       var anchorLineStart = new Vector2(anchorLineStartX, anchorY);
@@ -266,14 +260,14 @@ namespace Bonsai.Designer
         prefs.defaultConnectionColor,
         prefs.defaultConnectionWidth);
 
-      foreach (var input in node.Output.InputConnections)
+      foreach (BonsaiNode child in node.Children)
       {
         // Get the positions to draw a line between the node and the anchor line.
-        Vector2 center = input.RectPosition.center;
+        Vector2 center = child.InputRect.center;
         var anchorLineConnection = new Vector2(center.x, anchorY);
 
         // The node is running, hightlight the connection.
-        if (input.ParentNode.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
+        if (child.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
         {
           DrawLineCanvasSpace(
             t,

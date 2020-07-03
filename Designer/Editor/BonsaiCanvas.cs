@@ -1,7 +1,7 @@
 ﻿
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Bonsai.Core;
 using UnityEngine;
 
@@ -13,12 +13,8 @@ namespace Bonsai.Designer
   public class BonsaiCanvas
   {
     private readonly List<BonsaiNode> nodes = new List<BonsaiNode>();
-
-    public IReadOnlyList<BonsaiNode> Nodes
-    {
-      get { return nodes; }
-    }
-
+    public IReadOnlyList<BonsaiNode> Nodes { get { return nodes; } }
+    public BonsaiNode Root { get; private set; }
     public BehaviourTree Tree { get; }
 
     /// <summary>
@@ -30,6 +26,7 @@ namespace Bonsai.Designer
       Tree = tree;
       var nodeMap = ReconstructEditorNodes(tree.AllNodes);
       ReconstructEditorConnections(nodeMap);
+      Root = nodes.FirstOrDefault(node => node.Behaviour == Tree.Root);
     }
 
     /// <summary>
@@ -38,7 +35,8 @@ namespace Bonsai.Designer
     /// <param name="nodeTypename"></param>
     public BonsaiNode CreateNode(Type behaviourType)
     {
-      var behaviour = BonsaiSaveManager.CreateBehaviourNode(behaviourType, Tree);
+      var behaviour = ScriptableObject.CreateInstance(behaviourType) as BehaviourNode;
+      behaviour.Tree = Tree;
       return CreateNode(behaviour);
     }
 
@@ -59,14 +57,14 @@ namespace Bonsai.Designer
     {
       var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
       var tex = BonsaiPreferences.Texture(prop.texName);
-      var node = AddEditorNode(prop.bCreateInput, prop.bCreateOutput, prop.bCanHaveMultipleChildren, tex);
+      var node = AddEditorNode(prop.addOutput, tex);
       return node;
     }
 
     // Creates and adds an editor node to the canvas.
-    private BonsaiNode AddEditorNode(bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren, Texture icon = null)
+    private BonsaiNode AddEditorNode(bool addOutput, Texture icon = null)
     {
-      var node = new BonsaiNode(bCreateInput, bCreateOutput, bCanHaveMultipleChildren, icon);
+      var node = new BonsaiNode(addOutput, icon);
       nodes.Add(node);
       return node;
     }
@@ -99,32 +97,70 @@ namespace Bonsai.Designer
       }
     }
 
-    ///// <summary>
-    ///// Iterate through the nodes in the proper draw order
-    ///// where the last element renders on top of all nodes.
-    ///// </summary>
-    //public IEnumerable<BonsaiNode> NodesInDrawOrder
-    //{
-    //  get { return nodes; }
-    //}
+    public void SetRoot(BonsaiNode newRoot)
+    {
+      Root = newRoot;
+      Tree.Root = newRoot.Behaviour;
+    }
 
-    ///// <summary>
-    ///// Iterates through the nodes in reverse for input purposes
-    ///// so the top rendering node receives events first.
-    ///// </summary>
-    ///// <returns></returns>
-    //public IEnumerator<BonsaiNode> GetEnumerator()
-    //{
-    //  for (int i = nodes.Count - 1; i >= 0; --i)
-    //  {
-    //    yield return nodes[i];
-    //  }
-    //}
+    public void AddChild(BonsaiNode parent, BonsaiNode child)
+    {
+      if (child == Root)
+      {
+        Debug.LogWarning("A root cannot be a child.");
+      }
 
-    //IEnumerator IEnumerable.GetEnumerator()
-    //{
-    //  return GetEnumerator();
-    //}
+      else if (parent.Contains(child))
+      {
+        Debug.LogWarning("Already added.");
+      }
+
+      else if (DetectCycle(parent, child))
+      {
+        Debug.LogWarning("Cycle detected.");
+      }
+
+      else
+      {
+        child.SetParent(parent);
+      }
+    }
+
+    /// <summary>
+    /// Test for a cycle in the tree.
+    /// </summary>
+    /// <param name="child">The child that could cause a cycle.</param>
+    /// <returns>True if adding the child causes a cycle.</returns>
+    private bool DetectCycle(BonsaiNode parent, BonsaiNode child)
+    {
+      var currentNode = parent;
+
+      while (currentNode != null)
+      {
+        // Cycle detected.
+        if (child == currentNode)
+        {
+          return true;
+        }
+
+        // Move up the tree.
+        else
+        {
+          currentNode = currentNode.Parent;
+        }
+      }
+
+      // No cycle detected.
+      return false;
+    }
+
+    public void SortTree()
+    {
+      foreach (BonsaiNode node in nodes)
+      {
+        node.SortChildren();
+      }
+    }
 
     // Reconstruct editor nodes from the tree.
     private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes(IEnumerable<BehaviourNode> treeBehaviours)
@@ -151,8 +187,7 @@ namespace Bonsai.Designer
         for (int i = 0; i < node.Behaviour.ChildCount(); ++i)
         {
           BehaviourNode child = node.Behaviour.GetChildAt(i);
-          BonsaiInputPort input = nodeMap[child].Input;
-          node.Output.Add(input);
+          nodeMap[child].SetParent(node);
         }
       }
     }

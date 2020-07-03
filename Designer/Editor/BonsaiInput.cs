@@ -258,14 +258,14 @@ namespace Bonsai.Designer
 
     private static BonsaiInputEvent CreateInputEvent(CanvasTransform transform, IReadOnlyList<BonsaiNode> nodes)
     {
-      BonsaiInputPort input = null;
-      BonsaiOutputPort output = null;
+      bool isInputFocused = false;
+      bool isOutputFocused = false;
       BonsaiNode node = NodeUnderMouse(transform, nodes);
 
       if (node != null)
       {
-        input = InputUnderMouse(transform, node);
-        output = OutputUnderMouse(transform, node);
+        isInputFocused = IsInputUnderMouse(transform, node);
+        isOutputFocused = IsOutputUnderMouse(transform, node);
       }
 
       return new BonsaiInputEvent
@@ -273,8 +273,8 @@ namespace Bonsai.Designer
         transform = transform,
         canvasMousePostion = MousePosition(transform),
         node = node,
-        inputPort = input,
-        outputPort = output
+        isInputFocused = isInputFocused,
+        isOutputFocused = isOutputFocused
       };
     }
 
@@ -283,14 +283,9 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="node"></param>
     /// <returns></returns>
-    private static BonsaiInputPort InputUnderMouse(CanvasTransform t, BonsaiNode node)
+    private static bool IsInputUnderMouse(CanvasTransform t, BonsaiNode node)
     {
-      if (node.Input != null && IsUnderMouse(t, node.Input.RectPosition))
-      {
-        return node.Input;
-      }
-
-      return null;
+      return IsUnderMouse(t, node.InputRect);
     }
 
     /// <summary>
@@ -298,13 +293,9 @@ namespace Bonsai.Designer
     /// </summary>
     /// <param name="node"></param>
     /// <returns></returns>
-    private static BonsaiOutputPort OutputUnderMouse(CanvasTransform t, BonsaiNode node)
+    private static bool IsOutputUnderMouse(CanvasTransform t, BonsaiNode node)
     {
-      if (node.Output != null && IsUnderMouse(t, node.Output.RectPosition))
-      {
-        return node.Output;
-      }
-      return null;
+      return node.HasOutput && IsUnderMouse(t, node.OutputRect);
     }
 
     public void Dispose()

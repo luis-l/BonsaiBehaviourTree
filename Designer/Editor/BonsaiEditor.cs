@@ -80,7 +80,7 @@ namespace Bonsai.Designer
       switch (actionType)
       {
         case BonsaiInput.NodeContext.SetAsRoot:
-          Canvas.Tree.Root = NodeSelection.SingleSelectedNode.Behaviour;
+          Canvas.SetRoot(NodeSelection.SingleSelectedNode);
           break;
 
         case BonsaiInput.NodeContext.Duplicate:
@@ -248,22 +248,25 @@ namespace Bonsai.Designer
 
     private void StartConnection(BonsaiInputEvent startEvent)
     {
-      BonsaiOutputPort output = startEvent.inputPort == null
-        ? startEvent.outputPort
-        : EditorNodeConnecting.StartConnection(startEvent.inputPort);
+      BonsaiNode parent = startEvent.isOutputFocused
+        ? startEvent.node
+        : EditorNodeConnecting.StartConnection(startEvent.node);
 
-      ApplyAction = (BonsaiInputEvent applyEvent)
-        => EditorNodeConnecting.FinishConnection(applyEvent.node, output);
-
-      CanApplyAction = (BonsaiInputEvent checkEvent) => checkEvent.node != null;
-
-      Viewer.CustomDraw = (CanvasTransform t) =>
+      if (parent != null)
       {
-        var start = t.CanvasToScreenSpace(output.RectPosition.center);
-        var end = Event.current.mousePosition;
-        Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
-        OnCanvasChanged();
-      };
+        ApplyAction = (BonsaiInputEvent applyEvent)
+          => EditorNodeConnecting.FinishConnection(Canvas, parent, applyEvent.node);
+
+        CanApplyAction = (BonsaiInputEvent checkEvent) => checkEvent.node != null;
+
+        Viewer.CustomDraw = (CanvasTransform t) =>
+        {
+          var start = t.CanvasToScreenSpace(parent.OutputRect.center);
+          var end = Event.current.mousePosition;
+          Drawer.DrawRectConnectionScreenSpace(start, end, Color.white);
+          OnCanvasChanged();
+        };
+      }
     }
 
     private void StartDrag(BonsaiInputEvent e)
@@ -287,14 +290,12 @@ namespace Bonsai.Designer
     {
       BonsaiNode node = startEvent.node;
       Vector2 offset = EditorSingleDrag.StartDrag(node, startEvent.canvasMousePostion);
-      ApplyAction = (BonsaiInputEvent applyEvent) => EditorSingleDrag.FinishDrag(node);
       MotionAction = (CanvasTransform t) => EditorSingleDrag.Drag(node, BonsaiInput.MousePosition(t), offset);
     }
 
     private void StartMultiDrag(BonsaiInputEvent startEvent)
     {
       var nodes = EditorMultiDrag.StartDrag(NodeSelection.SelectedNodes, startEvent.canvasMousePostion);
-      ApplyAction = (BonsaiInputEvent applyEvent) => EditorMultiDrag.FinishDrag(nodes);
       MotionAction = (CanvasTransform t) => EditorMultiDrag.Drag(BonsaiInput.MousePosition(t), nodes);
     }
 
@@ -377,7 +378,6 @@ namespace Bonsai.Designer
     {
       BonsaiNode node = Canvas.Nodes.First(n => n.Behaviour == behaviour);
       node.UpdateGui();
-      node.UpdatePortPositions();
 
       // Snap so connections align.
       node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
@@ -423,31 +423,11 @@ namespace Bonsai.Designer
           }
         }
 
-        bool bCreateInput = false;
-        bool bCreateOutput = false;
-        bool bCanHaveMultipleChildren = false;
-
-        // Only action nodes have an input and no output.
-        if (type.IsSubclassOf(typeof(Task)))
-        {
-          bCreateInput = true;
-        }
-
-        // Composites and decorators have in and out.
-        else
-        {
-          bCreateInput = true;
-          bCreateOutput = true;
-
-          // Only composites can have more than 1 child.
-          if (type.IsSubclassOf(typeof(Composite)))
-          {
-            bCanHaveMultipleChildren = true;
-          }
-        }
+        // Only composites and decorators have outputs.
+        bool addOutput = !type.IsSubclassOf(typeof(Task));
 
         menuPath += type.Name;
-        var prop = new NodeTypeProperties(menuPath, texName, bCreateInput, bCreateOutput, bCanHaveMultipleChildren);
+        var prop = new NodeTypeProperties(menuPath, texName, addOutput);
 
         behaviourNodes.Add(type, prop);
       }
@@ -471,15 +451,13 @@ namespace Bonsai.Designer
     public class NodeTypeProperties
     {
       public string path, texName;
-      public bool bCreateInput, bCreateOutput, bCanHaveMultipleChildren;
+      public bool addOutput;
 
-      public NodeTypeProperties(string path, string texName, bool bCreateInput, bool bCreateOutput, bool bCanHaveMultipleChildren)
+      public NodeTypeProperties(string path, string texName, bool addOutput)
       {
         this.path = path;
         this.texName = texName;
-        this.bCreateInput = bCreateInput;
-        this.bCreateOutput = bCreateOutput;
-        this.bCanHaveMultipleChildren = bCanHaveMultipleChildren;
+        this.addOutput = addOutput;
       }
     }
 

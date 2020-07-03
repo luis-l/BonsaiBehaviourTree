@@ -65,7 +65,7 @@ namespace Bonsai.Designer
     public void InitState()
     {
       // If the window has a valid canvas and editable.
-      if (window.Tree != null && window.Editor.EditorMode.Value == BonsaiEditor.Mode.Edit)
+      if (window.Tree != null && window.EditorMode == BonsaiEditor.Mode.Edit)
       {
         string path = GetCurrentTreePath();
 
@@ -272,7 +272,6 @@ namespace Bonsai.Designer
 
       if (!string.IsNullOrEmpty(path))
       {
-
         AssetDatabase.MoveAsset(GetCurrentTreePath(), path);
         Save();
       }
@@ -294,7 +293,7 @@ namespace Bonsai.Designer
         // asset in the copy while the original main asset becomes a subasset.
 
         // Rename subassets such that they are lexicographically after the main asset.
-        foreach (var node in window.Editor.Canvas.Nodes)
+        foreach (var node in window.Nodes)
         {
           node.Behaviour.name = window.Tree.name + node.Behaviour.GetType().Name;
         }
@@ -307,6 +306,11 @@ namespace Bonsai.Designer
     // Saves the current canvas (not a temp canvas).
     private void Save()
     {
+      // Remove old behaviour assets.
+      // Sort canvas
+      // Set connections
+      // Save new behaviours
+
       // Sort the nodes in pre order so it is easier to clone the tree.
       window.Tree.SortNodes();
 
@@ -318,7 +322,7 @@ namespace Bonsai.Designer
 
     private void SaveTreeMetaData()
     {
-      foreach (var editorNode in window.Editor.Canvas.Nodes)
+      foreach (var editorNode in window.Nodes)
       {
         editorNode.Behaviour.bonsaiNodePosition = editorNode.Position;
       }
@@ -335,7 +339,7 @@ namespace Bonsai.Designer
     public void OnCleanup()
     {
       // Only save/delete things if we are in edit mode.
-      if (window.Editor.EditorMode.Value != BonsaiEditor.Mode.Edit)
+      if (window.EditorMode != BonsaiEditor.Mode.Edit)
       {
         return;
       }

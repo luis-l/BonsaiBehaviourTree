@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using Bonsai.Core;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -26,9 +27,15 @@ namespace Bonsai.Designer
     private BehaviourTree behaviourTree;
     public BehaviourTree Tree { get { return behaviourTree; } }
 
-    public BonsaiEditor Editor { get; private set; }
+    private BonsaiEditor Editor { get; set; }
+    public IReadOnlyList<BonsaiNode> Nodes { get { return Editor.Canvas.Nodes; } }
     public BonsaiViewer Viewer { get; private set; }
     public BonsaiSaveManager SaveManager { get; private set; }
+
+    // The editor state without needing a reference to the Editor instance.
+    // This is used to solve initialization order issues for OnEnable.
+    // This allows Inspectors to view the editor mode if they were enabled before the window.
+    public BonsaiEditor.Mode EditorMode { get; private set; }
 
     void OnEnable()
     {
@@ -45,6 +52,7 @@ namespace Bonsai.Designer
       Editor.CanvasChanged += (s, e) => Repaint();
       Editor.Input.MouseDown += (s, e) => Repaint();
       Editor.Input.MouseUp += (s, e) => Repaint();
+      Editor.EditorMode.ValueChanged += (s, mode) => { EditorMode = mode; };
 
       BuildCanvas();
 

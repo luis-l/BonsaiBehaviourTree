@@ -28,7 +28,7 @@ namespace Bonsai.Designer
       {
         // Unparented nodes are roots.
         // Isolated nodes are their own roots.
-        if (node.Input.outputConnection == null)
+        if (node.IsOrphan())
         {
           // Calculate the relative position from the node for dragging.
           var draggingRoot = new DraggingNode
@@ -41,7 +41,7 @@ namespace Bonsai.Designer
         }
 
         // Nodes that have a selected parent are not selected roots.
-        else if (!nodes.Contains(node.Input.outputConnection.ParentNode))
+        else if (!nodes.Contains(node.Parent))
         {
           // Calculate the relative position from the node for dragging.
           var draggingRoot = new DraggingNode
@@ -62,14 +62,6 @@ namespace Bonsai.Designer
       foreach (DraggingNode root in nodes)
       {
         EditorSingleDrag.SetSubtreePosition(root.node, dragPosition, root.offset);
-      }
-    }
-
-    public static void FinishDrag(IReadOnlyList<DraggingNode> nodes)
-    {
-      foreach (DraggingNode node in nodes)
-      {
-        node.node.NotifyParentOfPostionalReordering();
       }
     }
   }

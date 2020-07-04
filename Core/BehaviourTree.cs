@@ -658,7 +658,7 @@ namespace Bonsai.Core
 
     // Editor only helper method. 
     // Clears all nodes, children, and sets the tree reference to null.
-    public void ClearAllConnections()
+    public void ClearStructure()
     {
       foreach (BehaviourNode node in allNodes)
       {

@@ -168,7 +168,7 @@ namespace Bonsai.Designer
       }
 
       // Clear all parent-child connections. These will be reconstructed to match the connection in the BonsaiNodes.
-      canvas.Tree.ClearAllConnections();
+      canvas.Tree.ClearStructure();
 
       // Sort the canvas.
       // Only consider nodes with 2 or more children for sorting.

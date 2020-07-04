@@ -1,46 +1,22 @@
 ﻿
 using System;
+using Bonsai.Core;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
   public static class EditorChangeNodeType
   {
-    public static bool ChangeType(BonsaiNode node, Type newType)
+    public static void ChangeType(BonsaiNode node, Type newType)
     {
-      // Type conversion can only for same base types.
-      if (node.Behaviour is Core.Composite && newType.IsSubclassOf(typeof(Core.Composite)))
-      {
-
-        return true;
-      }
-      else if (node.Behaviour is Core.Decorator && newType.IsSubclassOf(typeof(Core.Decorator)))
-      {
-
-        return true;
-      }
-      else if (node.Behaviour is Core.Task && newType.IsSubclassOf(typeof(Core.Task)))
-      {
-
-        return true;
-      }
-
-      // Can not convert.
-      return false;
+      var newBehaviour = ScriptableObject.CreateInstance(newType) as BehaviourNode;
+      node.SetBehaviour(newBehaviour, NodeIcon(newType));
     }
 
-    private static void ChangeCompositeType(BonsaiNode node, Type newType)
+    private static Texture NodeIcon(Type behaviourType)
     {
-
-    }
-
-    private static void ChangeDecoratorType(BonsaiNode node, Type newType)
-    {
-
-    }
-
-    private static void ChangeTaskType(BonsaiNode node, Type newType)
-    {
-
+      var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
+      return BonsaiPreferences.Texture(prop.texName);
     }
   }
 }

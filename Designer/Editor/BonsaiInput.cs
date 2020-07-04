@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +18,6 @@ namespace Bonsai.Designer
     {
       SetAsRoot,
       Duplicate,
-      ChangeType,
       SelectChildren,
       DisconnectParent,
       DisconnectChildren,
@@ -34,6 +34,7 @@ namespace Bonsai.Designer
     public event EventHandler<Type> CreateNodeRequest;
     public event EventHandler<NodeContext> NodeActionRequest;
     public event EventHandler<NodeContext> MultiNodeActionRequest;
+    public event EventHandler<BonsaiNode> TypeChanged;
 
     public event EventHandler SaveRequest;
     public event EventHandler CanvasLostFocus;
@@ -170,7 +171,7 @@ namespace Bonsai.Designer
       if (node != null)
       {
         NodeContextClick?.Invoke(this, node);
-        CreateSingleSelectionContextMenu().ShowAsContext();
+        CreateSingleSelectionContextMenu(node).ShowAsContext();
       }
 
       else
@@ -195,13 +196,13 @@ namespace Bonsai.Designer
       MultiNodeActionRequest?.Invoke(this, (NodeContext)o);
     }
 
-    private GenericMenu CreateSingleSelectionContextMenu()
+    private GenericMenu CreateSingleSelectionContextMenu(BonsaiNode node)
     {
       var menu = new GenericMenu();
       menu.AddItem(new GUIContent("Set As Root"), false, OnNodeAction, NodeContext.SetAsRoot);
       menu.AddItem(new GUIContent("Duplicate"), false, OnNodeAction, NodeContext.Duplicate);
-      menu.AddItem(new GUIContent("Change Type"), false, OnNodeAction, NodeContext.ChangeType);
       menu.AddItem(new GUIContent("Select Children"), false, OnNodeAction, NodeContext.SelectChildren);
+      PopulateTypeConversions(menu, node);
       menu.AddSeparator("");
       menu.AddItem(new GUIContent("Unparent"), false, OnNodeAction, NodeContext.DisconnectParent);
       menu.AddItem(new GUIContent("Disconnect Children"), false, OnNodeAction, NodeContext.DisconnectChildren);
@@ -217,6 +218,21 @@ namespace Bonsai.Designer
       menu.AddItem(new GUIContent("Duplicate"), false, OnMultiNodeAction, NodeContext.DuplicateSelection);
       menu.AddItem(new GUIContent("Delete"), false, OnMultiNodeAction, NodeContext.DeleteSelection);
       return menu;
+    }
+
+    private void PopulateTypeConversions(GenericMenu menu, BonsaiNode node)
+    {
+      Type coreType = BonsaiEditor.CoreType(node.Behaviour);
+      var behaviourTypes = BonsaiEditor.RegisteredBehaviourNodeTypes;
+
+      foreach (Type subclass in behaviourTypes.Where(t => t.IsSubclassOf(coreType) && !t.IsAbstract))
+      {
+        menu.AddItem(new GUIContent("Change Type/" + subclass.Name), false, () =>
+        {
+          EditorChangeNodeType.ChangeType(node, subclass);
+          TypeChanged?.Invoke(this, node);
+        });
+      }
     }
 
     /// <summary>

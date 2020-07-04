@@ -1,9 +1,8 @@
 ﻿using System;
-using System.Linq;
 using System.Collections.Generic;
-
-using UnityEngine;
+using System.Linq;
 using Bonsai.Standard;
+using UnityEngine;
 
 namespace Bonsai.Core
 {

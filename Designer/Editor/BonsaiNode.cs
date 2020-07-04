@@ -108,6 +108,20 @@ namespace Bonsai.Designer
       }
     }
 
+    public void SetBehaviour(BehaviourNode newBehaviour, Texture icon)
+    {
+      if (icon)
+      {
+        HeaderContent.image = icon;
+      }
+
+      // Destroy the old behaviour, no longer needed.
+      Object.DestroyImmediate(behaviour, true);
+
+      behaviour = newBehaviour;
+      UpdateGui();
+    }
+
     public void Destroy()
     {
       // Unregister with previous parent.

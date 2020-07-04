@@ -60,6 +60,7 @@ namespace Bonsai.Designer
       Input.CreateNodeRequest += CreateNodeFromType;
       Input.NodeActionRequest += SingleNodeAction;
       Input.MultiNodeActionRequest += MultiNodeAction;
+      Input.TypeChanged += (s, node) => NodeSelection.SetSingleSelection(node);
 
       EditorMode.ValueChanged += (s, mode) =>
       {
@@ -86,11 +87,6 @@ namespace Bonsai.Designer
         case BonsaiInput.NodeContext.Duplicate:
           Type nodeType = NodeSelection.SingleSelectedNode.Behaviour.GetType();
           EditorNodeCreation.DuplicateSingle(Canvas, NodeSelection.SingleSelectedNode);
-          break;
-
-        case BonsaiInput.NodeContext.ChangeType:
-          // TODO
-          BonsaiWindow.LogNotImplemented("Change Type");
           break;
 
         case BonsaiInput.NodeContext.Delete:
@@ -391,6 +387,21 @@ namespace Bonsai.Designer
 
     #region Node Type Properties
 
+    public static Type CoreType(BehaviourNode behaviour)
+    {
+      if (behaviour is Composite)
+      {
+        return typeof(Composite);
+      }
+
+      if (behaviour is Decorator)
+      {
+        return typeof(Decorator);
+      }
+
+      return typeof(Task);
+    }
+
     public static void FetchBehaviourNodes()
     {
       behaviourNodes = new Dictionary<Type, NodeTypeProperties>();
@@ -437,6 +448,11 @@ namespace Bonsai.Designer
     public static IEnumerable<KeyValuePair<Type, NodeTypeProperties>> Behaviours
     {
       get { return behaviourNodes; }
+    }
+
+    public static IEnumerable<Type> RegisteredBehaviourNodeTypes
+    {
+      get { return behaviourNodes.Keys; }
     }
 
     public static NodeTypeProperties GetNodeTypeProperties(Type t)

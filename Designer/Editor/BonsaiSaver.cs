@@ -192,7 +192,10 @@ namespace Bonsai.Designer
         node.Behaviour.Tree = canvas.Tree;
       }
 
-      canvas.Tree.Root = canvas.Root.Behaviour;
+      if (canvas.Root != null)
+      {
+        canvas.Tree.Root = canvas.Root.Behaviour;
+      }
 
       // Sort the nodes in pre order so it is easier to clone the tree.
       canvas.Tree.SortNodes();

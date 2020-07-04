@@ -668,6 +668,8 @@ namespace Bonsai.Core
       }
 
       allNodes.Clear();
+
+      _root = null;
     }
 
     [HideInInspector]

@@ -139,7 +139,7 @@ namespace Bonsai.Designer
     {
       editorMode = status;
 
-      if (Canvas == null)
+      if (Canvas == null || Canvas.Tree == null)
       {
         editorModeLabel = "No Tree Set";
       }

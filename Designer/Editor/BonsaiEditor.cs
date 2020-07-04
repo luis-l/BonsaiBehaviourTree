@@ -95,6 +95,7 @@ namespace Bonsai.Designer
 
         case BonsaiInput.NodeContext.Delete:
           Canvas.Remove(node => NodeSelection.IsNodeSelected(node));
+          NodeSelection.SetTreeSelection(Canvas.Tree);
           break;
       }
     }

@@ -108,9 +108,12 @@ namespace Bonsai.Designer
 
     public void ClearSelection()
     {
-      selectedNodes.Clear();
-      Selection.objects = null;
-      Selection.activeObject = null;
+      if (!IsEmpty)
+      {
+        selectedNodes.Clear();
+        Selection.objects = null;
+        Selection.activeObject = null;
+      }
     }
 
     [Pure]

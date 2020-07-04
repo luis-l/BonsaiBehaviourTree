@@ -91,8 +91,9 @@ namespace Bonsai.Designer
     private void HandleEditorShortcuts(Event e)
     {
       // control+s shortcut to save the tree.
-      if (e.control && e.keyCode == KeyCode.S)
+      if (e.type == EventType.KeyUp && e.control && e.keyCode == KeyCode.S)
       {
+        e.Use();
         SaveRequest?.Invoke(this, EventArgs.Empty);
       }
     }

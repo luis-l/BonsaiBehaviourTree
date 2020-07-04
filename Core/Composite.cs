@@ -58,14 +58,6 @@ namespace Bonsai.Core
       return _children[index];
     }
 
-    public void AddChildren(params BehaviourNode[] children)
-    {
-      foreach (var child in children)
-      {
-        AddChild(child);
-      }
-    }
-
     /// <summary>
     /// Adds a child if it is parentless.
     /// </summary>

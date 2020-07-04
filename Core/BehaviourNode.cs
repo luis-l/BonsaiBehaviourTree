@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using UnityEngine;
 
 namespace Bonsai.Core
@@ -312,6 +311,7 @@ namespace Bonsai.Core
       Success, Failure, Running, None, Aborted, Interruption
     };
 
+
     private StatusEditor _statusEditor = StatusEditor.None;
 
     /// <summary>
@@ -346,10 +346,6 @@ namespace Bonsai.Core
     [HideInInspector]
     public Vector2 bonsaiNodePosition;
 
-    protected void OnDestroy()
-    {
-      _parentTree.allNodes.Remove(this);
-    }
 #endif
 
     #endregion

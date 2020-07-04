@@ -36,7 +36,6 @@ namespace Bonsai.Designer
     public BonsaiNode CreateNode(Type behaviourType)
     {
       var behaviour = ScriptableObject.CreateInstance(behaviourType) as BehaviourNode;
-      behaviour.Tree = Tree;
       return CreateNode(behaviour);
     }
 

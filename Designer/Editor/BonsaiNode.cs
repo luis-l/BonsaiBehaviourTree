@@ -122,7 +122,10 @@ namespace Bonsai.Designer
         }
       }
 
-      children.Clear();
+      if (children != null)
+      {
+        children.Clear();
+      }
 
       Object.DestroyImmediate(behaviour, true);
     }
@@ -173,33 +176,11 @@ namespace Bonsai.Designer
     /// </summary>
     public void SortChildren()
     {
-      children.Sort((BonsaiNode left, BonsaiNode right) => left.Center.x.CompareTo(right.Center.x));
+      if (children != null)
+      {
+        children.Sort((BonsaiNode left, BonsaiNode right) => left.Center.x.CompareTo(right.Center.x));
+      }
     }
-
-
-    /// <summary>
-    /// Syncs the ordering of the inputs with the internal tree structure.
-    /// </summary>
-    //public void SyncOrdering()
-    //{
-    //  var composite = Behaviour as Composite;
-    //  if (!composite) return;
-
-    //  SortChildren();
-
-
-    //  for (int i = 0; i < children.Count; ++i)
-    //  {
-    //    BehaviourNode b = children[i].Behaviour;
-
-    //    // We can do this without destroying the association between parent and children nodes
-    //    // since all we are doing is modifying the ordering of the child nodes in the children array.
-    //    composite.SetChildAtIndex(b, i);
-    //  }
-
-    //  // Just make sure to sync the index ordering after swapping children.
-    //  composite.UpdateIndexOrders();
-    //}
 
     /// <summary>
     /// Returns the y coordinate of the nearest input port on the y axis.

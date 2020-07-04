@@ -657,7 +657,18 @@ namespace Bonsai.Core
       n.OnDrawGizmos();
     }
 
-    #region Node Editor Meta Data
+    // Editor only helper method. 
+    // Clears all nodes, children, and sets the tree reference to null.
+    public void ClearAllConnections()
+    {
+      foreach (BehaviourNode node in allNodes)
+      {
+        node.ClearChildren();
+        node.ClearTree();
+      }
+
+      allNodes.Clear();
+    }
 
     [HideInInspector]
     public Vector2 panPosition = Vector2.zero;
@@ -665,7 +676,6 @@ namespace Bonsai.Core
     [HideInInspector]
     public Vector2 zoomPosition = Vector2.one;
 
-    #endregion
 #endif
 
   }

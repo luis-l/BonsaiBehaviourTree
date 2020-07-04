@@ -1,6 +1,5 @@
-﻿
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Bonsai.Core;
 using UnityEditor;
 using UnityEditor.Callbacks;
@@ -30,7 +29,7 @@ namespace Bonsai.Designer
     private BonsaiEditor Editor { get; set; }
     public IReadOnlyList<BonsaiNode> Nodes { get { return Editor.Canvas.Nodes; } }
     public BonsaiViewer Viewer { get; private set; }
-    public BonsaiSaveManager SaveManager { get; private set; }
+    public BonsaiSaver Saver { get; private set; }
 
     // The editor state without needing a reference to the Editor instance.
     // This is used to solve initialization order issues for OnEnable.
@@ -45,10 +44,11 @@ namespace Bonsai.Designer
       Editor = new BonsaiEditor();
       Viewer = new BonsaiViewer();
 
-      SaveManager = new BonsaiSaveManager(this);
+      Saver = new BonsaiSaver();
+      Saver.SaveMessage += (sender, message) => ShowNotification(new GUIContent(message));
 
       Editor.Viewer = Viewer;
-      Editor.Input.SaveRequest += Save;
+      Editor.Input.SaveRequest += (s, e) => Save();
       Editor.CanvasChanged += (s, e) => Repaint();
       Editor.Input.MouseDown += (s, e) => Repaint();
       Editor.Input.MouseUp += (s, e) => Repaint();
@@ -66,7 +66,11 @@ namespace Bonsai.Designer
 
     void OnDisable()
     {
-      SaveManager.OnCleanup();
+      // Save tree on exit.
+      QuickSave();
+
+      // This is to prevent active selection on objects that are no longer focused or do not exist after destroy.
+      Editor.NodeSelection.ClearSelection();
     }
 
     void OnGUI()
@@ -76,12 +80,6 @@ namespace Bonsai.Designer
         Viewer.DrawStaticGrid(position.size);
         Viewer.DrawMode();
         Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
-
-        // Asset removed.
-        if (!SaveManager.IsInNoCanvasState())
-        {
-          SaveManager.InitState();
-        }
       }
 
       else
@@ -131,6 +129,11 @@ namespace Bonsai.Designer
       Repaint();
     }
 
+    public bool ContainsNode(BehaviourNode behaviour)
+    {
+      return Editor.Canvas.Nodes.Select(n => n.Behaviour).Contains(behaviour);
+    }
+
     private void GoToViewMode()
     {
       if (!EditorApplication.isPlaying || !Selection.activeGameObject)
@@ -172,10 +175,7 @@ namespace Bonsai.Designer
         }
 
         Repaint();
-
-        // Cleanup window before putting new tree.
-        SaveManager.OnCleanup();
-
+        QuickSave();
         SetTree(treeToView, BonsaiEditor.Mode.View);
       }
     }
@@ -236,28 +236,27 @@ namespace Bonsai.Designer
       }
 
       GUILayout.FlexibleSpace();
-
-      string name = "None";
-      if (Tree != null)
-      {
-        name = Tree.name;
-      }
-
-      GUILayout.Label(name);
-
+      GUILayout.Label(TreeName());
       EditorGUILayout.EndHorizontal();
+    }
+
+    private string TreeName()
+    {
+      return Tree
+        ? (Tree.name.Length == 0 ? "New Tree" : Tree.name)
+        : "None";
     }
 
     private void CreateFileMenuEditable()
     {
       var fileMenu = new GenericMenu();
 
-      fileMenu.AddItem(new GUIContent("Create New"), false, SaveManager.RequestNew);
-      fileMenu.AddItem(new GUIContent("Load"), false, SaveManager.RequestLoad);
+      fileMenu.AddItem(new GUIContent("Create New"), false, CreateNew);
+      fileMenu.AddItem(new GUIContent("Load"), false, Load);
 
       fileMenu.AddSeparator("");
-      fileMenu.AddItem(new GUIContent("Save"), false, SaveManager.RequestSave);
-      fileMenu.AddItem(new GUIContent("Save As"), false, SaveManager.RequestSaveAs);
+      fileMenu.AddItem(new GUIContent("Save"), false, Save);
+      fileMenu.AddItem(new GUIContent("Save As"), false, SaveAs);
 
       fileMenu.DropDown(new Rect(5f, toolbarHeight, 0f, 0f));
     }
@@ -291,28 +290,50 @@ namespace Bonsai.Designer
       BuildCanvas();
     }
 
-    private void Save(object sender, EventArgs e)
+    private void CreateNew()
     {
-      var state = SaveManager.CurrentState();
+      QuickSave();
+      SetTree(BonsaiSaver.CreateBehaviourTree());
+      ShowNotification(new GUIContent("New Tree Created"));
+    }
 
-      if (state == BonsaiSaveManager.SaveState.TempTree)
-      {
-        SaveManager.RequestSaveAs();
-      }
+    private void Load()
+    {
+      // Save current canvas.
+      QuickSave();
 
-      else if (state == BonsaiSaveManager.SaveState.SavedTree)
+      BehaviourTree tree = Saver.LoadBehaviourTree();
+      if (tree)
       {
-        SaveManager.RequestSave();
+        SetTree(tree);
       }
     }
 
-    /// <summary>
-    /// The size of the window.
-    /// </summary>
-    //public Rect CanvasRect
-    //{
-    //  get { return new Rect(Vector2.zero, position.size); }
-    //}
+    // Standard save procedure. Tree not in the AssetDatabase will prompt the user to select a save file.
+    private void Save()
+    {
+      if (Editor.Canvas != null)
+      {
+        Saver.SaveCanvas(Editor.Canvas, TreeMetaData);
+      }
+    }
+
+    // A quick save only saves tree assets that already exist in the AssetDatabase.
+    private void QuickSave()
+    {
+      if (EditorMode == BonsaiEditor.Mode.Edit && Saver.CanSaveTree(Tree))
+      {
+        Saver.SaveCanvas(Editor.Canvas, TreeMetaData);
+      }
+    }
+
+    private void SaveAs()
+    {
+      if (Editor.Canvas != null)
+      {
+        Saver.SaveCanvasAs(Editor.Canvas);
+      }
+    }
 
     private CanvasTransform Transform
     {
@@ -323,6 +344,18 @@ namespace Bonsai.Designer
           pan = Viewer.panOffset,
           zoom = Viewer.ZoomScale,
           size = position.size
+        };
+      }
+    }
+
+    private BonsaiSaver.TreeMetaData TreeMetaData
+    {
+      get
+      {
+        return new BonsaiSaver.TreeMetaData
+        {
+          zoom = Viewer.zoom,
+          pan = Viewer.panOffset
         };
       }
     }
@@ -356,7 +389,7 @@ namespace Bonsai.Designer
     [OnOpenAsset(1)]
     private static bool OpenCanvasAsset(int instanceID, int line)
     {
-      var treeSelected = EditorUtility.InstanceIDToObject(instanceID) as Core.BehaviourTree;
+      var treeSelected = EditorUtility.InstanceIDToObject(instanceID) as BehaviourTree;
 
       if (treeSelected != null)
       {
@@ -383,13 +416,12 @@ namespace Bonsai.Designer
         // No windows available...just make a new one.
         if (!windowToUse)
         {
-          windowToUse = EditorWindow.CreateInstance<BonsaiWindow>();
+          windowToUse = CreateInstance<BonsaiWindow>();
           windowToUse.titleContent = new GUIContent("Bonsai");
           windowToUse.Show();
         }
 
         windowToUse.SetTree(treeSelected);
-        windowToUse.SaveManager.InitState();
         windowToUse.Repaint();
         return true;
       }

@@ -28,13 +28,16 @@ namespace Bonsai.Designer
       var edited = target as BehaviourNode;
 
       // Find the the editor window with the tree associated with this behaviour.
-      ParentWindow = Resources.FindObjectsOfTypeAll<BonsaiWindow>().First(w => w.Tree == edited.Tree);
-
-      if (ParentWindow.EditorMode == BonsaiEditor.Mode.View)
+      if (ParentWindow == null)
       {
-        runtimeHeading = new GUIContent("Runtime values");
-        runtimeHeaderStyle = new GUIStyle { fontSize = 12, fontStyle = FontStyle.Bold };
-        runtimeFields = GetRuntimeFields(edited);
+        ParentWindow = Resources.FindObjectsOfTypeAll<BonsaiWindow>().First(w => w.ContainsNode(edited));
+
+        if (ParentWindow.EditorMode == BonsaiEditor.Mode.View)
+        {
+          runtimeHeading = new GUIContent("Runtime values");
+          runtimeHeaderStyle = new GUIStyle { fontSize = 12, fontStyle = FontStyle.Bold };
+          runtimeFields = GetRuntimeFields(edited);
+        }
       }
     }
 

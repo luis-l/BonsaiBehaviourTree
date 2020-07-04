@@ -99,7 +99,6 @@ namespace Bonsai.Designer
     public void SetRoot(BonsaiNode newRoot)
     {
       Root = newRoot;
-      Tree.Root = newRoot.Behaviour;
     }
 
     public void AddChild(BonsaiNode parent, BonsaiNode child)

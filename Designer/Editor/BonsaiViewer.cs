@@ -171,7 +171,7 @@ namespace Bonsai.Designer
       {
         return Preferences.abortColor;
       }
-      else if (Canvas.Tree.Root == node.Behaviour)
+      else if (Canvas.Root == node)
       {
         return Preferences.rootSymbolColor;
       }

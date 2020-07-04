@@ -88,6 +88,7 @@ namespace Bonsai.Designer
         Viewer.DrawStaticGrid(position.size);
         Viewer.DrawMode();
         Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
+        UpdateWindowTitle();
       }
 
       else

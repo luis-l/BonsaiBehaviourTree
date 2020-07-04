@@ -45,7 +45,13 @@ namespace Bonsai.Designer
       Viewer = new BonsaiViewer();
 
       Saver = new BonsaiSaver();
-      Saver.SaveMessage += (sender, message) => ShowNotification(new GUIContent(message));
+      Saver.SaveMessage += (sender, message) =>
+      {
+        ShowNotification(new GUIContent(message));
+
+        // Update to show name of the tree.
+        UpdateWindowTitle();
+      };
 
       Editor.Viewer = Viewer;
       Editor.Input.SaveRequest += (s, e) => Save();
@@ -62,6 +68,8 @@ namespace Bonsai.Designer
       // already opened and the user selects a game object with a
       // behaviour tree component.
       Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
+
+      UpdateWindowTitle();
     }
 
     void OnDisable()
@@ -202,6 +210,7 @@ namespace Bonsai.Designer
       behaviourTree = bt;
       BuildCanvas();
       Editor.EditorMode.Value = mode;
+      UpdateWindowTitle();
     }
 
     private void DrawToolbar()
@@ -245,6 +254,18 @@ namespace Bonsai.Designer
       return Tree
         ? (Tree.name.Length == 0 ? "New Tree" : Tree.name)
         : "None";
+    }
+
+    private void UpdateWindowTitle()
+    {
+      if (Tree != null && Tree.name.Length != 0)
+      {
+        titleContent = new GUIContent(Tree.name);
+      }
+      else
+      {
+        titleContent = new GUIContent("Bonsai");
+      }
     }
 
     private void CreateFileMenuEditable()

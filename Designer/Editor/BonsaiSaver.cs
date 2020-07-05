@@ -107,16 +107,33 @@ namespace Bonsai.Designer
     public static BehaviourTree CreateBehaviourTree()
     {
       var bt = ScriptableObject.CreateInstance<BehaviourTree>();
-      var bb = ScriptableObject.CreateInstance<Blackboard>();
-      bt.SetBlackboard(bb);
+      bt.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
       return bt;
     }
 
     // Load a behaviour tree at the given path. The path is aboslute but the file must be under the Asset's folder.
-    private BehaviourTree LoadBehaviourTree(string absolutePath)
+    private static BehaviourTree LoadBehaviourTree(string absolutePath)
     {
       string path = AssetPath(absolutePath);
-      return AssetDatabase.LoadAssetAtPath<BehaviourTree>(path);
+      var tree = AssetDatabase.LoadAssetAtPath<BehaviourTree>(path);
+
+      // Add a blackboard if missing when opening in editor.
+      AddBlackboardIfMissing(tree);
+
+      return tree;
+    }
+
+    public static void AddBlackboardIfMissing(BehaviourTree tree)
+    {
+      if (tree && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tree.Blackboard)))
+      {
+        if (tree.Blackboard == null)
+        {
+          tree.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
+        }
+
+        AssetDatabase.AddObjectToAsset(tree.Blackboard, tree);
+      }
     }
 
     // Adds the tree to the database and saves the nodes to the database.
@@ -157,6 +174,9 @@ namespace Bonsai.Designer
     // Saves the current tree and nodes.
     private void SaveTree(TreeMetaData meta, BonsaiCanvas canvas)
     {
+      // If the blackboard is not yet in the database, then add.
+      AddBlackboardIfMissing(canvas.Tree);
+
       var treeBehaviours = canvas.Tree.AllNodes;
       var canvasBehaviours = canvas.Nodes.Select(n => n.Behaviour);
 
@@ -257,7 +277,7 @@ namespace Bonsai.Designer
     /// <summary>
     /// Converts the absolute path to a path relative to the Assets folder.
     /// </summary>
-    private string AssetPath(string absolutePath)
+    private static string AssetPath(string absolutePath)
     {
       int assetIndex = absolutePath.IndexOf("/Assets/");
       return absolutePath.Substring(assetIndex + 1);

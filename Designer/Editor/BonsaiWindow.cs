@@ -443,6 +443,10 @@ namespace Bonsai.Designer
           windowToUse.Show();
         }
 
+        // If a tree asset was created but has no blackboard, add one upon opening.
+        // This is for convenience.
+        BonsaiSaver.AddBlackboardIfMissing(treeSelected);
+
         windowToUse.SetTree(treeSelected);
         windowToUse.Repaint();
         return true;

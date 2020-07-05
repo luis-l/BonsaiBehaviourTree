@@ -2,7 +2,7 @@
 
 namespace Bonsai.Designer
 {
-  [CreateAssetMenu(fileName = "BonsaiPreferences", menuName = "Bonsai/Create Preferences")]
+  [CreateAssetMenu(fileName = "BonsaiPreferences", menuName = "Bonsai/Preferences")]
   public class BonsaiPreferences : ScriptableObject
   {
     // The unit length of the grid in pixels.

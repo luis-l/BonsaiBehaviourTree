@@ -2,10 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using Bonsai.Standard;
+using UnityEditor;
 using UnityEngine;
 
 namespace Bonsai.Core
 {
+  [CreateAssetMenu(fileName = "BonsaiBT", menuName = "Bonsai/Behaviour Tree")]
   public class BehaviourTree : ScriptableObject
   {
     private BehaviourIterator _mainIterator;
@@ -642,6 +644,16 @@ namespace Bonsai.Core
     public System.Random Random { get; private set; } = new System.Random();
 
 #if UNITY_EDITOR
+
+    [ContextMenu("Add Blackboard")]
+    void AddBlackboardAsset()
+    {
+      if (_blackboard == null)
+      {
+        _blackboard = CreateInstance<Blackboard>();
+        AssetDatabase.AddObjectToAsset(_blackboard, this);
+      }
+    }
 
     public void OnDrawGizmos()
     {

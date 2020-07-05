@@ -103,23 +103,30 @@ namespace Bonsai.Designer
       var tree = target as BehaviourTree;
       var bb = tree.Blackboard;
 
-      EditorGUILayout.LabelField("Behaviour Tree: " + tree.name);
+      EditorGUILayout.LabelField("Behaviour Tree", tree.name);
       EditorGUILayout.Space();
 
-      _bShowBlackboardFoldout = EditorGUILayout.Foldout(_bShowBlackboardFoldout, "Blackboard", true);
-
-      if (_bShowBlackboardFoldout)
+      if (bb)
       {
+        _bShowBlackboardFoldout = EditorGUILayout.Foldout(_bShowBlackboardFoldout, "Blackboard", true);
 
-        // Indent the blackboard contents under the foldout.
-        EditorGUILayout.BeginHorizontal();
-        EditorGUILayout.Space();
-        EditorGUILayout.BeginVertical();
+        if (_bShowBlackboardFoldout)
+        {
 
-        ShowBlackboardGUI(bb);
+          // Indent the blackboard contents under the foldout.
+          EditorGUILayout.BeginHorizontal();
+          EditorGUILayout.Space();
+          EditorGUILayout.BeginVertical();
 
-        EditorGUILayout.EndVertical();
-        EditorGUILayout.EndHorizontal();
+          ShowBlackboardGUI(bb);
+
+          EditorGUILayout.EndVertical();
+          EditorGUILayout.EndHorizontal();
+        }
+      }
+      else
+      {
+        EditorGUILayout.LabelField("Blackboard", "Unset");
       }
     }
 

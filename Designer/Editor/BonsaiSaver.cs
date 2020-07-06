@@ -31,7 +31,7 @@ namespace Bonsai.Designer
     // Tree is valid and exists in the Asset database.
     public bool CanSaveTree(BehaviourTree tree)
     {
-      return tree && !string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tree));
+      return tree && AssetDatabase.Contains(tree);
     }
 
     /// <summary>
@@ -62,10 +62,8 @@ namespace Bonsai.Designer
     /// <param name="canvas"></param>
     public void SaveCanvas(BonsaiCanvas canvas, TreeMetaData meta)
     {
-      string assetPath = AssetDatabase.GetAssetPath(canvas.Tree);
-
       // Tree is new, need to save to asset database.
-      if (string.IsNullOrEmpty(assetPath))
+      if (!AssetDatabase.Contains(canvas.Tree))
       {
         GetSaveFilePath()
           .OnSuccess(savePath =>
@@ -125,7 +123,7 @@ namespace Bonsai.Designer
 
     public static void AddBlackboardIfMissing(BehaviourTree tree)
     {
-      if (tree && string.IsNullOrEmpty(AssetDatabase.GetAssetPath(tree.Blackboard)))
+      if (tree && (tree.Blackboard == null || !AssetDatabase.Contains(tree.Blackboard)))
       {
         if (tree.Blackboard == null)
         {

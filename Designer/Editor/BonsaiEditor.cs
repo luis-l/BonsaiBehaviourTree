@@ -143,9 +143,8 @@ namespace Bonsai.Designer
           NodeSelection.ToggleSelecion(inputEvent.node);
         }
 
-        else if (!NodeSelection.IsMultiSelection)
+        else if (!NodeSelection.IsNodeSelected(inputEvent.node))
         {
-          // If we are not multi selecting, we can select the single node right now.
           // This condition is necessary, so multi-dragging works when clicking on a node under multi-select.
           NodeSelection.SetSingleSelection(inputEvent.node);
         }

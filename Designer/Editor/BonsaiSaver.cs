@@ -83,20 +83,6 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
-    /// Prompts user to save a copy of the canvas to a new file.
-    /// </summary>
-    public void SaveCanvasAs(BonsaiCanvas canvas)
-    {
-      GetSaveFilePath()
-        .OnSuccess(path =>
-        {
-          SaveTreeCopy(path, canvas);
-          OnTreeCopied();
-        })
-        .OnFailure(OnInvalidPathError);
-    }
-
-    /// <summary>
     /// Creates a new Behaviour Tree instance with a blackboard.
     /// The tree has no BehaviourNodes and no root node.
     /// The instance is unsaved.
@@ -150,30 +136,6 @@ namespace Bonsai.Designer
 
       // Save nodes.
       SaveTree(meta, canvas);
-    }
-
-    // Copies the current active canvas to a new location.
-    private void SaveTreeCopy(string path, BonsaiCanvas canvas)
-    {
-      // There seems to be a bug in the AssetDatabase.Copy
-      // The asset hierarchy is not preserved since it follows a 
-      // lexicographical traversal to copy.
-      //
-      // This means that if a subasset's name is lexicographically
-      // first than the main asset, then it will become the main
-      // asset in the copy while the original main asset becomes a subasset.
-
-      // Rename subassets such that they are lexicographically after the main asset.
-      foreach (var node in canvas.Nodes)
-      {
-        node.Behaviour.name = canvas.Tree.name + node.Behaviour.GetType().Name;
-      }
-
-      string sourcePath = AssetDatabase.GetAssetPath(canvas.Tree);
-      AssetDatabase.CopyAsset(sourcePath, path);
-
-      // TODO FIXME: Save the clone asset with the contents in the BonsaiCanvas.
-      // Previous tree should not be modified.
     }
 
     // Saves the current tree and nodes.

@@ -274,12 +274,9 @@ namespace Bonsai.Designer
       var fileMenu = new GenericMenu();
 
       fileMenu.AddItem(new GUIContent("Create New"), false, CreateNew);
-      fileMenu.AddItem(new GUIContent("Load"), false, Load);
-
       fileMenu.AddSeparator("");
+      fileMenu.AddItem(new GUIContent("Load"), false, Load);
       fileMenu.AddItem(new GUIContent("Save"), false, Save);
-      fileMenu.AddItem(new GUIContent("Save As"), false, SaveAs);
-
       fileMenu.DropDown(new Rect(5f, toolbarHeight, 0f, 0f));
     }
 
@@ -288,12 +285,9 @@ namespace Bonsai.Designer
       var fileMenu = new GenericMenu();
 
       fileMenu.AddDisabledItem(new GUIContent("Create New"));
-      fileMenu.AddDisabledItem(new GUIContent("Load"));
-
       fileMenu.AddSeparator("");
+      fileMenu.AddDisabledItem(new GUIContent("Load"));
       fileMenu.AddDisabledItem(new GUIContent("Save"));
-      fileMenu.AddDisabledItem(new GUIContent("Save As"));
-
       fileMenu.DropDown(new Rect(5f, toolbarHeight, 0f, 0f));
     }
 
@@ -346,14 +340,6 @@ namespace Bonsai.Designer
       if (EditorMode == BonsaiEditor.Mode.Edit && Saver.CanSaveTree(Tree))
       {
         Saver.SaveCanvas(Editor.Canvas, TreeMetaData);
-      }
-    }
-
-    private void SaveAs()
-    {
-      if (Editor.Canvas != null)
-      {
-        Saver.SaveCanvasAs(Editor.Canvas);
       }
     }
 

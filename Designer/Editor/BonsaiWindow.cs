@@ -202,7 +202,14 @@ namespace Bonsai.Designer
     {
       if (Tree && Editor.Canvas != null)
       {
-        Formatter.PositionNodesNicely(Tree, Editor.Canvas.Nodes);
+        if (Editor.Canvas.Root == null)
+        {
+          ShowNotification(new GUIContent("Set a root to nicely format the tree!"));
+        }
+        else
+        {
+          Formatter.PositionNodesNicely(Editor.Canvas.Root, Vector2.zero);
+        }
       }
     }
 
@@ -233,7 +240,6 @@ namespace Bonsai.Designer
       if (GUILayout.Button("View", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
         var fileMenu = new GenericMenu();
-        fileMenu.AddItem(new GUIContent("Nicefy Tree"), false, NicifyTree);
         fileMenu.AddItem(new GUIContent("Home Zoom"), false, HomeZoom);
         fileMenu.DropDown(new Rect(55f, toolbarHeight, 0f, 0f));
       }
@@ -241,6 +247,7 @@ namespace Bonsai.Designer
       if (GUILayout.Button("Tools", EditorStyles.toolbarDropDown, GUILayout.Width(50f)))
       {
         var fileMenu = new GenericMenu();
+        fileMenu.AddItem(new GUIContent("Nicefy Tree"), false, NicifyTree);
         fileMenu.AddItem(new GUIContent("Refresh Editor"), false, RefreshEditor);
         fileMenu.DropDown(new Rect(105f, toolbarHeight, 0f, 0f));
       }

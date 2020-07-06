@@ -84,6 +84,11 @@ namespace Bonsai.Designer
       set { rectPosition.center = value; }
     }
 
+    public Vector2 Size
+    {
+      get { return rectPosition.size; }
+    }
+
     public Rect InputRect
     {
       get

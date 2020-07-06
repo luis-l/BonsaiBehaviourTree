@@ -89,6 +89,11 @@ namespace Bonsai.Designer
           EditorNodeCreation.DuplicateSingle(Canvas, NodeSelection.SingleSelectedNode);
           break;
 
+        case BonsaiInput.NodeContext.FormatTree:
+          BonsaiNode root = NodeSelection.SingleSelectedNode;
+          Formatter.PositionNodesNicely(root, root.Center);
+          break;
+
         case BonsaiInput.NodeContext.Delete:
           Canvas.Remove(node => NodeSelection.IsNodeSelected(node));
           NodeSelection.SetTreeSelection(Canvas.Tree);

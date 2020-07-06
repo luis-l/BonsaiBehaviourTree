@@ -1,9 +1,5 @@
-﻿
-using System;
-using System.Collections.Generic;
-using Bonsai.Core;
+﻿using Bonsai.Core;
 using UnityEngine;
-using UnityEditor;
 
 namespace Bonsai.Designer
 {
@@ -15,148 +11,117 @@ namespace Bonsai.Designer
     /// <summary>
     /// Formats the tree to look nicely.
     /// </summary>
-    public static void PositionNodesNicely(BehaviourTree bt, IEnumerable<BonsaiNode> canvasNodes)
+    public static void PositionNodesNicely(BonsaiNode root, Vector2 anchor)
     {
-      // Assumption for Nicify:
-      // There must be a root set.
-      if (bt.Root == null)
-      {
-        return;
-      }
+      // Sort parent-child connections so formatter uses latest changes.
+      TreeIterator<BonsaiNode>.Traverse(
+        root,
+        node => node.SortChildren());
 
-      // This is for the node editor to use to place the nodes.
-      var positions = new Dictionary<BehaviourNode, Vector2>();
-      var levels = CalculateLevels(bt);
-      var posParams = new PositioningParameters();
+      var positioning = new FormatPositioning();
 
-      Action<BehaviourNode> positionInPlace = (node) =>
-      {
-        PositionNode(node, positions, levels, posParams);
-      };
+      TreeIterator<BonsaiNode>.Traverse(
+        root,
+        node => PositionHorizontal(node, positioning),
+        Traversal.PostOrder);
 
-      TreeIterator<BehaviourNode>.Traverse(bt.Root, positionInPlace, Traversal.PostOrder);
+      TreeIterator<BonsaiNode>.Traverse(
+        root,
+        node => PositionVertical(node));
 
-      foreach (BonsaiNode editorNode in canvasNodes)
-      {
-        var behaviour = editorNode.Behaviour;
-
-        if (positions.ContainsKey(behaviour))
-        {
-          Vector2 pos = positions[behaviour];
-          editorNode.Position = pos;
-        }
-      }
+      // Move the entire subtree to the anchor.
+      Vector2 offset = EditorSingleDrag.StartDrag(root, root.Center);
+      EditorSingleDrag.SetSubtreePosition(root, anchor, offset);
     }
 
-    private static void PositionNode(
-        BehaviourNode node,
-        Dictionary<BehaviourNode, Vector2> positions,
-        Dictionary<BehaviourNode, int> levels,
-        PositioningParameters posParams)
+    private static void PositionHorizontal(BonsaiNode node, FormatPositioning positioning)
     {
-      // Obtained from level order of tree.
-      float yLevel = levels[node] * posParams.yLevelOffset;
+      float xCoord;
 
       int childCount = node.ChildCount();
 
       // If it is a parent of 2 or more children then center in between the children.
       if (childCount > 1)
       {
-        BehaviourNode firstChild = node.GetChildAt(0);
-        BehaviourNode lastChild = node.GetChildAt(childCount - 1);
-
         // Get the x-midpoint between the first and last children.
-        Vector2 firstChildPos = positions[firstChild];
-        Vector2 lastChildPos = positions[lastChild];
-
+        Vector2 firstChildPos = node.GetChildAt(0).Center;
+        Vector2 lastChildPos = node.GetChildAt(childCount - 1).Center;
         float xMid = (firstChildPos.x + lastChildPos.x) / 2f;
-        posParams.xIntermediate = xMid;
 
-        positions.Add(node, new Vector2(xMid, yLevel));
+        xCoord = xMid;
+        positioning.xIntermediate = xMid;
       }
 
-      // A node with 1 child
+      // A node with 1 child, place directly above child.
       else if (childCount == 1)
       {
-        positions.Add(node, new Vector2(posParams.xIntermediate, yLevel));
+        xCoord = positioning.xIntermediate;
       }
 
       // A leaf node
       else
       {
-        Vector2 position = new Vector2(posParams.xLeaf, yLevel);
+        float branchWidth = MaxWidthForBranchList(node);
+        positioning.xLeaf += 0.5f * (positioning.lastLeafWidth + branchWidth) + FormatPositioning.xLeafSeparation;
 
-        posParams.xIntermediate = posParams.xLeaf;
+        xCoord = positioning.xLeaf;
+        positioning.xIntermediate = positioning.xLeaf;
+        positioning.lastLeafWidth = branchWidth;
+      }
 
-        float width = CalculateNameWidth(node);
+      // Set to 0 on the y-axis for this pass.
+      node.Center = new Vector2(xCoord, 0f);
+    }
 
-        // Offset the x leaf position for the next leaf node.
-        if (width > BonsaiNode.kDefaultSize.x)
-        {
-          posParams.xLeaf += width + PositioningParameters.xPadding;
-        }
+    private static void PositionVertical(BonsaiNode node)
+    {
+      BonsaiNode parent = node.Parent;
+      if (parent != null)
+      {
+        float ySeperation = parent.ChildCount() == 1
+          ? FormatPositioning.yLevelSeparation / 2f
+          : FormatPositioning.yLevelSeparation;
 
-        else
-        {
-          posParams.xLeaf += posParams.xDeltaLeaf;
-        }
-
-        positions.Add(node, position);
+        float x = node.Position.x;
+        float y = parent.Position.y + parent.Size.y + ySeperation;
+        node.Position = new Vector2(x, y);
       }
     }
 
-    // Calculate how many pixels the type name takes up.
-    private static float CalculateNameWidth(BehaviourNode node)
+    // A "branch list" is a tree branch where nodes only have a single child.
+    // e.g. Decorator -> Decorator -> Decorator -> Task
+    private static float MaxWidthForBranchList(BonsaiNode leaf)
     {
-      string typename = node.GetType().Name;
-      string niceName = ObjectNames.NicifyVariableName(typename);
+      float maxWidth = leaf.Size.x;
+      var parent = leaf.Parent;
 
-      var content = new GUIContent(niceName);
-      Vector2 size = new GUIStyle().CalcSize(content);
-
-      return size.x + BonsaiNode.resizePaddingX;
-    }
-
-    // To do this, we do a regular DFS and just check the current
-    // path length at a given node to determine its level.
-    private static Dictionary<BehaviourNode, int> CalculateLevels(BehaviourTree bt)
-    {
-      if (bt.Root == null)
+      while (parent != null && parent.ChildCount() == 1)
       {
-        return null;
+        maxWidth = Mathf.Max(maxWidth, parent.Size.x);
+        parent = parent.Parent;
       }
 
-      var levels = new Dictionary<BehaviourNode, int>();
-
-      Action<BehaviourNode, TreeIterator<BehaviourNode>> setLevel = (node, itr) =>
-      {
-        levels.Add(node, itr.CurrentLevel);
-      };
-
-      TreeIterator<BehaviourNode>.Traverse(bt.Root, setLevel, Traversal.LevelOrder);
-
-      return levels;
+      return maxWidth;
     }
 
     /// <summary>
-    /// A helper class to hold some positioning data when building the canvas.
+    /// A helper class to accumulate positioning data when formatting the tree.
     /// </summary>
-    private class PositioningParameters
+    private class FormatPositioning
     {
       public float xLeaf = 0f;
-
-      // This is used for single child nodes.
-      // That way it is chained in a line.
       public float xIntermediate = 0f;
+      public float lastLeafWidth = 0f;
 
-      public static float xPadding = 30f;
-      public static float yPadding = 40f;
+      /// <summary>
+      /// Horizontal separation between leaf nodes.
+      /// </summary>
+      public const float xLeafSeparation = 20f;
 
-      // The displacment between leaves in the x axis.
-      public readonly float xDeltaLeaf = BonsaiNode.kDefaultSize.x + xPadding;
-
-      // Displacment between nodes in the y axis.
-      public readonly float yLevelOffset = BonsaiNode.kDefaultSize.y + yPadding;
+      /// <summary>
+      /// Vertical separation between nodes.
+      /// </summary>
+      public const float yLevelSeparation = 50f;
     }
   }
 

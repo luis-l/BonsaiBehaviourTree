@@ -21,7 +21,6 @@ namespace Bonsai.Standard
     protected override void OnEnable()
     {
       abortType = AbortType.Self;
-      base.OnEnable();
     }
 
     public override void OnEnter()

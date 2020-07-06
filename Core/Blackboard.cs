@@ -35,11 +35,6 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     private readonly List<string> types = new List<string>();
 
-    void OnEnable()
-    {
-      hideFlags = HideFlags.HideInHierarchy;
-    }
-
     ///<summary>
     /// Adds a register to the Blackboard.
     ///</summary>

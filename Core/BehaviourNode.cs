@@ -48,13 +48,7 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     protected internal int _indexOrder = 0;
 
-    /// <summary>
-    /// Hides the node asset so it all looks packed under the tree asset.
-    /// </summary>
-    protected virtual void OnEnable()
-    {
-      hideFlags = HideFlags.HideInHierarchy;
-    }
+    protected virtual void OnEnable() { }
 
     /// <summary>
     /// Called when the tree is started.

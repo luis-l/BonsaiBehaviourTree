@@ -105,8 +105,15 @@ namespace Bonsai.Designer
     public static BehaviourTree CreateBehaviourTree()
     {
       var bt = ScriptableObject.CreateInstance<BehaviourTree>();
-      bt.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
+      bt.SetBlackboard(CreateBlackboard());
       return bt;
+    }
+
+    private static Blackboard CreateBlackboard()
+    {
+      var bb = ScriptableObject.CreateInstance<Blackboard>();
+      bb.hideFlags = HideFlags.HideInHierarchy;
+      return bb;
     }
 
     // Load a behaviour tree at the given path. The path is aboslute but the file must be under the Asset's folder.
@@ -127,7 +134,7 @@ namespace Bonsai.Designer
       {
         if (tree.Blackboard == null)
         {
-          tree.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
+          tree.SetBlackboard(CreateBlackboard());
         }
 
         AssetDatabase.AddObjectToAsset(tree.Blackboard, tree);
@@ -182,6 +189,7 @@ namespace Bonsai.Designer
       foreach (BehaviourNode newNodes in canvasBehaviours.Except(treeBehaviours))
       {
         newNodes.name = newNodes.GetType().Name;
+        newNodes.hideFlags = HideFlags.HideInHierarchy;
         AssetDatabase.AddObjectToAsset(newNodes, canvas.Tree);
       }
 

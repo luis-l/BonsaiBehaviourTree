@@ -81,6 +81,12 @@ namespace Bonsai.Designer
     {
       if (nodes.Remove(node))
       {
+        // Clear root since it was removed.
+        if (node == Root)
+        {
+          Root = null;
+        }
+
         node.Destroy();
       }
     }
@@ -89,6 +95,12 @@ namespace Bonsai.Designer
     {
       List<BonsaiNode> nodesToDestroy = nodes.FindAll(match);
       nodes.RemoveAll(match);
+
+      // Clear root if removed.
+      if (nodesToDestroy.Contains(Root))
+      {
+        Root = null;
+      }
 
       foreach (BonsaiNode node in nodesToDestroy)
       {
@@ -152,7 +164,7 @@ namespace Bonsai.Designer
       return false;
     }
 
-    public void SortTree()
+    public void SortNodes()
     {
       foreach (BonsaiNode node in nodes)
       {

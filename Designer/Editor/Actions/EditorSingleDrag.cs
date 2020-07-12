@@ -1,6 +1,4 @@
-﻿
-using UnityEditor.Experimental.GraphView;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Bonsai.Designer
 {

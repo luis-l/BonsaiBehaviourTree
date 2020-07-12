@@ -18,10 +18,7 @@ namespace Bonsai.Designer
     {
       SetAsRoot,
       Duplicate,
-      SelectChildren,
       FormatTree,
-      DisconnectParent,
-      DisconnectChildren,
       Delete,
       DuplicateSelection,
       DeleteSelection
@@ -202,12 +199,8 @@ namespace Bonsai.Designer
       var menu = new GenericMenu();
       menu.AddItem(new GUIContent("Set As Root"), false, OnNodeAction, NodeContext.SetAsRoot);
       menu.AddItem(new GUIContent("Duplicate"), false, OnNodeAction, NodeContext.Duplicate);
-      menu.AddItem(new GUIContent("Select Children"), false, OnNodeAction, NodeContext.SelectChildren);
       menu.AddItem(new GUIContent("Format Subtree"), false, OnNodeAction, NodeContext.FormatTree);
       PopulateTypeConversions(menu, node);
-      menu.AddSeparator("");
-      menu.AddItem(new GUIContent("Unparent"), false, OnNodeAction, NodeContext.DisconnectParent);
-      menu.AddItem(new GUIContent("Disconnect Children"), false, OnNodeAction, NodeContext.DisconnectChildren);
       menu.AddSeparator("");
       menu.AddItem(new GUIContent("Delete"), false, OnNodeAction, NodeContext.Delete);
       return menu;

@@ -131,8 +131,12 @@ namespace Bonsai.Designer
     {
       // Unregister with previous parent.
       SetParent(null);
+      OrphanChildren();
+      Object.DestroyImmediate(behaviour, true);
+    }
 
-      // Orphan children.
+    private void OrphanChildren()
+    {
       if (HasOutput)
       {
         foreach (BonsaiNode child in children)
@@ -145,8 +149,6 @@ namespace Bonsai.Designer
       {
         children.Clear();
       }
-
-      Object.DestroyImmediate(behaviour, true);
     }
 
     public BonsaiNode GetChildAt(int index)
@@ -181,7 +183,19 @@ namespace Bonsai.Designer
       // Register with new parent.
       if (newParent != null)
       {
-        newParent.children.Add(this);
+        if (newParent.behaviour is Composite)
+        {
+          newParent.children.Add(this);
+        }
+
+        else if (newParent.behaviour is Decorator)
+        {
+          // Replace single child.
+          newParent.OrphanChildren();
+          newParent.children.Add(this);
+        }
+
+        // else: Tasks cannot have children added.
       }
 
       // Set new parent

@@ -468,7 +468,11 @@ namespace Bonsai.Core
     public static BehaviourTree Clone(BehaviourTree originalBT)
     {
       var cloneBt = Instantiate(originalBT);
-      cloneBt._blackboard = Instantiate(originalBT._blackboard);
+
+      if (originalBT._blackboard)
+      {
+        cloneBt._blackboard = Instantiate(originalBT._blackboard);
+      }
 
       cloneBt.allNodes.Clear();
 

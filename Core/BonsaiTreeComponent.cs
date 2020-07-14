@@ -29,7 +29,7 @@ namespace Bonsai.Core
     {
       var manager = FindObjectOfType<BonsaiManager>();
 
-      // Automaticall add the behaviour tree mananger if none exists.
+      // Add the behaviour tree mananger if none exists.
       if (manager == null)
       {
         var gameobject = new GameObject();

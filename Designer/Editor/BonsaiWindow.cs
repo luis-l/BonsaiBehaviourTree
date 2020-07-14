@@ -60,6 +60,8 @@ namespace Bonsai.Designer
       Editor.Input.MouseUp += (s, e) => Repaint();
       Editor.EditorMode.ValueChanged += (s, mode) => { EditorMode = mode; };
 
+      EditorApplication.playModeStateChanged += PlayModeStateChanged;
+
       BuildCanvas();
 
       // Always start in edit mode.
@@ -72,10 +74,22 @@ namespace Bonsai.Designer
       UpdateWindowTitle();
     }
 
+    private void PlayModeStateChanged(PlayModeStateChange state)
+    {
+      // Before entering play mode, attempt to save the current tree asset. 
+      if (state == PlayModeStateChange.ExitingEditMode)
+      {
+        QuickSave();
+      }
+    }
+
     void OnDisable()
     {
       // Save tree on exit.
-      QuickSave();
+      if (!EditorApplication.isPlaying)
+      {
+        QuickSave();
+      }
 
       // This is to prevent active selection on objects that are no longer focused or do not exist after destroy.
       Editor.NodeSelection.ClearSelection();
@@ -166,9 +180,9 @@ namespace Bonsai.Designer
       {
         var windows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
 
-        // Look and check if this tree is already being viewed.
         foreach (var w in windows)
         {
+          // Tree is already being viewed.
           if (w.Tree == treeToView)
           {
             return;
@@ -183,8 +197,6 @@ namespace Bonsai.Designer
           }
         }
 
-        Repaint();
-        QuickSave();
         SetTree(treeToView, BonsaiEditor.Mode.View);
       }
     }

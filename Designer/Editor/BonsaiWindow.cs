@@ -86,10 +86,7 @@ namespace Bonsai.Designer
     void OnDisable()
     {
       // Save tree on exit.
-      if (!EditorApplication.isPlaying)
-      {
-        QuickSave();
-      }
+      QuickSave();
 
       // This is to prevent active selection on objects that are no longer focused or do not exist after destroy.
       Editor.NodeSelection.ClearSelection();

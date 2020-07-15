@@ -34,7 +34,7 @@ namespace Bonsai.Designer
         foreach (Guard other in guard.linkedGuards)
         {
           other.maxActiveGuards = guard.maxActiveGuards;
-          ParentWindow.BehaviourNodeEdited(other);
+          ParentWindow.UpdateNodeGUI(other);
         }
       }
     }

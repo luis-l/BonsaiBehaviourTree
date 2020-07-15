@@ -375,13 +375,24 @@ namespace Bonsai.Designer
       Viewer.zoom.Set(cap, cap);
     }
 
+    public void UpdateNodesGUI(IEnumerable<BonsaiNode> nodes)
+    {
+      foreach (BonsaiNode node in nodes)
+      {
+        node.UpdateGui();
+        // So connections align with snap.
+        node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
+      }
+    }
+
     public void UpdateNodeGUI(BehaviourNode behaviour)
     {
-      BonsaiNode node = Canvas.Nodes.First(n => n.Behaviour == behaviour);
-      node.UpdateGui();
-
-      // Snap so connections align.
-      node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
+      BonsaiNode node = Canvas.Nodes.FirstOrDefault(n => n.Behaviour == behaviour);
+      if (node != null)
+      {
+        node.UpdateGui();
+        node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
+      }
     }
 
     public void UpdateOrderIndices()

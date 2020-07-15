@@ -43,15 +43,9 @@ namespace Bonsai.Designer
 
       Editor = new BonsaiEditor();
       Viewer = new BonsaiViewer();
-
       Saver = new BonsaiSaver();
-      Saver.SaveMessage += (sender, message) =>
-      {
-        ShowNotification(new GUIContent(message));
 
-        // Update to show name of the tree.
-        UpdateWindowTitle();
-      };
+      Saver.SaveMessage += (sender, message) => ShowNotification(new GUIContent(message));
 
       Editor.Viewer = Viewer;
       Editor.Input.SaveRequest += (s, e) => Save();
@@ -70,8 +64,6 @@ namespace Bonsai.Designer
       // already opened and the user selects a game object with a
       // behaviour tree component.
       Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
-
-      UpdateWindowTitle();
     }
 
     private void PlayModeStateChanged(PlayModeStateChange state)
@@ -99,7 +91,6 @@ namespace Bonsai.Designer
         Viewer.DrawStaticGrid(position.size);
         Viewer.DrawMode();
         Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
-        UpdateWindowTitle();
       }
 
       else
@@ -115,8 +106,8 @@ namespace Bonsai.Designer
         Viewer.Draw(t);
       }
 
-      // Always draw the toolbar.
       DrawToolbar();
+      UpdateWindowTitle();
     }
 
     void Update()
@@ -140,10 +131,19 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
-    /// Call to update the editor with new behaviour changes.
+    /// Updates the GUI contents for each node that is currently selected.
     /// </summary>
-    /// <param name="behaviour"></param>
-    public void BehaviourNodeEdited(BehaviourNode behaviour)
+    public void UpdateSelectedNodesGUI()
+    {
+      Editor.UpdateNodesGUI(Editor.NodeSelection.SelectedNodes);
+      Repaint();
+    }
+
+    /// <summary>
+    /// Updates the GUI contents for the node.
+    /// </summary>
+    /// <param name="behaviour">The associated visual node will be update for this behaviour.</param>
+    public void UpdateNodeGUI(BehaviourNode behaviour)
     {
       Editor.UpdateNodeGUI(behaviour);
       Repaint();
@@ -227,7 +227,6 @@ namespace Bonsai.Designer
       behaviourTree = bt;
       BuildCanvas();
       Editor.EditorMode.Value = mode;
-      UpdateWindowTitle();
     }
 
     private void DrawToolbar()
@@ -277,11 +276,14 @@ namespace Bonsai.Designer
     {
       if (Tree != null && Tree.name.Length != 0)
       {
-        titleContent = new GUIContent(Tree.name);
+        if (titleContent.text != Tree.name)
+        {
+          titleContent.text = Tree.name;
+        }
       }
       else
       {
-        titleContent = new GUIContent("Bonsai");
+        titleContent.text = "Bonsai";
       }
     }
 
@@ -441,7 +443,6 @@ namespace Bonsai.Designer
         if (!windowToUse)
         {
           windowToUse = CreateInstance<BonsaiWindow>();
-          windowToUse.titleContent = new GUIContent("Bonsai");
           windowToUse.Show();
         }
 

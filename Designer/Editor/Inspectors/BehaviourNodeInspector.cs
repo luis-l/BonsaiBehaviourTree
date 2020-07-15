@@ -49,7 +49,7 @@ namespace Bonsai.Designer
       // If the behaviour was edited, update the tree editor and repaint.
       if (GUI.changed)
       {
-        ParentWindow.BehaviourNodeEdited(target as BehaviourNode);
+        ParentWindow.UpdateSelectedNodesGUI();
       }
 
       if (ParentWindow.EditorMode == BonsaiEditor.Mode.View)

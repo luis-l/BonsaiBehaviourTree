@@ -56,39 +56,18 @@ namespace Bonsai.Designer
 
       EditorApplication.playModeStateChanged += PlayModeStateChanged;
       AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
+      Selection.selectionChanged += SelectionChanged;
 
       BuildCanvas();
-
-      // Always start in edit mode.
-      //
-      // The only way it can be in view mode is if the window is
-      // already opened and the user selects a game object with a
-      // behaviour tree component.
       Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
-    }
-
-    private void BeforeAssemblyReload()
-    {
-      // Do not attempt to do saving if about to enter play mode since that is handled in PlayModeStateChanged.
-      if (!EditorApplication.isPlayingOrWillChangePlaymode)
-      {
-        OnExit();
-      }
-    }
-
-    private void PlayModeStateChanged(PlayModeStateChange state)
-    {
-      // Before entering play mode, attempt to save the current tree asset. 
-      if (state == PlayModeStateChange.ExitingEditMode)
-      {
-        QuickSave();
-      }
+      SwitchToViewModeIfRequired();
     }
 
     void OnDisable()
     {
       EditorApplication.playModeStateChanged -= PlayModeStateChanged;
       AssemblyReloadEvents.beforeAssemblyReload -= BeforeAssemblyReload;
+      Selection.selectionChanged -= SelectionChanged;
     }
 
     void OnDestroy()
@@ -124,22 +103,47 @@ namespace Bonsai.Designer
 
     void Update()
     {
-      // Check if there is a request to view a tree.
-      GoToViewMode();
-
       // Update the window during the play mode when the window
       // is viewing a tree instance of a game object.
       // This is to quicky update all changes of the tree.
       bool bConditions =
-          Tree &&
           Editor.EditorMode.Value == BonsaiEditor.Mode.View &&
           EditorApplication.isPlaying &&
+          Tree &&
           Tree.IsRunning();
 
       if (bConditions)
       {
         Repaint();
       }
+    }
+
+    private void BeforeAssemblyReload()
+    {
+      // Do not attempt to do saving if about to enter play mode since that is handled in PlayModeStateChanged.
+      if (!EditorApplication.isPlayingOrWillChangePlaymode)
+      {
+        OnExit();
+      }
+    }
+
+    private void PlayModeStateChanged(PlayModeStateChange state)
+    {
+      // Before entering play mode, attempt to save the current tree asset. 
+      if (state == PlayModeStateChange.ExitingEditMode)
+      {
+        QuickSave();
+      }
+
+      if (state == PlayModeStateChange.EnteredPlayMode)
+      {
+        SwitchToViewModeIfRequired();
+      }
+    }
+
+    private void SelectionChanged()
+    {
+      SwitchToViewModeIfRequired();
     }
 
     /// <summary>
@@ -166,21 +170,16 @@ namespace Bonsai.Designer
       return Editor.Canvas.Nodes.Select(n => n.Behaviour).Contains(behaviour);
     }
 
-    private void GoToViewMode()
+    private void SwitchToViewModeIfRequired()
     {
+      // Cannot go to view mode.
       if (!EditorApplication.isPlaying || !Selection.activeGameObject)
       {
         return;
       }
 
-      BehaviourTree treeToView = null;
-
       var btc = Selection.activeGameObject.GetComponent<BonsaiTreeComponent>();
-
-      if (btc)
-      {
-        treeToView = btc.Tree;
-      }
+      BehaviourTree treeToView = btc ? btc.Tree : null;
 
       // There must be a non-null tree to view,
       // it must be a different tree than the active tree for this window,
@@ -189,24 +188,26 @@ namespace Bonsai.Designer
       {
         var windows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
 
-        foreach (var w in windows)
-        {
-          // Tree is already being viewed.
-          if (w.Tree == treeToView)
-          {
-            return;
-          }
+        bool alreadyInView = windows.Any(w => w.Tree == treeToView);
 
-          // Have the window without a set tree to view the tree selected.
-          else if (!w.Tree)
-          {
-            w.Repaint();
-            w.SetTree(treeToView, BonsaiEditor.Mode.View);
-            return;
-          }
+        if (alreadyInView)
+        {
+          return;
         }
 
-        SetTree(treeToView, BonsaiEditor.Mode.View);
+        BonsaiWindow window = windows.FirstOrDefault(w => !w.Tree);
+
+        // Have the window without a set tree to view the tree selected.
+        if (window)
+        {
+          window.SetTree(treeToView, BonsaiEditor.Mode.View);
+        }
+        else
+        {
+          // View tree in this window.
+          SetTree(treeToView, BonsaiEditor.Mode.View);
+        }
+
       }
     }
 
@@ -431,50 +432,42 @@ namespace Bonsai.Designer
     /// <param name="instanceID"></param>
     /// <param name="line"></param>
     /// <returns></returns>
-    [OnOpenAsset(1)]
+    [OnOpenAsset(0)]
     private static bool OpenCanvasAsset(int instanceID, int line)
     {
       var treeSelected = EditorUtility.InstanceIDToObject(instanceID) as BehaviourTree;
 
-      if (treeSelected != null)
+      if (!treeSelected)
       {
-        BonsaiWindow windowToUse = null;
-
-        // Try to find an editor window without a canvas...
-        var bonsaiWindows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
-        foreach (var w in bonsaiWindows)
-        {
-          // The canvas is already opened
-          if (w.Tree == treeSelected)
-          {
-            return false;
-          }
-
-          // Found a window with no active canvas.
-          if (w.Tree == null)
-          {
-            windowToUse = w;
-            break;
-          }
-        }
-
-        // No windows available...just make a new one.
-        if (!windowToUse)
-        {
-          windowToUse = CreateInstance<BonsaiWindow>();
-          windowToUse.Show();
-        }
-
-        // If a tree asset was created but has no blackboard, add one upon opening.
-        // This is for convenience.
-        BonsaiSaver.AddBlackboardIfMissing(treeSelected);
-
-        windowToUse.SetTree(treeSelected);
-        windowToUse.Repaint();
-        return true;
+        return false;
       }
 
-      return false;
+      // Try to find an editor window without a canvas...
+      var windows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
+
+      bool isAlreadyOpened = windows.Any(w => w.Tree == treeSelected);
+
+      if (isAlreadyOpened)
+      {
+        return false;
+      }
+
+      // Find a window without any tree.
+      BonsaiWindow window = windows.FirstOrDefault(w => w.Tree == null);
+
+      // No windows available, make a new one.
+      if (!window)
+      {
+        window = CreateInstance<BonsaiWindow>();
+        window.Show();
+      }
+
+      // If a tree asset was created but has no blackboard, add one upon opening.
+      // This is for convenience.
+      BonsaiSaver.AddBlackboardIfMissing(treeSelected);
+      window.SetTree(treeSelected);
+      window.SwitchToViewModeIfRequired();
+      return true;
     }
   }
 }

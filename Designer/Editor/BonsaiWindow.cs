@@ -55,6 +55,7 @@ namespace Bonsai.Designer
       Editor.EditorMode.ValueChanged += (s, mode) => { EditorMode = mode; };
 
       EditorApplication.playModeStateChanged += PlayModeStateChanged;
+      AssemblyReloadEvents.beforeAssemblyReload += BeforeAssemblyReload;
 
       BuildCanvas();
 
@@ -64,6 +65,15 @@ namespace Bonsai.Designer
       // already opened and the user selects a game object with a
       // behaviour tree component.
       Editor.EditorMode.Value = BonsaiEditor.Mode.Edit;
+    }
+
+    private void BeforeAssemblyReload()
+    {
+      // Do not attempt to do saving if about to enter play mode since that is handled in PlayModeStateChanged.
+      if (!EditorApplication.isPlayingOrWillChangePlaymode)
+      {
+        OnExit();
+      }
     }
 
     private void PlayModeStateChanged(PlayModeStateChange state)
@@ -77,11 +87,13 @@ namespace Bonsai.Designer
 
     void OnDisable()
     {
-      // Save tree on exit.
-      QuickSave();
+      EditorApplication.playModeStateChanged -= PlayModeStateChanged;
+      AssemblyReloadEvents.beforeAssemblyReload -= BeforeAssemblyReload;
+    }
 
-      // This is to prevent active selection on objects that are no longer focused or do not exist after destroy.
-      Editor.NodeSelection.ClearSelection();
+    void OnDestroy()
+    {
+      OnExit();
     }
 
     void OnGUI()
@@ -359,6 +371,13 @@ namespace Bonsai.Designer
       {
         Saver.SaveCanvas(Editor.Canvas, TreeMetaData);
       }
+    }
+
+    private void OnExit()
+    {
+      // This is to prevent active selection on objects that are no longer focused or do not exist after destroy.
+      Editor.NodeSelection.ClearSelection();
+      QuickSave();
     }
 
     private CanvasTransform Transform

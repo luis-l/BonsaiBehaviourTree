@@ -647,33 +647,15 @@ namespace Bonsai.Core
 
     public System.Random Random { get; private set; } = new System.Random();
 
-#if UNITY_EDITOR
-
-    [ContextMenu("Add Blackboard")]
-    void AddBlackboardAsset()
-    {
-      if (_blackboard == null)
-      {
-        _blackboard = CreateInstance<Blackboard>();
-        AssetDatabase.AddObjectToAsset(_blackboard, this);
-      }
-    }
-
-    public void OnDrawGizmos()
-    {
-      foreach (BehaviourNode b in allNodes)
-      {
-        b.OnDrawGizmos();
-      }
-    }
-
-    private void DrawGizmos(BehaviourNode n)
-    {
-      n.OnDrawGizmos();
-    }
-
-    // Editor only helper method. 
-    // Clears all nodes, children, and sets the tree reference to null.
+    /// <summary>
+    /// Clear tree structure references.
+    /// <list type="bullet">
+    /// <item>Root</item>
+    /// <item>References to parent Tree</item>
+    /// <item>Parent-Child connections</item>
+    /// <item>Internal Nodes List</item>
+    /// </list>
+    /// </summary>
     public void ClearStructure()
     {
       foreach (BehaviourNode node in allNodes)
@@ -685,6 +667,18 @@ namespace Bonsai.Core
       allNodes.Clear();
 
       _root = null;
+    }
+
+#if UNITY_EDITOR
+
+    [ContextMenu("Add Blackboard")]
+    void AddBlackboardAsset()
+    {
+      if (_blackboard == null)
+      {
+        _blackboard = CreateInstance<Blackboard>();
+        AssetDatabase.AddObjectToAsset(_blackboard, this);
+      }
     }
 
     [HideInInspector]

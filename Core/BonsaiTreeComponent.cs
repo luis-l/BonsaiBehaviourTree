@@ -14,28 +14,27 @@ namespace Bonsai.Core
     // The instance of the behaviour tree associated with this game object component.
     internal BehaviourTree bt;
 
+    void Awake()
+    {
+      BonsaiManager.Instance.AddTree(this);
+    }
+
     void OnDestroy()
     {
-      // The manager handles destruction of the tree.
-      BonsaiManager.DestroyTree(bt);
+      if (BonsaiManager.Instance)
+      {
+        BonsaiManager.Instance.RemoveTree(bt);
+      }
+
+      if (bt)
+      {
+        Destroy(bt);
+      }
     }
 
     public BehaviourTree Tree
     {
       get { return bt; }
-    }
-
-    void Reset()
-    {
-      var manager = FindObjectOfType<BonsaiManager>();
-
-      // Add the behaviour tree mananger if none exists.
-      if (manager == null)
-      {
-        var gameobject = new GameObject();
-        gameobject.AddComponent<BonsaiManager>();
-        gameobject.transform.SetAsFirstSibling();
-      }
     }
   }
 }

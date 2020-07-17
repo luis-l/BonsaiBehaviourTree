@@ -252,8 +252,6 @@ namespace Bonsai.Core
       _parentTree = null;
     }
 
-    public virtual void OnDrawGizmos() { }
-
     public abstract BehaviourNode GetChildAt(int index);
     public abstract int ChildCount();
 

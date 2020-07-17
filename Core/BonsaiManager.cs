@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,88 +10,74 @@ namespace Bonsai.Core
   /// </summary>
   public class BonsaiManager : MonoBehaviour
   {
-    private const string kName = "Bonsai BT Manager";
+    private static readonly Lazy<BonsaiManager> lazyInstance = new Lazy<BonsaiManager>(
+      GetOrCreateSceneBonsaiManager,
+      isThreadSafe: false);
 
-    private static BonsaiManager _manager;
-    public static BonsaiManager Manager
+    private const string kName = "Bonsai Manager";
+
+    private readonly List<BehaviourTree> trees = new List<BehaviourTree>();
+
+    public static BonsaiManager Instance
     {
-      get
-      {
-        if (_manager == null)
-        {
-          _manager = FindObjectOfType<BonsaiManager>();
-          _manager.name = kName;
-        }
+      get { return lazyInstance.Value; }
+    }
 
-        return _manager;
+    public void AddTree(BonsaiTreeComponent btc)
+    {
+      BehaviourTree blueprint = btc.TreeBlueprint;
+
+      if (blueprint)
+      {
+        var tree = BehaviourTree.Clone(blueprint);
+        tree.actor = btc.gameObject;
+        btc.bt = tree;
+        trees.Add(tree);
+      }
+
+      else
+      {
+        Debug.LogWarning("The behaviour tree is null for " + btc.gameObject);
       }
     }
 
-    private static List<BehaviourTree> _trees = new List<BehaviourTree>();
-
-    public static void AddTree(BehaviourTree blueprint)
+    public void RemoveTree(BehaviourTree tree)
     {
-      var btInstance = BehaviourTree.Clone(blueprint);
-      btInstance.Start();
-
-      _trees.Add(btInstance);
+      trees.Remove(tree);
     }
 
-    public static void DestroyTree(BehaviourTree tree)
+    private static BonsaiManager GetOrCreateSceneBonsaiManager()
     {
-      _trees.Remove(tree);
-      Destroy(tree);
-    }
-
-    void Awake()
-    {
-      _trees.Clear();
-
-      var btComps = FindObjectsOfType<BonsaiTreeComponent>();
-
-      foreach (BonsaiTreeComponent btc in btComps)
+      var manager = FindObjectOfType<BonsaiManager>();
+      if (!manager)
       {
-
-        BehaviourTree blueprint = btc.TreeBlueprint;
-
-        if (blueprint)
-        {
-
-          var tree = BehaviourTree.Clone(blueprint);
-          tree.actor = btc.gameObject;
-          btc.bt = tree;
-
-          _trees.Add(tree);
-        }
-
-        else
-        {
-          Debug.LogError("The associated behaviour tree is null.");
-        }
+        var gameobject = new GameObject();
+        gameobject.AddComponent<BonsaiManager>();
+        gameobject.transform.SetAsFirstSibling();
+        manager = gameobject.GetComponent<BonsaiManager>();
       }
+      return manager;
     }
 
-    // Use this for initialization
     void Start()
     {
-      foreach (BehaviourTree tree in _trees)
+      foreach (BehaviourTree tree in trees)
       {
         tree.Start();
       }
     }
 
-    // Update is called once per frame
     void Update()
     {
-      for (int i = 0; i < _trees.Count; ++i)
+      for (int i = 0; i < trees.Count; ++i)
       {
-        _trees[i].Update();
+        trees[i].Update();
       }
     }
 
     void OnDestroy()
     {
-      _trees.Clear();
+      trees.Clear();
     }
 
     void OnValidate()
@@ -102,17 +89,5 @@ namespace Bonsai.Core
     {
       name = kName;
     }
-
-#if UNITY_EDITOR
-
-    void OnDrawGizmos()
-    {
-      for (int i = 0; i < _trees.Count; ++i)
-      {
-        _trees[i].OnDrawGizmos();
-      }
-    }
-#endif
-
   }
 }

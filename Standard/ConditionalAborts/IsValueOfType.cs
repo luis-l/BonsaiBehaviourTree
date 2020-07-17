@@ -1,9 +1,9 @@
 ﻿
 using System;
-using UnityEngine;
-
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -30,12 +30,20 @@ namespace Bonsai.Standard
 
     public override bool Condition()
     {
-      if (!Blackboard.Exists(key))
+      if (type == null || !Blackboard.Contains(key))
       {
         return false;
       }
 
-      Type valueType = Blackboard.GetRegister(key).GetValueType();
+      object value = Blackboard.Get(key);
+
+      // Value is unset, nothing to check.
+      if (value == null)
+      {
+        return false;
+      }
+
+      Type valueType = value.GetType();
 
       return useIsAssignableFrom ? type.IsAssignableFrom(valueType) : valueType == type;
     }
@@ -63,6 +71,21 @@ namespace Bonsai.Standard
       else
       {
         _typename = "";
+      }
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      base.Description(builder);
+      builder.AppendLine();
+
+      if (key == null || key.Length == 0)
+      {
+        builder.Append("No key is set to check");
+      }
+      else
+      {
+        builder.AppendFormat("Blackboard key {0} is {1}", key, Utility.TypeExtensions.NiceName(type));
       }
     }
   }

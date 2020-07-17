@@ -14,9 +14,9 @@ namespace Tests
 
     public override void OnStart()
     {
-      if (!Blackboard.Exists(kHistoryKey))
+      if (!Blackboard.Contains(kHistoryKey))
       {
-        Blackboard.Add(kHistoryKey, new List<int>());
+        Blackboard.Set(kHistoryKey, new List<int>());
       }
     }
 

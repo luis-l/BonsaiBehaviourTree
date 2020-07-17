@@ -23,7 +23,7 @@ namespace Bonsai.Standard
       Blackboard bb = Blackboard;
 
       // If any of the keys is non-existant then return false.
-      if (!bb.Exists(key1) || !bb.Exists(key2))
+      if (!bb.Contains(key1) || !bb.Contains(key2))
       {
         return false;
       }

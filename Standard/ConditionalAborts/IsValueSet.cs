@@ -1,10 +1,7 @@
-﻿
-using System;
-using UnityEngine;
-
+﻿using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
-using System.Text;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -14,64 +11,12 @@ namespace Bonsai.Standard
   [BonsaiNode("Conditional/", "Condition")]
   public class IsValueSet : ConditionalAbort
   {
-    [Tooltip("The key of the value to test if it's not set to its default value.")]
+    [Tooltip("The key to check if it has a value set.")]
     public string key;
-
-    // Cache the register at the blackboard key.
-    private Blackboard.RegisterBase _registerOfKey;
-
-    // Cache the default value for the value at the key.
-    // This should not be done repeatedly for performance reasons.
-    private object _defaultValue;
-
-    // Cache if the value at the key is a value type.
-    // If it is a reference type then the default value is null.
-    private bool _bIsValueType;
-
-    public override void OnStart()
-    {
-      CacheDefaultValue();
-    }
 
     public override bool Condition()
     {
-      // No register was cached.
-      // This happenes when the key does not exist.
-      if (_registerOfKey == null)
-      {
-        return false;
-      }
-
-      object value = _registerOfKey.GetValue();
-
-      // Value types must be compared with the default value type.
-      // All the reference types have a default value of null.
-      return _bIsValueType ? !value.Equals(_defaultValue) : value != null;
-    }
-
-    /// <summary>
-    /// Use this everytime you change the key.
-    /// </summary>
-    public void CacheDefaultValue()
-    {
-      // Reset values.
-      _registerOfKey = null;
-      _bIsValueType = false;
-      _defaultValue = null;
-
-      if (Blackboard.Exists(key))
-      {
-
-        _registerOfKey = Blackboard.GetRegister(key);
-
-        Type t = _registerOfKey.GetValueType();
-
-        if (t.IsValueType)
-        {
-          _bIsValueType = true;
-          _defaultValue = Activator.CreateInstance(t);
-        }
-      }
+      return Blackboard.IsSet(key);
     }
 
     public override void Description(StringBuilder builder)
@@ -85,7 +30,7 @@ namespace Bonsai.Standard
       }
       else
       {
-        builder.AppendFormat("Check blackboard key: {0}", key);
+        builder.AppendFormat("Blackboard key: {0}", key);
       }
     }
   }

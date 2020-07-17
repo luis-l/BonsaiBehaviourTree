@@ -85,14 +85,14 @@ namespace Bonsai.Designer
 
     private Dictionary<string, FieldInfo> GetRuntimeFields(BehaviourNode target)
     {
-      return target.GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-        .Where(f => f.GetCustomAttribute<ShowAtRuntimeAttribute>(false) != null)
+      return target.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+        .Where(f => f.GetCustomAttribute<ShowAtRuntimeAttribute>() != null)
         .ToDictionary(f => RuntimeFieldLabel(f), f => f);
     }
 
     private static string RuntimeFieldLabel(FieldInfo f)
     {
-      var view = f.GetCustomAttribute<ShowAtRuntimeAttribute>(false);
+      var view = f.GetCustomAttribute<ShowAtRuntimeAttribute>();
       return ObjectNames.NicifyVariableName(string.IsNullOrEmpty(view.label) ? f.Name : view.label);
     }
   }

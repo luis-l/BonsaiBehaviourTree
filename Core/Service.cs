@@ -11,7 +11,8 @@ namespace Bonsai.Core
     public float randomDeviation = 0f;
     public bool restartTimerOnEnter = true;
 
-    private readonly Utility.Timer timer = new Utility.Timer();
+    [Designer.ShowAtRuntime]
+    protected readonly Utility.Timer timer = new Utility.Timer();
 
     public Action OnEvaluation = delegate { };
 

@@ -17,7 +17,6 @@ namespace Bonsai.Core
 
     // Store references to the parallel nodes;
     private Parallel[] _parallelNodes;
-    private int _parallelNodeCount = 0;
 
     /// <summary>
     /// Nodes that are allowed to update on tree tick.
@@ -27,7 +26,7 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     private BehaviourNode _root;
 
-    private bool _bTreeInitialized = false;
+    private bool isTreeInitialized = false;
 
     /// <summary>
     /// The game object binded to the tree.
@@ -46,7 +45,7 @@ namespace Bonsai.Core
         // NOTE:
         // Everytime we set the root, Start()
         // must be called again in order to preprocess the tree.
-        _bTreeInitialized = false;
+        isTreeInitialized = false;
 
         if (value == null)
         {
@@ -97,18 +96,18 @@ namespace Bonsai.Core
 
       PreProcess();
 
-      for (int i = 0; i < allNodes.Count; ++i)
+      foreach (BehaviourNode node in allNodes)
       {
-        allNodes[i].OnStart();
+        node.OnStart();
       }
 
       _mainIterator.Traverse(_root);
-      _bTreeInitialized = true;
+      isTreeInitialized = true;
     }
 
     public void Update()
     {
-      if (_bTreeInitialized && _mainIterator.IsRunning)
+      if (isTreeInitialized && _mainIterator.IsRunning)
       {
 
         if (treeTickNodes.Length != 0)
@@ -153,14 +152,9 @@ namespace Bonsai.Core
     private void CacheObservers()
     {
       _observerAborts.Clear();
-
-      foreach (var conditional in GetNodes<ConditionalAbort>())
-      {
-        if (conditional.abortType != AbortType.None)
-        {
-          _observerAborts.Add(conditional);
-        }
-      }
+      _observerAborts.AddRange(
+        GetNodes<ConditionalAbort>()
+        .Where(node => node.abortType != AbortType.None));
     }
 
     private void CacheTreeTickNodes()
@@ -184,20 +178,18 @@ namespace Bonsai.Core
       {
         node._iterator = itr;
 
-        bool bIsParallel = node as Parallel != null;
+        bool isParallel = node as Parallel != null;
 
-        if (bIsParallel)
+        if (isParallel)
         {
           parallelRoots.Push(node);
         }
 
-        return bIsParallel;
+        return isParallel;
       };
 
-      Action<BehaviourNode> nothing = (node) => { };
-
       // Assign the main iterator to nodes not under any parallel nodes.
-      TreeIterator<BehaviourNode>.Traverse(_root, nothing, skipAndAssign);
+      TreeIterator<BehaviourNode>.Traverse(_root, delegate { }, skipAndAssign);
 
       while (parallelRoots.Count != 0)
       {
@@ -207,29 +199,19 @@ namespace Bonsai.Core
         for (int i = 0; i < parallel.ChildCount(); ++i)
         {
           itr = (parallel as Parallel).GetIterator(i);
-          TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), nothing, skipAndAssign);
+          TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), delegate { }, skipAndAssign);
         }
       }
     }
 
     private void SyncParallelIterators()
     {
-      var parallelNodes = GetNodes<Parallel>();
-      _parallelNodeCount = parallelNodes.Count;
+      _parallelNodes = GetNodes<Parallel>().ToArray();
 
-      if (_parallelNodeCount > 0)
+      // Cache the parallel nodes and syn their iterators.
+      foreach (Parallel p in _parallelNodes)
       {
-
-        _parallelNodes = new Parallel[_parallelNodeCount];
-
-        // Cache the parallel nodes and syn their iterators.
-        int i = 0;
-        foreach (Parallel p in parallelNodes)
-        {
-
-          _parallelNodes[i++] = p;
-          p.SyncSubIterators();
-        }
+        p.SyncSubIterators();
       }
     }
 
@@ -242,22 +224,19 @@ namespace Bonsai.Core
       // Since the parallel count is usually small, we 
       // can just do a linear iteration to interrupt multiple
       // parallel nodes.
-      for (int pIndex = 0; pIndex < _parallelNodeCount; ++pIndex)
+      for (int pIndex = 0; pIndex < _parallelNodes.Length; ++pIndex)
       {
         Parallel p = _parallelNodes[pIndex];
 
         if (IsUnderSubtree(subroot, p))
         {
-
           for (int itrIndex = 0; itrIndex < p.ChildCount(); ++itrIndex)
           {
-
             BehaviourIterator itr = p.GetIterator(itrIndex);
 
             // Only interrupt running iterators.
             if (itr.IsRunning)
             {
-
               // Get the child of the parallel node, and interrupt the child subtree.
               int childIndex = itr.FirstInTraversal;
               BehaviourNode firstNode = allNodes[childIndex];
@@ -277,34 +256,24 @@ namespace Bonsai.Core
       ResetOrderIndices();
 
       int orderCounter = 0;
-
-      Action<BehaviourNode> preOrder = (node) =>
-      {
-        node.preOrderIndex = orderCounter++;
-      };
-
-      TreeIterator<BehaviourNode>.Traverse(_root, preOrder);
+      TreeIterator<BehaviourNode>.Traverse(
+        _root,
+        node => node.preOrderIndex = orderCounter++);
 
       orderCounter = 0;
+      TreeIterator<BehaviourNode>.Traverse(
+        _root,
+        node => node.postOrderIndex = orderCounter++,
+        Traversal.PostOrder);
 
-
-      Action<BehaviourNode> postOrder = (node) =>
-      {
-        node.postOrderIndex = orderCounter++;
-      };
-
-      TreeIterator<BehaviourNode>.Traverse(_root, postOrder, Traversal.PostOrder);
-
-
-      Action<BehaviourNode, TreeIterator<BehaviourNode>> levelOrder = (node, itr) =>
-      {
-        node.levelOrder = itr.CurrentLevel;
-
-        // This will end up with the highest level.
-        Height = itr.CurrentLevel;
-      };
-
-      TreeIterator<BehaviourNode>.Traverse(_root, levelOrder, Traversal.LevelOrder);
+      TreeIterator<BehaviourNode>.Traverse(
+        _root,
+        (node, itr) =>
+        {
+          node.levelOrder = itr.CurrentLevel;
+          Height = itr.CurrentLevel;
+        },
+        Traversal.LevelOrder);
     }
 
     /// <summary>
@@ -312,22 +281,9 @@ namespace Bonsai.Core
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    public List<T> GetNodes<T>() where T : BehaviourNode
+    public IEnumerable<T> GetNodes<T>() where T : BehaviourNode
     {
-      var nodes = new List<T>();
-
-      for (int i = 0; i < allNodes.Count; ++i)
-      {
-
-        var node = allNodes[i] as T;
-
-        if (node)
-        {
-          nodes.Add(node);
-        }
-      }
-
-      return nodes;
+      return allNodes.Select(node => node as T).Where(casted => casted != null);
     }
 
     // Note on multiple aborts:
@@ -504,38 +460,26 @@ namespace Bonsai.Core
 
     public static void IncludeTreeReferences(BehaviourTree mainTree)
     {
-      var includes = mainTree.GetNodes<Include>();
+      var includes = mainTree.GetNodes<Include>().ToArray();
 
-      // Nothing to include.
-      if (includes.Count == 0)
+      foreach (Include include in includes)
       {
-        return;
-      }
-
-      var includedTrees = new BehaviourTree[includes.Count];
-
-      for (int i = 0; i < includes.Count; ++i)
-      {
-
         // Clone each individual tree independently.
-        Include include = includes[i];
         BehaviourTree subtree = Clone(include.tree);
 
         BehaviourNode includeParent = include.Parent;
         BehaviourNode subtreeRoot = subtree.Root;
 
+        // The root node must now be the child of the parent of the include.
         if (includeParent)
         {
-
-          // The root node must now be the child of the parent of the include.
           subtreeRoot._indexOrder = include._indexOrder;
           includeParent.ForceSetChild(subtreeRoot);
         }
 
+        // If the include node is the root, then just make the subtree the root.
         else if (include.preOrderIndex == 0)
         {
-
-          // If the include node is the root, then just make the subtree the root.
           mainTree.Root = subtreeRoot;
         }
 
@@ -556,19 +500,18 @@ namespace Bonsai.Core
         }
       }
 
-      // After everything is included, we need to resort the tree nodes in pre order with the new included nodes.
-      mainTree.SortNodes();
+      mainTree.allNodes.RemoveAll(node => includes.Contains(node));
 
-      // Destory the cloned subtrees since we do not need them anymore.
-      for (int i = 0; i < includedTrees.Length; ++i)
+      // Destroy the include nodes.
+      foreach (Include i in includes)
       {
-        Destroy(includedTrees[i]);
+        Destroy(i);
       }
 
-      // Destroy the includes
-      for (int i = 0; i < includes.Count; ++i)
+      // After everything is included, we need to resort the tree nodes in pre order with the new included nodes.
+      if (includes.Any())
       {
-        Destroy(includes[i]);
+        mainTree.SortNodes();
       }
     }
 

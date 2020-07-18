@@ -6,35 +6,49 @@ namespace Bonsai.Core
   public class BonsaiTreeComponent : MonoBehaviour
   {
     /// <summary>
-    /// The tree blueprint used.
+    /// The tree blueprint asset used.
     /// </summary>
     [SerializeField]
     public BehaviourTree TreeBlueprint;
 
-    // The instance of the behaviour tree associated with this game object component.
-    internal BehaviourTree bt;
+    // Tree instance of the blueprint. This is a clone of the tree blueprint asset.
+    // The tree instance is what runs in game.
+    internal BehaviourTree treeInstance;
 
     void Awake()
     {
-      BonsaiManager.Instance.AddTree(this);
+      if (TreeBlueprint)
+      {
+        treeInstance = BehaviourTree.Clone(TreeBlueprint);
+        treeInstance.actor = gameObject;
+      }
+      else
+      {
+        Debug.LogError("The behaviour tree is not set for " + gameObject);
+      }
+    }
+
+    void Start()
+    {
+      treeInstance.Start();
+    }
+
+    void Update()
+    {
+      treeInstance.Update();
     }
 
     void OnDestroy()
     {
-      if (BonsaiManager.Instance)
-      {
-        BonsaiManager.Instance.RemoveTree(bt);
-      }
-
-      if (bt)
-      {
-        Destroy(bt);
-      }
+      Destroy(treeInstance);
     }
 
+    /// <summary>
+    /// The tree instance running in game.
+    /// </summary>
     public BehaviourTree Tree
     {
-      get { return bt; }
+      get { return treeInstance; }
     }
   }
 }

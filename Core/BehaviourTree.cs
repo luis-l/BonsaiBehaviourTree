@@ -270,31 +270,6 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Test to see if a node is a parallel node.
-    /// </summary>
-    /// <param name="node"></param>
-    /// <returns></returns>
-    public bool IsParallelNode(BehaviourNode node)
-    {
-      return _parallelNodeCount != 0 && ContainsParallelPreOrder(node.preOrderIndex);
-    }
-
-    // Here we use a simple linear iteration over the array containing pre-orders for parallel nodes.
-    // We do a linear search since the number of parallel node is usually small.
-    private bool ContainsParallelPreOrder(int preOrderIndex)
-    {
-      for (int i = 0; i < _parallelNodeCount; ++i)
-      {
-        if (_parallelNodes[i].preOrderIndex == preOrderIndex)
-        {
-          return true;
-        }
-      }
-
-      return false;
-    }
-
-    /// <summary>
     /// Computes the pre and post orders of all nodes.
     /// </summary>
     public void CalculateTreeOrders()

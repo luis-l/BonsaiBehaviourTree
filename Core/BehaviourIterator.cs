@@ -100,14 +100,7 @@ namespace Bonsai.Core
 
     private void CallOnChildExit(BehaviourNode node)
     {
-      // If this is not a root node, then notify the parent about the child finishing.
-      if (_traversal.Count > 0)
-      {
-        node.Parent.OnChildExit(node._indexOrder, LastStatusReturned);
-      }
-
-      // If this was a subtree under a parallel node, then notify its parent.
-      else if (node.Parent && _tree.IsParallelNode(node.Parent))
+      if (node.Parent)
       {
         node.Parent.OnChildExit(node._indexOrder, LastStatusReturned);
       }

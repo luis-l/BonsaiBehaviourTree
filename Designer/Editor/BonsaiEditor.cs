@@ -39,11 +39,11 @@ namespace Bonsai.Designer
     /// </summary>
     private Action<CanvasTransform> MotionAction;
     private Action<BonsaiInputEvent> ApplyAction;
-    private Predicate<BonsaiInputEvent> CanApplyAction;
 
     // Context Menus block Events. 
     // When a new node is created from the context menu we need to position it under the mouse.
     private BonsaiNode lastCreatedNodeToPosition = null;
+    private BonsaiNode pendingParentConnection = null;
 
     public BonsaiEditor()
     {
@@ -74,6 +74,20 @@ namespace Bonsai.Designer
       BonsaiNode node = Canvas.CreateNode(type);
       NodeSelection.SetSingleSelection(node);
       lastCreatedNodeToPosition = node;
+
+      // This is to handle connecting a newly created node from the GenericMenu
+      // triggered by a EditorNodeConnection action. 
+      if (pendingParentConnection != null)
+      {
+        EditorNodeConnecting.FinishConnection(Canvas, pendingParentConnection, node);
+        pendingParentConnection = null;
+      }
+    }
+
+    private void RemoveSelectedNodes()
+    {
+      Canvas.Remove(node => NodeSelection.IsNodeSelected(node));
+      NodeSelection.SetTreeSelection(Canvas.Tree);
     }
 
     private void SingleNodeAction(object sender, BonsaiInput.NodeContext actionType)
@@ -85,7 +99,6 @@ namespace Bonsai.Designer
           break;
 
         case BonsaiInput.NodeContext.Duplicate:
-          Type nodeType = NodeSelection.SingleSelectedNode.Behaviour.GetType();
           EditorNodeCreation.DuplicateSingle(Canvas, NodeSelection.SingleSelectedNode);
           break;
 
@@ -95,8 +108,7 @@ namespace Bonsai.Designer
           break;
 
         case BonsaiInput.NodeContext.Delete:
-          Canvas.Remove(node => NodeSelection.IsNodeSelected(node));
-          NodeSelection.SetTreeSelection(Canvas.Tree);
+          RemoveSelectedNodes();
           break;
       }
     }
@@ -110,8 +122,7 @@ namespace Bonsai.Designer
           NodeSelection.SetMultiSelection(duplicates);
           break;
         case BonsaiInput.NodeContext.DeleteSelection:
-          Canvas.Remove(node => NodeSelection.IsNodeSelected(node));
-          NodeSelection.SetTreeSelection(Canvas.Tree);
+          RemoveSelectedNodes();
           break;
       }
     }
@@ -187,16 +198,12 @@ namespace Bonsai.Designer
 
     private void MouseUp(object sender, BonsaiInputEvent inputEvent)
     {
-      if (CanApplyAction == null || CanApplyAction(inputEvent))
-      {
-        ApplyAction?.Invoke(inputEvent);
-      }
+      ApplyAction?.Invoke(inputEvent);
       ClearActions();
     }
 
     public void ClearActions()
     {
-      CanApplyAction = null;
       ApplyAction = null;
       MotionAction = null;
       Viewer.CustomDraw = null;
@@ -249,16 +256,31 @@ namespace Bonsai.Designer
 
     private void StartConnection(BonsaiInputEvent startEvent)
     {
-      BonsaiNode parent = startEvent.isOutputFocused
+      bool isOutputFocused = startEvent.isOutputFocused;
+
+      BonsaiNode parent = isOutputFocused
         ? startEvent.node
         : EditorNodeConnecting.StartConnection(startEvent.node);
 
       if (parent != null)
       {
-        ApplyAction = (BonsaiInputEvent applyEvent)
-          => EditorNodeConnecting.FinishConnection(Canvas, parent, applyEvent.node);
+        ApplyAction = (BonsaiInputEvent applyEvent) =>
+        {
+          if (applyEvent.node != null)
+          {
+            EditorNodeConnecting.FinishConnection(Canvas, parent, applyEvent.node);
+          }
 
-        CanApplyAction = (BonsaiInputEvent checkEvent) => checkEvent.node != null;
+          // Connection dropped on canvas. Show create menu to make a new connected node.
+          // Only do this for connections started from the output port.
+          else if (isOutputFocused)
+          {
+            // We have to cache the parent because GenericMenu's callback upong selecting an item is deferred,
+            // and cannot handle node connection in this scope.
+            pendingParentConnection = parent;
+            Input.ShowCreateNodeMenu();
+          }
+        };
 
         Viewer.CustomDraw = (CanvasTransform t) =>
         {

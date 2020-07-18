@@ -141,6 +141,11 @@ namespace Bonsai.Designer
       return e.type == EventType.ScrollWheel;
     }
 
+    public void ShowCreateNodeMenu()
+    {
+      nodeTypeSelectionMenu.ShowAsContext();
+    }
+
     /// <summary>
     /// The callback to create the node via typename.
     /// </summary>
@@ -175,7 +180,7 @@ namespace Bonsai.Designer
       else
       {
         CanvasContextClick?.Invoke(this, EventArgs.Empty);
-        nodeTypeSelectionMenu.ShowAsContext();
+        ShowCreateNodeMenu();
       }
     }
 

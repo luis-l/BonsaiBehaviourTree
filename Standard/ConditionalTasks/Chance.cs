@@ -1,8 +1,7 @@
 ﻿
-using UnityEngine;
-
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -15,11 +14,8 @@ namespace Bonsai.Standard
 
     public override bool Condition()
     {
-      // Get a random value between 0 and 1.
-      float prob = (float)Tree.Random.NextDouble();
-
       // Return true if the probability is within the range [0, chance];
-      return prob <= chance;
+      return Random.value <= chance;
     }
   }
 }

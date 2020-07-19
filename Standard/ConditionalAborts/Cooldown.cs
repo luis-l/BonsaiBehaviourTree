@@ -19,11 +19,6 @@ namespace Bonsai.Standard
     [ShowAtRuntime]
     private readonly Utility.Timer timer = new Utility.Timer();
 
-    public override void OnStart()
-    {
-      timer.OnTimeout += ResetConditionCache;
-    }
-
     public override void OnEnter()
     {
       // We can only traverse the child if the cooldown is inactive.

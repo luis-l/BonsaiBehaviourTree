@@ -1,5 +1,4 @@
 ﻿
-using UnityEngine;
 using System;
 using System.Text;
 
@@ -50,7 +49,7 @@ namespace Bonsai.Core
     /// </summary>
     public sealed override void OnBranchTick()
     {
-      timer.Update(Time.deltaTime);
+      timer.Update(UnityEngine.Time.deltaTime);
     }
 
     /// <summary>
@@ -60,12 +59,12 @@ namespace Bonsai.Core
 
     private void UpdateWaitTime()
     {
-      timer.WaitTime = interval + ((float)Tree.Random.NextDouble() * 2f * randomDeviation - randomDeviation);
+      timer.WaitTime = interval + UnityEngine.Random.Range(-randomDeviation, randomDeviation);
     }
 
     public override void Description(StringBuilder builder)
     {
-      if (randomDeviation == 0)
+      if (randomDeviation == 0f)
       {
         builder.AppendFormat("Tick {0:0.00}s", interval);
       }

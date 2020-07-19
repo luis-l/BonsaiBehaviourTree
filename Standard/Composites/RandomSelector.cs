@@ -44,8 +44,7 @@ namespace Bonsai.Standard
 
       for (int i = 0; i < childCount; i++)
       {
-
-        int indexPivot = Tree.Random.Next(childCount);
+        int indexPivot = UnityEngine.Random.Range(0, childCount);
 
         // Swap the i-th and pivot elements.
         int tmp = _childrenOrder[i];

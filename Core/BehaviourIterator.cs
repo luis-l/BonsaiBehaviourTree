@@ -10,12 +10,12 @@ namespace Bonsai.Core
   {
     // Keeps track of the traversal path.
     // Useful to help on aborts and interrupts.
-    private readonly Utility.FixedSizeStack<int> _traversal;
-    private readonly Utility.FixedSizeStack<int> _branchTicks;
+    private readonly Utility.FixedSizeStack<int> traversal;
+    private readonly Utility.FixedSizeStack<int> branchTicks;
 
     // Access to the tree so we can find any node from pre-order index.
-    private readonly BehaviourTree _tree;
-    private readonly Queue<int> _requestedTraversals;
+    private readonly BehaviourTree tree;
+    private readonly Queue<int> requestedTraversals;
 
     /// <summary>
     /// Called when the iterators finishes iterating the entire tree.
@@ -24,13 +24,13 @@ namespace Bonsai.Core
 
     public BehaviourIterator(BehaviourTree tree, int levelOffset)
     {
-      _tree = tree;
+      this.tree = tree;
 
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
-      int maxTraversalLength = _tree.Height + 1;
-      _traversal = new Utility.FixedSizeStack<int>(maxTraversalLength);
-      _branchTicks = new Utility.FixedSizeStack<int>(maxTraversalLength);
-      _requestedTraversals = new Queue<int>(maxTraversalLength);
+      int maxTraversalLength = this.tree.Height + 1;
+      traversal = new Utility.FixedSizeStack<int>(maxTraversalLength);
+      branchTicks = new Utility.FixedSizeStack<int>(maxTraversalLength);
+      requestedTraversals = new Queue<int>(maxTraversalLength);
 
       LevelOffset = levelOffset;
     }
@@ -43,8 +43,8 @@ namespace Bonsai.Core
       CallOnEnterOnQueuedNodes();
       TickBranch();
 
-      int index = _traversal.Peek();
-      BehaviourNode node = _tree.allNodes[index];
+      int index = traversal.Peek();
+      BehaviourNode node = tree.allNodes[index];
       LastStatusReturned = node.Run();
 
 #if UNITY_EDITOR
@@ -57,7 +57,7 @@ namespace Bonsai.Core
         CallOnChildExit(node);
       }
 
-      if (_traversal.Count == 0)
+      if (traversal.Count == 0)
       {
         OnDone();
       }
@@ -65,25 +65,25 @@ namespace Bonsai.Core
 
     private void TickBranch()
     {
-      for (int i = 0; i < _branchTicks.Count; i++)
+      for (int i = 0; i < branchTicks.Count; i++)
       {
-        int nodeIndex = _branchTicks.GetValue(i);
-        _tree.allNodes[nodeIndex].OnBranchTick();
+        int nodeIndex = branchTicks.GetValue(i);
+        tree.allNodes[nodeIndex].OnBranchTick();
       }
     }
 
     private void CallOnEnterOnQueuedNodes()
     {
       // Make sure to call on enter on any queued new traversals.
-      while (_requestedTraversals.Count != 0)
+      while (requestedTraversals.Count != 0)
       {
-        int i = _requestedTraversals.Dequeue();
-        BehaviourNode node = _tree.allNodes[i];
+        int i = requestedTraversals.Dequeue();
+        BehaviourNode node = tree.allNodes[i];
         node.OnEnter();
 
         if (node.CanTickOnBranch())
         {
-          _branchTicks.Push(i);
+          branchTicks.Push(i);
         }
 
         CallOnChildEnter(node);
@@ -113,8 +113,8 @@ namespace Bonsai.Core
     public void Traverse(BehaviourNode next)
     {
       int index = next.preOrderIndex;
-      _traversal.Push(index);
-      _requestedTraversals.Enqueue(index);
+      traversal.Push(index);
+      requestedTraversals.Enqueue(index);
 
       LastStatusReturned = BehaviourNode.Status.Running;
 
@@ -140,7 +140,7 @@ namespace Bonsai.Core
       // If an abort node is the root, then we need to empty the entire traversal.
       // We can achieve this by setting the terminating index to the invalid index, which is an invalid index
       // and will empty the traversal.
-      while (_traversal.Count != 0 && _traversal.Peek() != terminatingIndex)
+      while (traversal.Count != 0 && traversal.Peek() != terminatingIndex)
       {
         StepBackAbort();
       }
@@ -152,7 +152,7 @@ namespace Bonsai.Core
       }
 
       // Any requested traversals are cancelled on abort.
-      _requestedTraversals.Clear();
+      requestedTraversals.Clear();
 
       Traverse(aborter);
     }
@@ -168,8 +168,8 @@ namespace Bonsai.Core
       int parentIndexInTraversal = GetIndexInTraversal(parent);
       int subtreeIndexInTraversal = parentIndexInTraversal + 1;
 
-      int subtreePreOrder = _traversal.GetValue(subtreeIndexInTraversal);
-      return _tree.allNodes[subtreePreOrder];
+      int subtreePreOrder = traversal.GetValue(subtreeIndexInTraversal);
+      return tree.allNodes[subtreePreOrder];
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ namespace Bonsai.Core
 
     public bool IsRunning
     {
-      get { return _traversal.Count != 0; }
+      get { return traversal.Count != 0; }
     }
 
     /// <summary>
@@ -193,7 +193,7 @@ namespace Bonsai.Core
     /// </summary>
     public int CurrentIndex
     {
-      get { return _traversal.Count == 0 ? -1 : _traversal.Peek(); }
+      get { return traversal.Count == 0 ? -1 : traversal.Peek(); }
     }
 
     public int LevelOffset { get; }
@@ -219,7 +219,7 @@ namespace Bonsai.Core
     /// <param name="subtree"></param>
     internal void StepBackInterrupt(BehaviourNode subtree, bool bFullInterrupt = false)
     {
-      while (_traversal.Count != 0 && _traversal.Peek() != subtree.preOrderIndex)
+      while (traversal.Count != 0 && traversal.Peek() != subtree.preOrderIndex)
       {
         var node = PopNode();
 
@@ -229,7 +229,7 @@ namespace Bonsai.Core
 
       }
 
-      if (bFullInterrupt && _traversal.Count != 0)
+      if (bFullInterrupt && traversal.Count != 0)
       {
         var node = PopNode();
 
@@ -238,7 +238,7 @@ namespace Bonsai.Core
 #endif
 
         // Any requested traversals are cancelled on interruption.
-        _requestedTraversals.Clear();
+        requestedTraversals.Clear();
       }
     }
 
@@ -247,21 +247,21 @@ namespace Bonsai.Core
     /// </summary>
     public int FirstInTraversal
     {
-      get { return _traversal.GetValue(0); }
+      get { return traversal.GetValue(0); }
     }
 
     private BehaviourNode PopNode()
     {
-      int index = _traversal.Pop();
-      BehaviourNode node = _tree.allNodes[index];
+      int index = traversal.Pop();
+      BehaviourNode node = tree.allNodes[index];
       node.OnExit();
 
       // Guard against empty branch tick pop.
       // This could occur if a node was aborted then interrupted in succession.
       // TODO: Test this further.
-      if (_branchTicks.Count != 0 && node.CanTickOnBranch())
+      if (branchTicks.Count != 0 && node.CanTickOnBranch())
       {
-        _branchTicks.Pop();
+        branchTicks.Pop();
       }
 
       return node;

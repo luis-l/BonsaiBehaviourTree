@@ -49,6 +49,7 @@ namespace Tests
       tree.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
       tree.SortNodes();
       tree.Start();
+      tree.BeginTraversal();
     }
 
     public static BehaviourNode.Status StepBehaviourTree(BehaviourTree tree)

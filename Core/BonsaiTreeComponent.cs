@@ -31,6 +31,7 @@ namespace Bonsai.Core
     void Start()
     {
       treeInstance.Start();
+      treeInstance.BeginTraversal();
     }
 
     void Update()

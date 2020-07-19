@@ -24,6 +24,11 @@ namespace Bonsai.Standard
       }
     }
 
+    public override void OnEnter()
+    {
+      RunningSubTree.BeginTraversal();
+    }
+
     public override Status Run()
     {
       if (RunningSubTree)

@@ -83,9 +83,12 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Preprocesses and starts the tree.
+    /// <para>Preprocesses and starts the tree.
+    /// This can be thought of as the tree initializer.
+    /// </para>
+    /// Does not begin the tree traversal.
+    /// <seealso cref="BeginTraversal"/>
     /// </summary>
-    /// <param name="root"></param>
     public void Start()
     {
       if (_root == null)
@@ -101,7 +104,6 @@ namespace Bonsai.Core
         node.OnStart();
       }
 
-      mainIterator.Traverse(_root);
       isTreeInitialized = true;
     }
 
@@ -125,11 +127,26 @@ namespace Bonsai.Core
     }
 
     /// <summary>
+    /// <para>Start traversing the tree from the root.
+    /// Can only be done if the tree is not yet running.
+    /// </para>
+    /// The tree should be initialized before calling this.
+    /// <seealso cref="Start"/>
+    /// </summary>
+    public void BeginTraversal()
+    {
+      if (isTreeInitialized && !mainIterator.IsRunning)
+      {
+        mainIterator.Traverse(_root);
+      }
+    }
+
+    /// <summary>
     /// Processes the tree to calculate certain properties like node priorities,
-    /// caching observers, and syncinc parallel iterators.
+    /// caching observers, and sync parallel iterators.
     /// The root must be set.
     /// </summary>
-    private void PreProcess()
+    void PreProcess()
     {
       if (_root == null)
       {

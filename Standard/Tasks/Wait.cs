@@ -1,9 +1,8 @@
 ﻿
-using UnityEngine;
-
-using Bonsai.Designer;
-using Bonsai.Core;
 using System.Text;
+using Bonsai.Core;
+using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {

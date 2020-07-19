@@ -427,29 +427,27 @@ namespace Bonsai.Designer
     }
 
     /// <summary>
-    /// Opens up the Bonsai window from asset selection.
+    /// Opens the tree in a Bonsai Window.
     /// </summary>
-    /// <param name="instanceID"></param>
-    /// <param name="line"></param>
-    /// <returns></returns>
-    [OnOpenAsset(0)]
-    private static bool OpenCanvasAsset(int instanceID, int line)
+    /// <param name="tree">The tree to open</param>
+    /// <returns>
+    /// The window that opens the tree. Null if already opened.
+    /// </returns>
+    public static BonsaiWindow OpenTree(BehaviourTree tree, BonsaiEditor.Mode mode = BonsaiEditor.Mode.Edit)
     {
-      var treeSelected = EditorUtility.InstanceIDToObject(instanceID) as BehaviourTree;
-
-      if (!treeSelected)
+      if (!tree)
       {
-        return false;
+        return null;
       }
 
       // Try to find an editor window without a canvas...
       var windows = Resources.FindObjectsOfTypeAll<BonsaiWindow>();
 
-      bool isAlreadyOpened = windows.Any(w => w.Tree == treeSelected);
+      bool isAlreadyOpened = windows.Any(w => w.Tree == tree);
 
       if (isAlreadyOpened)
       {
-        return false;
+        return null;
       }
 
       // Find a window without any tree.
@@ -462,12 +460,31 @@ namespace Bonsai.Designer
         window.Show();
       }
 
-      // If a tree asset was created but has no blackboard, add one upon opening.
-      // This is for convenience.
-      BonsaiSaver.AddBlackboardIfMissing(treeSelected);
-      window.SetTree(treeSelected);
-      window.SwitchToViewModeIfRequired();
-      return true;
+      window.SetTree(tree, mode);
+      return window;
+    }
+
+    /// <summary>
+    /// Opens up the Bonsai window from asset selection.
+    /// </summary>
+    /// <param name="instanceID"></param>
+    /// <param name="line"></param>
+    /// <returns></returns>
+    [OnOpenAsset(0)]
+    private static bool OpenCanvasAsset(int instanceID, int line)
+    {
+      var tree = EditorUtility.InstanceIDToObject(instanceID) as BehaviourTree;
+      BonsaiWindow w = OpenTree(tree);
+      if (w)
+      {
+        // If a tree asset was created but has no blackboard, add one upon opening.
+        // This is for convenience.
+        BonsaiSaver.AddBlackboardIfMissing(tree);
+
+        w.SwitchToViewModeIfRequired();
+      }
+
+      return w;
     }
   }
 }

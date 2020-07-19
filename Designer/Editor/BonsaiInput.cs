@@ -26,6 +26,7 @@ namespace Bonsai.Designer
 
     public event EventHandler<BonsaiInputEvent> MouseDown;
     public event EventHandler<BonsaiInputEvent> Click;
+    public event EventHandler<BonsaiInputEvent> DoubleClick;
     public event EventHandler<BonsaiInputEvent> MouseUp;
     public event EventHandler<BonsaiNode> NodeContextClick;
     public event EventHandler CanvasContextClick;
@@ -38,7 +39,12 @@ namespace Bonsai.Designer
     public event EventHandler CanvasLostFocus;
 
     // Keeps track of time between mouse down and mouse up to determine if the event was a click.
-    private readonly System.Timers.Timer clickTimer = new System.Timers.Timer(100);
+    private readonly System.Timers.Timer clickTimer = new System.Timers.Timer(120);
+
+    private readonly System.Timers.Timer doubleClickTimer = new System.Timers.Timer(400);
+
+    // Keeps track of the number of quick clicks in succession. The time threshold is determined by clickTimer.
+    private int quickClicksCount = 0;
 
     public IReadOnlySelection selection;
 
@@ -48,6 +54,10 @@ namespace Bonsai.Designer
     {
       // Clicks are one-shot events.
       clickTimer.AutoReset = false;
+      doubleClickTimer.AutoReset = false;
+
+      // Double click time limit reached.
+      doubleClickTimer.Elapsed += (s, e) => quickClicksCount = 0;
 
       // Setup Node Selection menu.
       foreach (var kvp in BonsaiEditor.Behaviours)
@@ -101,6 +111,11 @@ namespace Bonsai.Designer
     {
       if (IsClickAction(e))
       {
+        if (quickClicksCount == 0)
+        {
+          doubleClickTimer.Start();
+        }
+
         clickTimer.Start();
         MouseDown?.Invoke(this, CreateInputEvent(t, nodes));
       }
@@ -115,7 +130,20 @@ namespace Bonsai.Designer
           Click?.Invoke(this, inputEvent);
         }
 
-        // Reset for next click.
+        // Collect quick, consecutive clicks.
+        if (doubleClickTimer.Enabled)
+        {
+          quickClicksCount++;
+        }
+
+        // Double click event occured.
+        if (quickClicksCount >= 2)
+        {
+          DoubleClick?.Invoke(this, inputEvent);
+          doubleClickTimer.Stop();
+          quickClicksCount = 0;
+        }
+
         clickTimer.Stop();
         MouseUp?.Invoke(this, inputEvent);
       }
@@ -318,6 +346,7 @@ namespace Bonsai.Designer
     public void Dispose()
     {
       clickTimer.Dispose();
+      doubleClickTimer.Dispose();
     }
   }
 }

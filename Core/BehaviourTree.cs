@@ -453,66 +453,7 @@ namespace Bonsai.Core
         cloneBt.allNodes[i].OnCopy();
       }
 
-      IncludeTreeReferences(cloneBt);
-
       return cloneBt;
-    }
-
-    public static void IncludeTreeReferences(BehaviourTree mainTree)
-    {
-      var includes = mainTree.GetNodes<Include>().ToArray();
-
-      foreach (Include include in includes)
-      {
-        // Clone each individual tree independently.
-        BehaviourTree subtree = Clone(include.tree);
-
-        BehaviourNode includeParent = include.Parent;
-        BehaviourNode subtreeRoot = subtree.Root;
-
-        // The root node must now be the child of the parent of the include.
-        if (includeParent)
-        {
-          subtreeRoot._indexOrder = include._indexOrder;
-          includeParent.ForceSetChild(subtreeRoot);
-        }
-
-        // If the include node is the root, then just make the subtree the root.
-        else if (include.preOrderIndex == 0)
-        {
-          mainTree.Root = subtreeRoot;
-        }
-
-#if UNITY_EDITOR
-        Vector2 deltaFromSubrootToInclude = include.bonsaiNodePosition - subtreeRoot.bonsaiNodePosition;
-#endif
-
-        // The nodes of the included tree, must now reference the main tree.
-        foreach (BehaviourNode b in subtree.AllNodes)
-        {
-          b.ClearTree();
-          b.Tree = mainTree;
-
-#if UNITY_EDITOR
-          // Offset the sub tree nodes so they are placed under the include node.
-          b.bonsaiNodePosition += deltaFromSubrootToInclude;
-#endif
-        }
-      }
-
-      mainTree.allNodes.RemoveAll(node => includes.Contains(node));
-
-      // Destroy the include nodes.
-      foreach (Include i in includes)
-      {
-        Destroy(i);
-      }
-
-      // After everything is included, we need to resort the tree nodes in pre order with the new included nodes.
-      if (includes.Any())
-      {
-        mainTree.SortNodes();
-      }
     }
 
     /// <summary>
@@ -592,9 +533,10 @@ namespace Bonsai.Core
     [ContextMenu("Add Blackboard")]
     void AddBlackboardAsset()
     {
-      if (_blackboard == null)
+      if (_blackboard == null && !EditorApplication.isPlaying)
       {
         _blackboard = CreateInstance<Blackboard>();
+        _blackboard.hideFlags = HideFlags.HideInHierarchy;
         AssetDatabase.AddObjectToAsset(_blackboard, this);
       }
     }

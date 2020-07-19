@@ -1,8 +1,8 @@
 ﻿
-using UnityEngine;
-
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -12,10 +12,40 @@ namespace Bonsai.Standard
     [Tooltip("The tree asset to include in this tree.")]
     public BehaviourTree tree;
 
+    public BehaviourTree RunningTree { get; private set; }
+
+    public override void OnStart()
+    {
+      if (tree)
+      {
+        RunningTree = BehaviourTree.Clone(tree);
+        RunningTree.actor = Actor;
+        RunningTree.Start();
+      }
+    }
+
     public override Status Run()
     {
-      // This task never runs. It is symbolic in the editor and is replaced in runtime but the subtree asset.
-      throw new UnityException("The Include task should never run.");
+      if (RunningTree)
+      {
+        RunningTree.Update();
+        return RunningTree.IsRunning() ? Status.Running : RunningTree.LastStatus();
+      }
+
+      // No tree was included. Just fail.
+      return Status.Failure;
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      if (tree)
+      {
+        builder.AppendFormat("Include {0}", tree.name);
+      }
+      else
+      {
+        builder.Append("Tree not set");
+      }
     }
   }
 }

@@ -53,6 +53,7 @@ namespace Bonsai.Designer
       Input.selection = NodeSelection;
       Input.MouseDown += MouseDown;
       Input.Click += Clicked;
+      Input.DoubleClick += DoubleClicked;
       Input.MouseUp += MouseUp;
       Input.CanvasLostFocus += CanvasLostFocus;
       Input.NodeContextClick += NodeContextClicked;
@@ -135,7 +136,7 @@ namespace Bonsai.Designer
         return;
       }
 
-      if (inputEvent.IsPortFocused())
+      if (inputEvent.IsPortFocused() && EditorMode.Value == Mode.Edit)
       {
         StartConnection(inputEvent);
       }
@@ -183,6 +184,19 @@ namespace Bonsai.Designer
       if (!Event.current.control && inputEvent.node != null && NodeSelection.IsMultiSelection)
       {
         NodeSelection.SetSingleSelection(inputEvent.node);
+      }
+    }
+
+    private void DoubleClicked(object sender, BonsaiInputEvent inputEvent)
+    {
+      if (inputEvent.node != null)
+      {
+        // Open sub-tree
+        var include = inputEvent.node.Behaviour as Standard.Include;
+        if (include)
+        {
+          OpenIncludedSubTree(include);
+        }
       }
     }
 
@@ -320,6 +334,11 @@ namespace Bonsai.Designer
     {
       var nodes = EditorMultiDrag.StartDrag(NodeSelection.SelectedNodes, startEvent.canvasMousePostion);
       MotionAction = (CanvasTransform t) => EditorMultiDrag.Drag(BonsaiInput.MousePosition(t), nodes);
+    }
+
+    private void OpenIncludedSubTree(Standard.Include include)
+    {
+      BonsaiWindow.OpenTree(include.RunningTree, Mode.View);
     }
 
     public void SetBehaviourTree(BehaviourTree tree)

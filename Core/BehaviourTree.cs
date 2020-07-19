@@ -10,13 +10,13 @@ namespace Bonsai.Core
   [CreateAssetMenu(fileName = "BonsaiBT", menuName = "Bonsai/Behaviour Tree")]
   public class BehaviourTree : ScriptableObject
   {
-    private BehaviourIterator _mainIterator;
+    private BehaviourIterator mainIterator;
 
     // Only conditional decorator nodes can have observer properties.
-    private List<ConditionalAbort> _observerAborts;
+    private List<ConditionalAbort> observerAborts;
 
     // Store references to the parallel nodes;
-    private Parallel[] _parallelNodes;
+    private Parallel[] parallelNodes;
 
     /// <summary>
     /// Nodes that are allowed to update on tree tick.
@@ -101,13 +101,13 @@ namespace Bonsai.Core
         node.OnStart();
       }
 
-      _mainIterator.Traverse(_root);
+      mainIterator.Traverse(_root);
       isTreeInitialized = true;
     }
 
     public void Update()
     {
-      if (isTreeInitialized && _mainIterator.IsRunning)
+      if (isTreeInitialized && mainIterator.IsRunning)
       {
 
         if (treeTickNodes.Length != 0)
@@ -115,12 +115,12 @@ namespace Bonsai.Core
           NodeTreeTick();
         }
 
-        if (_observerAborts.Count != 0)
+        if (observerAborts.Count != 0)
         {
           TickObservers();
         }
 
-        _mainIterator.Update();
+        mainIterator.Update();
       }
     }
 
@@ -139,10 +139,10 @@ namespace Bonsai.Core
 
       CalculateTreeOrders();
 
-      _mainIterator = new BehaviourIterator(this, 0);
+      mainIterator = new BehaviourIterator(this, 0);
 
       // Setup a new list for the observer nodes.
-      _observerAborts = new List<ConditionalAbort>();
+      observerAborts = new List<ConditionalAbort>();
 
       CacheObservers();
       CacheTreeTickNodes();
@@ -151,8 +151,8 @@ namespace Bonsai.Core
 
     private void CacheObservers()
     {
-      _observerAborts.Clear();
-      _observerAborts.AddRange(
+      observerAborts.Clear();
+      observerAborts.AddRange(
         GetNodes<ConditionalAbort>()
         .Where(node => node.abortType != AbortType.None));
     }
@@ -166,9 +166,9 @@ namespace Bonsai.Core
     {
       SyncParallelIterators();
 
-      _root._iterator = _mainIterator;
+      _root._iterator = mainIterator;
 
-      BehaviourIterator itr = _mainIterator;
+      BehaviourIterator itr = mainIterator;
       var parallelRoots = new Stack<BehaviourNode>();
 
       // This function handles assigning the iterator and skipping nodes.
@@ -206,10 +206,10 @@ namespace Bonsai.Core
 
     private void SyncParallelIterators()
     {
-      _parallelNodes = GetNodes<Parallel>().ToArray();
+      parallelNodes = GetNodes<Parallel>().ToArray();
 
       // Cache the parallel nodes and syn their iterators.
-      foreach (Parallel p in _parallelNodes)
+      foreach (Parallel p in parallelNodes)
       {
         p.SyncSubIterators();
       }
@@ -224,9 +224,9 @@ namespace Bonsai.Core
       // Since the parallel count is usually small, we 
       // can just do a linear iteration to interrupt multiple
       // parallel nodes.
-      for (int pIndex = 0; pIndex < _parallelNodes.Length; ++pIndex)
+      for (int pIndex = 0; pIndex < parallelNodes.Length; ++pIndex)
       {
-        Parallel p = _parallelNodes[pIndex];
+        Parallel p = parallelNodes[pIndex];
 
         if (IsUnderSubtree(subroot, p))
         {
@@ -291,9 +291,9 @@ namespace Bonsai.Core
     // the tree picks the highest order abort (left most).
     private void TickObservers()
     {
-      for (int i = 0; i < _observerAborts.Count; ++i)
+      for (int i = 0; i < observerAborts.Count; ++i)
       {
-        ConditionalAbort node = _observerAborts[i];
+        ConditionalAbort node = observerAborts[i];
 
         // The iterator must be running since aborts can only occur under 
         // actively running subtrees.
@@ -362,12 +362,12 @@ namespace Bonsai.Core
 
     public bool IsRunning()
     {
-      return _mainIterator != null && _mainIterator.IsRunning;
+      return mainIterator != null && mainIterator.IsRunning;
     }
 
     public BehaviourNode.Status LastStatus()
     {
-      return _mainIterator.LastStatusReturned;
+      return mainIterator.LastStatusReturned;
     }
 
     public int Height { get; private set; } = 0;

@@ -338,7 +338,17 @@ namespace Bonsai.Designer
 
     private void OpenIncludedSubTree(Standard.Include include)
     {
-      BonsaiWindow.OpenTree(include.RunningTree, Mode.View);
+      if (include.RunningSubTree)
+      {
+        BonsaiWindow.OpenTree(include.RunningSubTree, Mode.View);
+      }
+
+      // Shortcut to open include tree from Include node.
+      // Only works in edit mode. View mode is reserved for running tree instances.
+      else if (include.subtreeAsset && IsEditMode)
+      {
+        BonsaiWindow.OpenTree(include.subtreeAsset, Mode.Edit);
+      }
     }
 
     public void SetBehaviourTree(BehaviourTree tree)

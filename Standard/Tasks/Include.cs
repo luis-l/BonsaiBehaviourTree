@@ -9,27 +9,27 @@ namespace Bonsai.Standard
   [BonsaiNode("Tasks/", "TreeIcon")]
   public class Include : Task
   {
-    [Tooltip("The tree asset to include in this tree.")]
-    public BehaviourTree tree;
+    [Tooltip("The sub-tree to run when this task executes.")]
+    public BehaviourTree subtreeAsset;
 
-    public BehaviourTree RunningTree { get; private set; }
+    public BehaviourTree RunningSubTree { get; private set; }
 
     public override void OnStart()
     {
-      if (tree)
+      if (subtreeAsset)
       {
-        RunningTree = BehaviourTree.Clone(tree);
-        RunningTree.actor = Actor;
-        RunningTree.Start();
+        RunningSubTree = BehaviourTree.Clone(subtreeAsset);
+        RunningSubTree.actor = Actor;
+        RunningSubTree.Start();
       }
     }
 
     public override Status Run()
     {
-      if (RunningTree)
+      if (RunningSubTree)
       {
-        RunningTree.Update();
-        return RunningTree.IsRunning() ? Status.Running : RunningTree.LastStatus();
+        RunningSubTree.Update();
+        return RunningSubTree.IsRunning() ? Status.Running : RunningSubTree.LastStatus();
       }
 
       // No tree was included. Just fail.
@@ -38,9 +38,9 @@ namespace Bonsai.Standard
 
     public override void Description(StringBuilder builder)
     {
-      if (tree)
+      if (subtreeAsset)
       {
-        builder.AppendFormat("Include {0}", tree.name);
+        builder.AppendFormat("Include {0}", subtreeAsset.name);
       }
       else
       {

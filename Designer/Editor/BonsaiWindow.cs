@@ -471,7 +471,7 @@ namespace Bonsai.Designer
     /// <param name="line"></param>
     /// <returns></returns>
     [OnOpenAsset(0)]
-    private static bool OpenCanvasAsset(int instanceID, int line)
+    static bool OpenCanvasAsset(int instanceID, int line)
     {
       var tree = EditorUtility.InstanceIDToObject(instanceID) as BehaviourTree;
       BonsaiWindow w = OpenTree(tree);

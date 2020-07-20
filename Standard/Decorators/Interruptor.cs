@@ -1,9 +1,9 @@
 ﻿
 using System.Collections.Generic;
-using UnityEngine;
-
+using System.Linq;
 using Bonsai.Core;
 using Bonsai.Designer;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -12,15 +12,14 @@ namespace Bonsai.Standard
   {
     [Tooltip("If true, then the interruptable node return success else failure.")]
     public bool returnSuccess = false;
+
     public List<Interruptable> linkedInterruptables = new List<Interruptable>();
 
     public override Status Run()
     {
       for (int i = 0; i < linkedInterruptables.Count; ++i)
       {
-
         Status interruptionStatus = returnSuccess ? Status.Success : Status.Failure;
-
         linkedInterruptables[i].PerformInterruption(interruptionStatus);
       }
 
@@ -29,10 +28,11 @@ namespace Bonsai.Standard
 
     public override void OnCopy()
     {
-      for (int i = 0; i < linkedInterruptables.Count; ++i)
-      {
-        linkedInterruptables[i] = BehaviourTree.GetInstanceVersion<Interruptable>(Tree, linkedInterruptables[i]);
-      }
+      // Only get the instance version of interruptables under the tree root.
+      linkedInterruptables = linkedInterruptables
+        .Where(i => i.PreOrderIndex != kInvalidOrder)
+        .Select(i => BehaviourTree.GetInstanceVersion<Interruptable>(Tree, i))
+        .ToList();
     }
 
     public override BehaviourNode[] GetReferencedNodes()

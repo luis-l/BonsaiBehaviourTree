@@ -1,29 +1,28 @@
 ﻿
-using Bonsai.Designer;
 using Bonsai.Core;
+using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
   [BonsaiNode("Decorators/", "Interruptable")]
   public class Interruptable : Decorator
   {
-    public bool _bIsRunning = false;
-
-    private Status _statusToReturn = Status.Failure;
-    private bool _bInterrupted = false;
+    private bool isRunning = false;
+    private Status returnStatus = Status.Failure;
+    private bool isInterrupted = false;
 
     public override void OnEnter()
     {
-      _bIsRunning = true;
-      _bInterrupted = false;
+      isRunning = true;
+      isInterrupted = false;
       base.OnEnter();
     }
 
     public override Status Run()
     {
-      if (_bInterrupted)
+      if (isInterrupted)
       {
-        return _statusToReturn;
+        return returnStatus;
       }
 
       return _iterator.LastStatusReturned;
@@ -31,16 +30,15 @@ namespace Bonsai.Standard
 
     public override void OnExit()
     {
-      _bIsRunning = false;
+      isRunning = false;
     }
 
     public void PerformInterruption(Status interruptionStatus)
     {
-      if (_bIsRunning)
+      if (isRunning)
       {
-
-        _bInterrupted = true;
-        _statusToReturn = interruptionStatus;
+        isInterrupted = true;
+        returnStatus = interruptionStatus;
         Tree.Interrupt(this);
       }
     }

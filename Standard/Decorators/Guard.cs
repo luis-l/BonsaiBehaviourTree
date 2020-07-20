@@ -1,10 +1,10 @@
 ﻿
 using System.Collections.Generic;
-using UnityEngine;
-
+using System.Linq;
+using System.Text;
 using Bonsai.Core;
 using Bonsai.Designer;
-using System.Text;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -13,9 +13,10 @@ namespace Bonsai.Standard
   {
     public int maxActiveGuards = 1;
 
-    [Tooltip("If true, then the guard will stay running until the child" +
-        "can be used (active guard count < max active guards), else " +
-        "the guard will immediately return.")]
+    [Tooltip(
+      @"If true, then the guard will stay running until the child
+      can be used (active guard count < max active guards), else
+      the guard will immediately return.")]
     public bool waitUntilChildAvailable = false;
 
     [Tooltip("When the guard does not wait, should we return success of failure when skipping it?")]
@@ -24,8 +25,8 @@ namespace Bonsai.Standard
     [HideInInspector]
     public List<Guard> linkedGuards = new List<Guard>();
 
-    private int _runningGuards = 0;
-    private bool _bChildRan = false;
+    private int runningGuards = 0;
+    private bool childRan = false;
 
     public override void OnEnter()
     {
@@ -36,12 +37,12 @@ namespace Bonsai.Standard
     {
       // If we enter the run state of the guard, that means
       // the child already returned.
-      if (_bChildRan)
+      if (childRan)
       {
         return _iterator.LastStatusReturned;
       }
 
-      bool bGuardsAvailable = isRunningGuardsAvailable();
+      bool bGuardsAvailable = IsRunningGuardsAvailable();
 
       // Cannot wait for the child, return.
       if (!waitUntilChildAvailable && !bGuardsAvailable)
@@ -49,16 +50,15 @@ namespace Bonsai.Standard
         return returnSuccessOnSkip ? Status.Success : Status.Failure;
       }
 
-      else if (!_bChildRan && bGuardsAvailable)
+      else if (!childRan && bGuardsAvailable)
       {
-
         // Notify the other guards that this guard runned its child.
         for (int i = 0; i < linkedGuards.Count; ++i)
         {
-          linkedGuards[i]._runningGuards += 1;
+          linkedGuards[i].runningGuards += 1;
         }
 
-        _bChildRan = true;
+        childRan = true;
         _iterator.Traverse(Child);
       }
 
@@ -67,34 +67,34 @@ namespace Bonsai.Standard
     }
 
     // Makes sure that the running guards does not exceed that max capacity.
-    private bool isRunningGuardsAvailable()
+    private bool IsRunningGuardsAvailable()
     {
-      return _runningGuards < maxActiveGuards;
+      return runningGuards < maxActiveGuards;
     }
 
     public override void OnExit()
     {
-      if (_bChildRan)
+      if (childRan)
       {
-
-        _runningGuards -= 1;
+        runningGuards -= 1;
 
         // Notify the rest of the guards that this guard finished.
         for (int i = 0; i < linkedGuards.Count; ++i)
         {
-          linkedGuards[i]._runningGuards -= 1;
+          linkedGuards[i].runningGuards -= 1;
         }
       }
 
-      _bChildRan = false;
+      childRan = false;
     }
 
     public override void OnCopy()
     {
-      for (int i = 0; i < linkedGuards.Count; ++i)
-      {
-        linkedGuards[i] = BehaviourTree.GetInstanceVersion<Guard>(Tree, linkedGuards[i]);
-      }
+      // Only get the instance version of guards under the tree root.
+      linkedGuards = linkedGuards
+        .Where(i => i.PreOrderIndex != kInvalidOrder)
+        .Select(i => BehaviourTree.GetInstanceVersion<Guard>(Tree, i))
+        .ToList();
     }
 
     public override BehaviourNode[] GetReferencedNodes()

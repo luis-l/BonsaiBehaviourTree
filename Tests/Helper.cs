@@ -47,7 +47,6 @@ namespace Tests
     public static void StartBehaviourTree(BehaviourTree tree)
     {
       tree.SetBlackboard(ScriptableObject.CreateInstance<Blackboard>());
-      tree.SortNodes();
       tree.Start();
       tree.BeginTraversal();
     }
@@ -65,7 +64,6 @@ namespace Tests
     public static BehaviourNode.Status RunBehaviourTree(BehaviourTree tree)
     {
       StartBehaviourTree(tree);
-
       while (tree.IsRunning())
       {
         tree.Update();
@@ -79,23 +77,21 @@ namespace Tests
       return ScriptableObject.CreateInstance<BehaviourTree>();
     }
 
-    static public T CreateNode<T>(BehaviourTree tree) where T : BehaviourNode
+    static public T CreateNode<T>() where T : BehaviourNode
     {
-      var node = ScriptableObject.CreateInstance<T>();
-      node.Tree = tree;
-      return node;
+      return ScriptableObject.CreateInstance<T>();
     }
 
-    static public TestNode PassNode(BehaviourTree tree)
+    static public TestNode PassNode()
     {
-      var node = CreateNode<TestNode>(tree);
+      var node = CreateNode<TestNode>();
       node.ReturnStatus = BehaviourNode.Status.Success;
       return node;
     }
 
-    static public TestNode FailNode(BehaviourTree tree)
+    static public TestNode FailNode()
     {
-      var node = CreateNode<TestNode>(tree);
+      var node = CreateNode<TestNode>();
       node.ReturnStatus = BehaviourNode.Status.Failure;
       return node;
     }

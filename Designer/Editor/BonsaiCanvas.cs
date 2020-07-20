@@ -24,9 +24,11 @@ namespace Bonsai.Designer
     public BonsaiCanvas(BehaviourTree tree)
     {
       Tree = tree;
-      var nodeMap = ReconstructEditorNodes(tree.AllNodes);
-      ReconstructEditorConnections(nodeMap);
-      Root = nodes.FirstOrDefault(node => node.Behaviour == Tree.Root);
+      {
+        var nodeMap = ReconstructEditorNodes(tree.AllNodes.Concat(tree.unusedNodes));
+        ReconstructEditorConnections(nodeMap);
+        Root = nodes.FirstOrDefault(n => n.Behaviour == tree.Root);
+      }
     }
 
     /// <summary>
@@ -48,23 +50,6 @@ namespace Bonsai.Designer
     {
       var node = CreateEditorNode(behaviour.GetType());
       node.Behaviour = behaviour;
-      return node;
-    }
-
-    // Creates an editor node.
-    private BonsaiNode CreateEditorNode(Type behaviourType)
-    {
-      var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
-      var tex = BonsaiPreferences.Texture(prop.texName);
-      var node = AddEditorNode(prop.addOutput, tex);
-      return node;
-    }
-
-    // Creates and adds an editor node to the canvas.
-    private BonsaiNode AddEditorNode(bool addOutput, Texture icon = null)
-    {
-      var node = new BonsaiNode(addOutput, icon);
-      nodes.Add(node);
       return node;
     }
 
@@ -110,7 +95,14 @@ namespace Bonsai.Designer
 
     public void SetRoot(BonsaiNode newRoot)
     {
-      Root = newRoot;
+      if (newRoot.Parent == null)
+      {
+        Root = newRoot;
+      }
+      else
+      {
+        Debug.LogWarning("Root cannot be a child.");
+      }
     }
 
     public void AddChild(BonsaiNode parent, BonsaiNode child)
@@ -134,6 +126,31 @@ namespace Bonsai.Designer
       {
         child.SetParent(parent);
       }
+    }
+
+    public void SortNodes()
+    {
+      foreach (BonsaiNode node in nodes)
+      {
+        node.SortChildren();
+      }
+    }
+
+    // Creates an editor node.
+    private BonsaiNode CreateEditorNode(Type behaviourType)
+    {
+      var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
+      var tex = BonsaiPreferences.Texture(prop.texName);
+      var node = AddEditorNode(prop.addOutput, tex);
+      return node;
+    }
+
+    // Creates and adds an editor node to the canvas.
+    private BonsaiNode AddEditorNode(bool addOutput, Texture icon = null)
+    {
+      var node = new BonsaiNode(addOutput, icon);
+      nodes.Add(node);
+      return node;
     }
 
     /// <summary>
@@ -164,28 +181,26 @@ namespace Bonsai.Designer
       return false;
     }
 
-    public void SortNodes()
-    {
-      foreach (BonsaiNode node in nodes)
-      {
-        node.SortChildren();
-      }
-    }
-
     // Reconstruct editor nodes from the tree.
-    private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes(IEnumerable<BehaviourNode> treeBehaviours)
+    private Dictionary<BehaviourNode, BonsaiNode> ReconstructEditorNodes(IEnumerable<BehaviourNode> behaviours)
     {
       var nodeMap = new Dictionary<BehaviourNode, BonsaiNode>();
 
-      foreach (BehaviourNode behaviour in treeBehaviours)
+      foreach (BehaviourNode behaviour in behaviours)
       {
-        BonsaiNode node = CreateNode(behaviour);
-        node.Behaviour = behaviour;
-        node.Position = behaviour.bonsaiNodePosition;
+        BonsaiNode node = ReconstructEditorNode(behaviour);
         nodeMap.Add(behaviour, node);
       }
 
       return nodeMap;
+    }
+
+    private BonsaiNode ReconstructEditorNode(BehaviourNode behaviour)
+    {
+      BonsaiNode node = CreateNode(behaviour);
+      node.Behaviour = behaviour;
+      node.Position = behaviour.bonsaiNodePosition;
+      return node;
     }
 
     // Reconstruct the editor connections from the tree.
@@ -194,7 +209,8 @@ namespace Bonsai.Designer
       // Create the connections
       foreach (BonsaiNode node in nodes)
       {
-        for (int i = 0; i < node.Behaviour.ChildCount(); ++i)
+        int childCount = node.Behaviour.ChildCount();
+        for (int i = 0; i < childCount; i++)
         {
           BehaviourNode child = node.Behaviour.GetChildAt(i);
           nodeMap[child].SetParent(node);

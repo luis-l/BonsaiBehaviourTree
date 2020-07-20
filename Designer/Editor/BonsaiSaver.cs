@@ -1,6 +1,7 @@
 ﻿
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using Bonsai.Core;
 using UnityEditor;
 using UnityEngine;
@@ -144,16 +145,12 @@ namespace Bonsai.Designer
       // If the blackboard is not yet in the database, then add.
       AddBlackboardIfMissing(canvas.Tree);
 
-      var treeBehaviours = canvas.Tree.AllNodes;
       var canvasBehaviours = canvas.Nodes.Select(n => n.Behaviour);
 
-      // New nodes that need to be added to the database.
-      foreach (BehaviourNode newNodes in canvasBehaviours.Except(treeBehaviours))
-      {
-        newNodes.name = newNodes.GetType().Name;
-        newNodes.hideFlags = HideFlags.HideInHierarchy;
-        AssetDatabase.AddObjectToAsset(newNodes, canvas.Tree);
-      }
+      AddNewNodeAssets(
+        canvas.Tree,
+        canvas.Tree.AllNodes.Concat(canvas.Tree.unusedNodes),
+        canvasBehaviours);
 
       // Clear all parent-child connections. These will be reconstructed to match the connection in the BonsaiNodes.
       canvas.Tree.ClearStructure();
@@ -175,21 +172,32 @@ namespace Bonsai.Designer
       }
 
       // Re-add nodes to tree.
-      foreach (BonsaiNode node in canvas.Nodes)
-      {
-        node.Behaviour.Tree = canvas.Tree;
-      }
-
       if (canvas.Root != null)
       {
-        canvas.Tree.Root = canvas.Root.Behaviour;
+        canvas.Tree.SetNodes(canvas.Root.Behaviour);
       }
 
-      // Sort the nodes in pre order so it is easier to clone the tree.
-      canvas.Tree.SortNodes();
+      // Nodes not connected to he root will have an unset pre-order index.
+      // Tree.ClearStructure unsets the index and is only set in Tree.SetNodes
+      // for nodes under the root.
+      canvas.Tree.unusedNodes = canvasBehaviours.Where(
+        b => b.PreOrderIndex == BehaviourNode.kInvalidOrder).ToList();
 
       SaveTreeMetaData(meta, canvas);
       AssetDatabase.SaveAssets();
+    }
+
+    private void AddNewNodeAssets(
+      BehaviourTree treeAsset,
+      IEnumerable<BehaviourNode> assetNodes,
+      IEnumerable<BehaviourNode> canvasNodes)
+    {
+      foreach (BehaviourNode newNodes in canvasNodes.Except(assetNodes))
+      {
+        newNodes.name = newNodes.GetType().Name;
+        newNodes.hideFlags = HideFlags.HideInHierarchy;
+        AssetDatabase.AddObjectToAsset(newNodes, treeAsset);
+      }
     }
 
     private void SaveTreeMetaData(TreeMetaData meta, BonsaiCanvas canvas)

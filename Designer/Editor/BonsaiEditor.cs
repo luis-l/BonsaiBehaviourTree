@@ -237,7 +237,7 @@ namespace Bonsai.Designer
 
     private void OnAbortSelected(object sender, ConditionalAbort abort)
     {
-      UpdateOrderIndices();
+      // TODO: Hightlight abortable nodes.
     }
 
     private void OnCanvasChanged()
@@ -444,11 +444,6 @@ namespace Bonsai.Designer
         node.UpdateGui();
         node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
       }
-    }
-
-    public void UpdateOrderIndices()
-    {
-      Canvas.Tree.CalculateTreeOrders();
     }
 
     #region Node Type Properties

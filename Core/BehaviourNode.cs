@@ -18,35 +18,22 @@ namespace Bonsai.Core
 
     public const int kInvalidOrder = -1;
 
-    [SerializeField, HideInInspector]
-    private BehaviourTree _parentTree = null;
+    internal BehaviourTree treeOwner = null;
 
     [SerializeField, HideInInspector]
     internal int preOrderIndex = 0;
 
-    [SerializeField, HideInInspector]
     internal int postOrderIndex = 0;
-
-    [SerializeField, HideInInspector]
     internal int levelOrder = 0;
 
-    [SerializeField, HideInInspector]
-    protected internal BehaviourNode _parent;
+    public BehaviourNode Parent { get; private set; }
 
     internal BehaviourIterator _iterator;
 
     /// <summary>
     /// The order of the node relative to its parent.
-    /// This value is only changed in the Composite node, since
-    /// that can affect the index value in the AddChild() and RemoveChild().
-    ///
-    /// This value is mainly used when the iterator needs to jump to a child
-    /// of a composite node.
-    ///
-    /// It is also used in tree cloning.
     /// </summary>
-    [SerializeField, HideInInspector]
-    protected internal int _indexOrder = 0;
+    protected internal int indexOrder = 0;
 
     protected virtual void OnEnable() { }
 
@@ -151,22 +138,7 @@ namespace Bonsai.Core
     /// </summary>
     public BehaviourTree Tree
     {
-      get { return _parentTree; }
-
-      set
-      {
-        if (!_parentTree)
-        {
-
-          _parentTree = value;
-          _parentTree.allNodes.Add(this);
-        }
-
-        else
-        {
-          Debug.LogError("The tree can only be set once.");
-        }
-      }
+      get { return treeOwner; }
     }
 
     /// <summary>
@@ -174,7 +146,7 @@ namespace Bonsai.Core
     /// </summary>
     public int ChildOrder
     {
-      get { return _indexOrder; }
+      get { return indexOrder; }
     }
 
     /// <summary>
@@ -198,31 +170,6 @@ namespace Bonsai.Core
       get { return levelOrder; }
     }
 
-    /// <summary>
-    /// Gets and Sets the Node's parent.
-    /// </summary>
-    public BehaviourNode Parent
-    {
-      get { return _parent; }
-      set
-      {
-        // If there is no parent associated.
-        if (_parent == null)
-        {
-
-          // Assign the parent.
-          _parent = value;
-        }
-
-        // Error. Need to remove the old parent first, before setting a new one.
-        else
-        {
-          Debug.LogWarning("Behaviour Node already has a parent!");
-          Debug.Log("Remove the current parent first if you wish to set a new one.");
-        }
-      }
-    }
-
     public BehaviourIterator Iterator
     {
       get { return _iterator; }
@@ -233,7 +180,7 @@ namespace Bonsai.Core
     /// </summary>
     protected Blackboard Blackboard
     {
-      get { return _parentTree.Blackboard; }
+      get { return treeOwner.Blackboard; }
     }
 
     /// <summary>
@@ -241,46 +188,59 @@ namespace Bonsai.Core
     /// </summary>
     protected GameObject Actor
     {
-      get { return _parentTree.actor; }
+      get { return treeOwner.actor; }
     }
 
-    /// <summary>
-    /// DANGER. Directly sets the tree reference to null.
-    /// </summary>
-    internal void ClearTree()
-    {
-      _parentTree = null;
-    }
 
     public abstract BehaviourNode GetChildAt(int index);
     public abstract int ChildCount();
+    public abstract int MaxChildCount();
 
-    /// <summary>
-    /// DANGER.
-    /// A method that removes the reference to the parent.
-    /// NOTE: This method is only used to help clone nodes.
-    /// There is no need for you to use it!.
-    /// </summary>
-    internal void ClearParent()
+    // The current tree implementation does a "add-only" approach
+    // to simplify handling. This is because once a tree is built,
+    // it will never change during execution.
+    //
+    // The general work flow to change children: 
+    //   remove all children, add new children.
+    //
+    // This should be good enough for current use case.
+    public void AddChild(BehaviourNode child)
     {
-      _parent = null;
+      // If unparented, add node.
+      if (!child.Parent)
+      {
+        AddChildOverride(child);
+      }
     }
 
     /// <summary>
-    /// DANGER! 
-    /// Directly sets the child (at its relative index.
-    /// This is used to help clone nodes.
+    /// Removes all children and unsets their parent node.
     /// </summary>
-    /// <param name="child"></param>
-    public abstract void ForceSetChild(BehaviourNode child);
+    public void RemoveChildren()
+    {
+      for (int i = 0; i < ChildCount(); i++)
+      {
+        GetChildAt(i).Parent = null;
+      }
 
-    // These are functions used by the Tree cloner and the editor.
-    public abstract void AddChild(BehaviourNode child);
-    public abstract void RemoveChild(BehaviourNode child);
-    public abstract void ClearChildren();
-    public abstract bool CanAddChild(BehaviourNode child);
+      RemoveChildrenInternal();
+    }
 
-    public abstract int MaxChildCount();
+    // Internal implementation to add a child to a node.
+    internal abstract void AddChildInternal(BehaviourNode node);
+
+    // Internal implementation to remove all children references.
+    internal abstract void RemoveChildrenInternal();
+
+    /// <summary>
+    /// Adds child regardless if it has a parent.
+    /// </summary>
+    internal void AddChildOverride(BehaviourNode child)
+    {
+      child.indexOrder = ChildCount();
+      AddChildInternal(child);
+      child.Parent = this;
+    }
 
     /// <summary>
     /// A summary description of the node.

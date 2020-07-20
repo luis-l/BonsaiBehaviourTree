@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Bonsai.Standard;
 using UnityEditor;
@@ -23,8 +24,10 @@ namespace Bonsai.Core
     /// </summary>
     private BehaviourNode[] treeTickNodes;
 
-    [SerializeField, HideInInspector]
-    private BehaviourNode _root;
+    public BehaviourNode Root
+    {
+      get { return allNodes.Count == 0 ? null : allNodes[0]; }
+    }
 
     private bool isTreeInitialized = false;
 
@@ -34,38 +37,6 @@ namespace Bonsai.Core
     /// </summary>
     public GameObject actor;
 
-    /// <summary>
-    /// Gets and sets the tree root.
-    /// </summary>
-    public BehaviourNode Root
-    {
-      get { return _root; }
-      set
-      {
-        // NOTE:
-        // Everytime we set the root, Start()
-        // must be called again in order to preprocess the tree.
-        isTreeInitialized = false;
-
-        if (value == null)
-        {
-          Debug.LogWarning("Cannot initialize with null node");
-          return;
-        }
-
-        // Setup root.
-        if (value.Parent == null)
-        {
-          _root = value;
-        }
-
-        else
-        {
-          Debug.LogWarning("Cannot set parented node as tree root.");
-        }
-      }
-    }
-
     [SerializeField, HideInInspector]
     private Blackboard _blackboard;
 
@@ -74,8 +45,10 @@ namespace Bonsai.Core
       get { return _blackboard; }
     }
 
+    // allNodes must always be kept in pre-order.
     [SerializeField, HideInInspector]
-    internal List<BehaviourNode> allNodes = new List<BehaviourNode>();
+    [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Unity cannot serialize readonly fields")]
+    private List<BehaviourNode> allNodes = new List<BehaviourNode>();
 
     public void SetBlackboard(Blackboard bb)
     {
@@ -91,7 +64,7 @@ namespace Bonsai.Core
     /// </summary>
     public void Start()
     {
-      if (_root == null)
+      if (Root == null)
       {
         Debug.LogWarning("Cannot start tree with a null root.");
         return;
@@ -137,7 +110,7 @@ namespace Bonsai.Core
     {
       if (isTreeInitialized && !mainIterator.IsRunning)
       {
-        mainIterator.Traverse(_root);
+        mainIterator.Traverse(Root);
       }
     }
 
@@ -148,13 +121,13 @@ namespace Bonsai.Core
     /// </summary>
     void PreProcess()
     {
-      if (_root == null)
+      if (Root == null)
       {
         Debug.Log("The tree must have a valid root in order to be pre-processed");
         return;
       }
 
-      CalculateTreeOrders();
+      SetPostandLevelOrders();
 
       mainIterator = new BehaviourIterator(this, 0);
 
@@ -183,7 +156,7 @@ namespace Bonsai.Core
     {
       SyncParallelIterators();
 
-      _root._iterator = mainIterator;
+      Root._iterator = mainIterator;
 
       BehaviourIterator itr = mainIterator;
       var parallelRoots = new Stack<BehaviourNode>();
@@ -206,7 +179,7 @@ namespace Bonsai.Core
       };
 
       // Assign the main iterator to nodes not under any parallel nodes.
-      TreeIterator<BehaviourNode>.Traverse(_root, delegate { }, skipAndAssign);
+      TreeIterator<BehaviourNode>.Traverse(Root, delegate { }, skipAndAssign);
 
       while (parallelRoots.Count != 0)
       {
@@ -266,25 +239,18 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Computes the pre and post orders of all nodes.
+    /// Sets the nodes post and level order numbering.
     /// </summary>
-    public void CalculateTreeOrders()
+    private void SetPostandLevelOrders()
     {
-      ResetOrderIndices();
-
       int orderCounter = 0;
       TreeIterator<BehaviourNode>.Traverse(
-        _root,
-        node => node.preOrderIndex = orderCounter++);
-
-      orderCounter = 0;
-      TreeIterator<BehaviourNode>.Traverse(
-        _root,
+        Root,
         node => node.postOrderIndex = orderCounter++,
         Traversal.PostOrder);
 
       TreeIterator<BehaviourNode>.Traverse(
-        _root,
+        Root,
         (node, itr) =>
         {
           node.levelOrder = itr.CurrentLevel;
@@ -389,6 +355,21 @@ namespace Bonsai.Core
 
     public int Height { get; private set; } = 0;
 
+    public void SetNodes(BehaviourNode root)
+    {
+      allNodes.Clear();
+      TreeIterator<BehaviourNode>.Traverse(
+        root,
+        node => AddNode(node));
+    }
+
+    private void AddNode(BehaviourNode node)
+    {
+      node.preOrderIndex = allNodes.Count;
+      node.treeOwner = this;
+      allNodes.Add(node);
+    }
+
     /// <summary>
     /// Gets the instantiated copy version of a behaviour node from its original version.
     /// </summary>
@@ -409,83 +390,57 @@ namespace Bonsai.Core
 
     /// <summary>
     /// Deep copies the tree.
-    /// Make sure that the original behaviour tree has its pre-orders calculated.
     /// </summary>
-    /// <param name="originalBT"></param>
-    /// <returns></returns>
-    public static BehaviourTree Clone(BehaviourTree originalBT)
+    /// <param name="sourceTree">The source tree to clone.</param>
+    /// <returns>The cloned tree.</returns>
+    public static BehaviourTree Clone(BehaviourTree sourceTree)
     {
-      var cloneBt = Instantiate(originalBT);
+      // The tree clone will be blank to start. We will duplicate blackboard and nodes.
+      var cloneBt = CreateInstance<BehaviourTree>();
 
-      if (originalBT._blackboard)
+      if (sourceTree._blackboard)
       {
-        cloneBt._blackboard = Instantiate(originalBT._blackboard);
+        cloneBt._blackboard = Instantiate(sourceTree._blackboard);
       }
 
-      cloneBt.allNodes.Clear();
-
-      Action<BehaviourNode> copier = (originalNode) =>
-      {
-        var nodeCopy = Instantiate(originalNode);
-
-        // Linke the root copy.
-        if (originalBT.Root == originalNode)
-        {
-          cloneBt.Root = nodeCopy;
-        }
-
-        // Nodes will be added in pre-order.
-        nodeCopy.ClearTree();
-        nodeCopy.Tree = cloneBt;
-      };
-
-      // Traversing in tree order will make sure that the runtime tree has its nodes properly sorted
-      // in pre-order and will also make sure that dangling nodes are left out (unconnected nodes from the editor).
-      TreeIterator<BehaviourNode>.Traverse(originalBT.Root, copier);
+      // This will add nodes in pre-order to the main node list.
+      TreeIterator<BehaviourNode>.Traverse(
+        sourceTree.Root,
+        node => cloneBt.AddNode(Instantiate(node)));
 
       // At this point the clone BT has its children in pre order order
       // and the original BT has pre-order indices calculated for each node.
       //
-      // RELINK children and parent associations of the cloned nodes.
+      // RELINK children and parents for the cloned nodes.
       // The clone node count is <= original node count because the editor may have dangling nodes.
       int maxCloneNodeCount = cloneBt.allNodes.Count;
       for (int i = 0; i < maxCloneNodeCount; ++i)
       {
+        BehaviourNode nodeSource = sourceTree.allNodes[i];
+        BehaviourNode copyNode = GetInstanceVersion(cloneBt, nodeSource);
 
-        BehaviourNode originalNode = originalBT.allNodes[i];
-        BehaviourNode originalParent = originalNode.Parent;
+        // When instantiating, the child list has references that point to the original.
+        // Need to clear when adding the cloned children.
+        copyNode.RemoveChildrenInternal();
 
-        if (originalParent)
+        // Child count for this node.
+        int childCount = nodeSource.ChildCount();
+
+        // Start from one since child pre-order indices are after parent pre-order index.
+        for (int childIndex = 0; childIndex < childCount; childIndex++)
         {
-
-          BehaviourNode copyNode = GetInstanceVersion(cloneBt, originalNode);
-          BehaviourNode copyParent = GetInstanceVersion(cloneBt, originalParent);
-
-          copyParent.ForceSetChild(copyNode);
+          BehaviourNode childSource = nodeSource.GetChildAt(childIndex);
+          BehaviourNode copyChild = GetInstanceVersion(cloneBt, childSource);
+          copyNode.AddChildOverride(copyChild);
         }
       }
 
-      for (int i = 0; i < maxCloneNodeCount; ++i)
+      foreach (BehaviourNode node in cloneBt.allNodes)
       {
-        cloneBt.allNodes[i].OnCopy();
+        node.OnCopy();
       }
 
       return cloneBt;
-    }
-
-    /// <summary>
-    /// Sorts the nodes in pre order.
-    /// </summary>
-    public void SortNodes()
-    {
-      CalculateTreeOrders();
-
-      // Moves back the dangling nodes to the end of the list and then
-      // sorts the nodes by pre-order.
-      allNodes = allNodes
-          .OrderBy(node => node.preOrderIndex == BehaviourNode.kInvalidOrder)
-          .ThenBy(node => node.preOrderIndex)
-          .ToList();
     }
 
     /// <summary>
@@ -498,22 +453,9 @@ namespace Bonsai.Core
       return allNodes[preOrderIndex];
     }
 
-    public IEnumerable<BehaviourNode> AllNodes
+    public IReadOnlyList<BehaviourNode> AllNodes
     {
       get { return allNodes; }
-    }
-
-    /// <summary>
-    /// Resets the pre and post order indices.
-    /// </summary>
-    public void ResetOrderIndices()
-    {
-      foreach (BehaviourNode b in allNodes)
-      {
-        b.preOrderIndex = BehaviourNode.kInvalidOrder;
-        b.postOrderIndex = BehaviourNode.kInvalidOrder;
-        b.levelOrder = BehaviourNode.kInvalidOrder;
-      }
     }
 
     /// <summary>
@@ -529,13 +471,13 @@ namespace Bonsai.Core
     {
       foreach (BehaviourNode node in allNodes)
       {
-        node.ClearChildren();
-        node.ClearTree();
+        node.preOrderIndex = BehaviourNode.kInvalidOrder;
+        node.indexOrder = 0;
+        node.RemoveChildren();
+        node.treeOwner = null;
       }
 
       allNodes.Clear();
-
-      _root = null;
     }
 
 #if UNITY_EDITOR
@@ -556,6 +498,13 @@ namespace Bonsai.Core
 
     [HideInInspector]
     public Vector2 zoomPosition = Vector2.one;
+
+    /// <summary>
+    /// Unused nodes are nodes that are not part of the root.
+    /// These are ignored when tree executes and excluded when cloning.
+    /// </summary>
+    [SerializeField, HideInInspector]
+    public List<BehaviourNode> unusedNodes = new List<BehaviourNode>();
 
 #endif
 

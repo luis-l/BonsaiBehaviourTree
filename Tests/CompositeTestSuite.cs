@@ -14,11 +14,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Sequence>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Sequence>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -29,11 +29,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Sequence>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Sequence>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);
@@ -44,11 +44,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<RandomSequence>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<RandomSequence>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -59,11 +59,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<RandomSequence>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<RandomSequence>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);
@@ -74,11 +74,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Selector>(tree);
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Selector>();
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -89,11 +89,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Selector>(tree);
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Selector>();
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);
@@ -104,11 +104,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<RandomSelector>(tree);
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<RandomSelector>();
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -119,11 +119,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<RandomSelector>(tree);
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<RandomSelector>();
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.FailNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);
@@ -134,11 +134,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Parallel>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Parallel>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -149,11 +149,11 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<Parallel>(tree);
-      root.AddChild(Helper.PassNode(tree));
-      root.AddChild(Helper.FailNode(tree));
-      root.AddChild(Helper.PassNode(tree));
-      tree.Root = root;
+      var root = Helper.CreateNode<Parallel>();
+      root.AddChild(Helper.PassNode());
+      root.AddChild(Helper.FailNode());
+      root.AddChild(Helper.PassNode());
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);
@@ -164,19 +164,19 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<UtilitySelector>(tree);
+      var root = Helper.CreateNode<UtilitySelector>();
 
-      var alpha = Helper.PassNode(tree).WithUtility(10f);
-      var beta = Helper.FailNode(tree).WithUtility(30f);
-      var delta = Helper.FailNode(tree).WithUtility(20f);
+      var alpha = Helper.PassNode().WithUtility(10f);
+      var beta = Helper.FailNode().WithUtility(30f);
+      var delta = Helper.FailNode().WithUtility(20f);
 
-      var alphaDecorator = Helper.CreateNode<Success>(tree);
+      var alphaDecorator = Helper.CreateNode<Success>();
       alphaDecorator.AddChild(alpha);
 
       root.AddChild(alphaDecorator);
       root.AddChild(beta);
       root.AddChild(delta);
-      tree.Root = root;
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -187,22 +187,22 @@ namespace Tests
     {
       BehaviourTree tree = Helper.CreateTree();
 
-      var root = Helper.CreateNode<UtilitySelector>(tree);
+      var root = Helper.CreateNode<UtilitySelector>();
 
-      var alpha = Helper.PassNode(tree).WithUtility(10f);
-      var beta = Helper.FailNode(tree).WithUtility(30f);
-      var delta = Helper.FailNode(tree).WithUtility(20f);
+      var alpha = Helper.PassNode().WithUtility(10f);
+      var beta = Helper.FailNode().WithUtility(30f);
+      var delta = Helper.FailNode().WithUtility(20f);
 
-      var alphaDecorator = Helper.CreateNode<Success>(tree);
+      var alphaDecorator = Helper.CreateNode<Success>();
       alphaDecorator.AddChild(alpha);
 
-      var betaDecorator = Helper.CreateNode<Failure>(tree);
+      var betaDecorator = Helper.CreateNode<Failure>();
       betaDecorator.AddChild(beta);
 
       root.AddChild(alphaDecorator);
       root.AddChild(betaDecorator);
       root.AddChild(delta);
-      tree.Root = root;
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);
@@ -215,16 +215,16 @@ namespace Tests
     public void UtilitySelectorFail()
     {
       BehaviourTree tree = Helper.CreateTree();
-      var root = Helper.CreateNode<UtilitySelector>(tree);
+      var root = Helper.CreateNode<UtilitySelector>();
 
-      var alpha = Helper.FailNode(tree).WithUtility(10f);
-      var beta = Helper.FailNode(tree).WithUtility(30f);
-      var delta = Helper.FailNode(tree).WithUtility(20f);
+      var alpha = Helper.FailNode().WithUtility(10f);
+      var beta = Helper.FailNode().WithUtility(30f);
+      var delta = Helper.FailNode().WithUtility(20f);
 
       root.AddChild(alpha);
       root.AddChild(beta);
       root.AddChild(delta);
-      tree.Root = root;
+      tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
       Assert.AreEqual(BehaviourNode.Status.Failure, result);

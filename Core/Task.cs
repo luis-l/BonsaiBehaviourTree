@@ -12,39 +12,8 @@ namespace Bonsai.Core
     public sealed override void OnAbort(ConditionalAbort aborter) { }
     public sealed override void OnChildEnter(int childIndex) { }
     public sealed override void OnChildExit(int childIndex, Status childStatus) { }
-
-    /// <summary>
-    /// Does nothing.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void AddChild(BehaviourNode child) { }
-
-    /// <summary>
-    /// Does nothing.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void RemoveChild(BehaviourNode child) { }
-
-    /// <summary>
-    /// Does nothing.
-    /// </summary>
-    public sealed override void ClearChildren() { }
-
-    /// <summary>
-    /// Always returns false.
-    /// </summary>
-    /// <param name="child"></param>
-    /// <returns></returns>
-    public sealed override bool CanAddChild(BehaviourNode child)
-    {
-      return false;
-    }
-
-    /// <summary>
-    /// Does nothing.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void ForceSetChild(BehaviourNode child) { }
+    internal sealed override void AddChildInternal(BehaviourNode child) { }
+    internal sealed override void RemoveChildrenInternal() { }
 
     public sealed override int MaxChildCount()
     {

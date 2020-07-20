@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Bonsai.Core
@@ -21,9 +22,8 @@ namespace Bonsai.Core
     // Used to serailize the key names.
     // Note: Cannot be readonly since it will not serialize in the ScriptableObject.
     [SerializeField, HideInInspector]
-#pragma warning disable IDE0044 // Add readonly modifier
+    [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Unity cannot serialize readonly fields")]
     private List<string> keys = new List<string>();
-#pragma warning restore IDE0044 // Add readonly modifier
 
     ///<summary>
     /// Sets key in the blackboard with an unset value.

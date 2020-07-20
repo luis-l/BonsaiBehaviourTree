@@ -18,7 +18,7 @@ namespace Bonsai.Core
     /// </summary>
     public AbortType abortType = AbortType.None;
 
-    private bool _bLastReevaluationResult = false;
+    private bool lastConditionResult = false;
 
     /// <summary>
     /// The condition that needs to be satisfied for the node to run its children or to abort.
@@ -26,42 +26,15 @@ namespace Bonsai.Core
     /// <returns></returns>
     public abstract bool Condition();
 
-    // Caches the result of Condition() in OnEnter() that way,
-    // Run() can use the cached result to determine what status to return.
-    private bool _bConditionResult = false;
-
-    private bool _bStateChanged = false;
-
     /// <summary>
     /// Only runs the child if the condition is true.
     /// </summary>
     public override void OnEnter()
     {
-      // If the node enters from a state changed (an abort occurred)
-      if (_bStateChanged)
+      lastConditionResult = Condition();
+      if (lastConditionResult)
       {
-        // Reset the state change.
-        _bStateChanged = false;
-
-        // We only re-traverse the child from a state changed, if the condition
-        // returned true during the re-evaluation.
-        if (_bConditionResult)
-        {
-          base.OnEnter();
-        }
-      }
-
-      // The node enters normally (not caused by an abort).
-      else
-      {
-        _bConditionResult = Condition();
-        _bLastReevaluationResult = _bConditionResult;
-
-        // Only run the child if the condition is true.
-        if (_bConditionResult)
-        {
-          base.OnEnter();
-        }
+        base.OnEnter();
       }
     }
 
@@ -69,41 +42,17 @@ namespace Bonsai.Core
     /// Returns true if the condition changed state since the last re-evaluation.
     /// </summary>
     /// <returns></returns>
-    protected virtual bool Reevaluate()
+    public bool Reevaluate()
     {
-      _bConditionResult = Condition();
-
-      // Change of state.
-      if (_bConditionResult != _bLastReevaluationResult)
-      {
-        _bStateChanged = true;
-        _bLastReevaluationResult = _bConditionResult;
-        return true;
-      }
-
-      // State is still the same.
-      return false;
+      lastConditionResult = Condition();
+      return lastConditionResult;
     }
 
     public override Status Run()
     {
       // Return failure if the condition failed, else
       // return what the child returns if the condition was true.
-      return _bConditionResult ? _iterator.LastStatusReturned : Status.Failure;
-    }
-
-    /// <summary>
-    /// Resets the cached condition result.
-    /// </summary>
-    public override void OnExit()
-    {
-      ResetConditionCache();
-    }
-
-    protected void ResetConditionCache()
-    {
-      _bConditionResult = false;
-      _bLastReevaluationResult = false;
+      return lastConditionResult ? _iterator.LastStatusReturned : Status.Failure;
     }
 
     public bool IsAbortSatisfied()
@@ -116,7 +65,7 @@ namespace Bonsai.Core
 
       // The main node we wish to abort from if possible.
       // Aborts only occur within the same parent subtree of the aborter.
-      BehaviourNode active = Tree.allNodes[_iterator.CurrentIndex];
+      BehaviourNode active = Tree.AllNodes[_iterator.CurrentIndex];
 
       // The abort type dictates the final criteria to check
       // if the abort is satisfied and if the condition check changed state.

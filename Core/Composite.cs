@@ -1,6 +1,4 @@
-﻿
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bonsai.Core
@@ -58,111 +56,17 @@ namespace Bonsai.Core
       return _children[index];
     }
 
-    /// <summary>
-    /// Adds a child if it is parentless.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void AddChild(BehaviourNode child)
+    internal sealed override void AddChildInternal(BehaviourNode child)
     {
-      if (child == null)
+      if (child != null && child != this)
       {
-        Debug.LogWarning("Child is null");
-        return;
-      }
-
-      if (child == this)
-      {
-        Debug.LogWarning("A child cannot be its own child.");
-        return;
-      }
-
-      if (child.Parent == null)
-      {
-        child.Parent = this;
-        child._indexOrder = _children.Count;
         _children.Add(child);
       }
-
-      else
-      {
-        Debug.LogWarning("Composite node attempted to parent a child that already has a set parent.");
-      }
     }
 
-    public sealed override bool CanAddChild(BehaviourNode child)
+    internal sealed override void RemoveChildrenInternal()
     {
-      return child != null && child != this && child.Parent == null;
-    }
-
-    /// <summary>
-    /// Removes the child from its children, if it is the parent of the child.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void RemoveChild(BehaviourNode child)
-    {
-      if (child == null)
-      {
-        return;
-      }
-
-      // Assure that this child was actually parented to this composite node.
-      if (child.Parent == this)
-      {
-        // Forget about this child.
-        bool bRemoved = _children.Remove(child);
-
-        // If removed then we unparent the child.
-        if (bRemoved)
-        {
-          child._indexOrder = 0;
-          child._parent = null;
-
-          UpdateIndexOrders();
-        }
-
-        // BIG ERROR. This should not happen.
-        // The theory is that the only way for a child to have its parent set if it was null
-        // which gets handled internally by the standard node types: Composite and Decorator.
-        else
-        {
-          const string msg1 = "Error on CompositeNode.Remove(child). ";
-          const string msg2 = "A child was parented to a composite node but was not found in the children list. ";
-          const string msg3 = "This should not have happend.";
-
-          Debug.LogError(string.Concat(msg1, msg2, msg3));
-        }
-      }
-    }
-
-    public sealed override void ClearChildren()
-    {
-      // Hack to run some code when removing children.
-      Predicate<BehaviourNode> match = (child) =>
-      {
-        child._indexOrder = 0;
-        child._parent = null;
-        return true;
-      };
-
-      _children.RemoveAll(match);
-    }
-
-    /// <summary>
-    /// DANGER! 
-    /// Directly sets the child (at its relative index.
-    /// This is used to help clone nodes.
-    /// </summary>
-    /// <param name="child"></param>
-    public sealed override void ForceSetChild(BehaviourNode child)
-    {
-      child.ClearParent();
-      child.Parent = this;
-
-      // Do not bother with unsetting the original child's parent.
-      // The original child is already properly setup in its tree.
-      // This is used when trying to build a tree copy, so we can
-      // simply set a new child at that index.
-      _children[child.ChildOrder] = child;
+      _children.Clear();
     }
 
     public bool IsInChildrenBounds(int index)
@@ -186,7 +90,7 @@ namespace Bonsai.Core
       int indexOrder = 0;
       foreach (var child in _children)
       {
-        child._indexOrder = indexOrder++;
+        child.indexOrder = indexOrder++;
       }
     }
 
@@ -200,12 +104,7 @@ namespace Bonsai.Core
       // node to this child's index.
       if (IsChild(child))
       {
-        _currentChildIndex = child._indexOrder;
-      }
-
-      else
-      {
-        Debug.LogError("The node is not parented to this composite node.");
+        _currentChildIndex = child.indexOrder;
       }
     }
 

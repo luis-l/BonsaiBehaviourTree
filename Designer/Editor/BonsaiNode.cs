@@ -31,14 +31,6 @@ namespace Bonsai.Designer
 
     public bool HasOutput { get; }
 
-    // Nodes fit well with snapping if their width has a multiple of snapStep and is even.
-    public static readonly Vector2 kDefaultSize = Vector2.one * 100;
-
-    /// <summary>
-    /// How much additional offset to apply when resizing.
-    /// </summary>
-    public const float resizePaddingX = 20f;
-
     [SerializeField]
     private BehaviourNode behaviour;
 

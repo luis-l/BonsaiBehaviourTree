@@ -31,7 +31,6 @@ namespace Bonsai.Designer
 
     public bool HasOutput { get; }
 
-    [SerializeField]
     private BehaviourNode behaviour;
 
     public BehaviourNode Behaviour

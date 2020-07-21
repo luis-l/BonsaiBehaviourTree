@@ -11,7 +11,7 @@ namespace Bonsai.Designer
   public class BonsaiNode : IIterableNode<BonsaiNode>
   {
     public BonsaiNode Parent { get; private set; }
-    private readonly List<BonsaiNode> children;
+    private readonly List<BonsaiNode> children = new List<BonsaiNode>();
     public IReadOnlyList<BonsaiNode> Children { get { return children; } }
 
     private Rect rectPosition;
@@ -52,11 +52,6 @@ namespace Bonsai.Designer
     public BonsaiNode(bool addOutput, Texture icon = null)
     {
       HasOutput = addOutput;
-
-      if (HasOutput)
-      {
-        children = new List<BonsaiNode>();
-      }
 
       if (icon)
       {
@@ -129,34 +124,27 @@ namespace Bonsai.Designer
 
     private void OrphanChildren()
     {
-      if (HasOutput)
+      foreach (BonsaiNode child in children)
       {
-        foreach (BonsaiNode child in children)
-        {
-          child.Parent = null;
-        }
+        child.Parent = null;
       }
 
-      if (children != null)
-      {
-        children.Clear();
-      }
+      children.Clear();
     }
 
     public BonsaiNode GetChildAt(int index)
     {
-      return HasOutput ? children[index] : null;
+      return children.Count != 0 ? children[index] : null;
     }
 
     public int ChildCount()
     {
-      return HasOutput ? children.Count : 0;
-
+      return children.Count;
     }
 
     public bool Contains(BonsaiNode child)
     {
-      return HasOutput && children.Contains(child);
+      return children.Contains(child);
     }
 
     public bool IsOrphan()
@@ -201,10 +189,7 @@ namespace Bonsai.Designer
     /// </summary>
     public void SortChildren()
     {
-      if (children != null)
-      {
-        children.Sort((BonsaiNode left, BonsaiNode right) => left.Center.x.CompareTo(right.Center.x));
-      }
+      children.Sort((BonsaiNode left, BonsaiNode right) => left.Center.x.CompareTo(right.Center.x));
     }
 
     /// <summary>

@@ -397,6 +397,7 @@ namespace Bonsai.Core
     {
       // The tree clone will be blank to start. We will duplicate blackboard and nodes.
       var cloneBt = CreateInstance<BehaviourTree>();
+      cloneBt.name = sourceTree.name;
 
       if (sourceTree._blackboard)
       {

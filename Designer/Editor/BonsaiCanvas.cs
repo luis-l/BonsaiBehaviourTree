@@ -141,14 +141,14 @@ namespace Bonsai.Designer
     {
       var prop = BonsaiEditor.GetNodeTypeProperties(behaviourType);
       var tex = BonsaiPreferences.Texture(prop.texName);
-      var node = AddEditorNode(prop.addOutput, tex);
+      var node = AddEditorNode(prop.hasOutput, tex);
       return node;
     }
 
     // Creates and adds an editor node to the canvas.
-    private BonsaiNode AddEditorNode(bool addOutput, Texture icon = null)
+    private BonsaiNode AddEditorNode(bool hasOutput, Texture icon = null)
     {
-      var node = new BonsaiNode(addOutput, icon);
+      var node = new BonsaiNode(hasOutput, icon);
       nodes.Add(node);
       return node;
     }

@@ -47,11 +47,10 @@ namespace Bonsai.Designer
     /// <summary>
     /// Create a new node for the first time.
     /// </summary>
-    /// <param name="addInput">If the node should have an input.</param>
-    /// <param name="addOutput">If the node should have an output.</param>
-    public BonsaiNode(bool addOutput, Texture icon = null)
+    /// <param name="hasOutput">If the node should have an output.</param>
+    public BonsaiNode(bool hasOutput, Texture icon = null)
     {
-      HasOutput = addOutput;
+      HasOutput = hasOutput;
 
       if (icon)
       {

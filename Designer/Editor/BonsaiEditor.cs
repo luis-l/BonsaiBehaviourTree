@@ -497,10 +497,10 @@ namespace Bonsai.Designer
         }
 
         // Only composites and decorators have outputs.
-        bool addOutput = !type.IsSubclassOf(typeof(Task));
+        bool hasOutput = !type.IsSubclassOf(typeof(Task));
 
         menuPath += type.Name;
-        var prop = new NodeTypeProperties(menuPath, texName, addOutput);
+        var prop = new NodeTypeProperties(menuPath, texName, hasOutput);
 
         behaviourNodes.Add(type, prop);
       }
@@ -529,13 +529,13 @@ namespace Bonsai.Designer
     public class NodeTypeProperties
     {
       public string path, texName;
-      public bool addOutput;
+      public bool hasOutput;
 
-      public NodeTypeProperties(string path, string texName, bool addOutput)
+      public NodeTypeProperties(string path, string texName, bool hasOutput)
       {
         this.path = path;
         this.texName = texName;
-        this.addOutput = addOutput;
+        this.hasOutput = hasOutput;
       }
     }
 

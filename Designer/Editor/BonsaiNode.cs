@@ -54,7 +54,7 @@ namespace Bonsai.Designer
 
       if (icon)
       {
-        HeaderContent = new GUIContent(icon);
+        HeaderContent.image = icon;
       }
     }
 

@@ -17,15 +17,7 @@ namespace Bonsai.Standard
       }
 
       // Process the sub-iterators.
-      for (int i = 0; i < subIterators.Count; ++i)
-      {
-        // Keep updating the iterators that are not done.
-        Core.BehaviourIterator itr = subIterators[i];
-        if (itr.IsRunning)
-        {
-          itr.Update();
-        }
-      }
+      RunChildBranches();
 
       // Parallel iterators still running.
       return Status.Running;

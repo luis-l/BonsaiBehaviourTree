@@ -14,7 +14,31 @@ namespace Bonsai.Core
 
     public override void OnStart()
     {
-      ChildStatuses = new Status[ChildCount()];
+      int count = ChildCount();
+      ChildStatuses = new Status[count];
+
+      // Set the branch iterators. Branch iterators have this parallel node as their root.
+      // Offset level order by +1 since the parallel parent is not included in branch traversal.
+      BranchIterators = Enumerable
+        .Range(0, count)
+        .Select(i => new BehaviourIterator(Tree, levelOrder + 1))
+        .ToArray();
+
+      // Assign the branch iterator to nodes not under any parallel nodes.
+      // Children under parallel nodes will have iterators assigned by the local parallel parent.
+      // Each branch under a parallel node use their own branch iterator.
+      for (int i = 0; i < count; i++)
+      {
+        BehaviourIterator branchIterator = BranchIterators[i];
+        TreeIterator<BehaviourNode>.Traverse(
+          GetChildAt(i),
+          delegate { },
+          node =>
+          {
+            node.Iterator = branchIterator;
+            return node is ParallelComposite;
+          });
+      }
     }
 
     public override void OnEnter()
@@ -84,20 +108,6 @@ namespace Bonsai.Core
       }
 
       return true;
-    }
-
-    /// <summary>
-    /// Sets the number of sub-iterators to the number of children.
-    /// </summary>
-    internal void SyncSubIterators()
-    {
-      // Set the new iterators. All of the sub-iterators have this parallel node as the root.
-      // Offset the level order by +1 since the parallel parent is not included
-      // in the subtree child iterator traversal stack.
-      BranchIterators = Enumerable
-        .Range(0, _children.Count)
-        .Select(i => new BehaviourIterator(Tree, levelOrder + 1))
-        .ToArray();
     }
   }
 }

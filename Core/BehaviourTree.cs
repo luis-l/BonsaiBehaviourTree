@@ -133,9 +133,11 @@ namespace Bonsai.Core
       // Setup a new list for the observer nodes.
       observerAborts = new List<ConditionalAbort>();
 
+      parallelNodes = GetNodes<ParallelComposite>().ToArray();
+
       CacheObservers();
       CacheTreeTickNodes();
-      SyncIterators();
+      SetRootIteratorReferences();
     }
 
     private void CacheObservers()
@@ -151,57 +153,19 @@ namespace Bonsai.Core
       treeTickNodes = allNodes.Where(node => node.CanTickOnTree()).ToArray();
     }
 
-    private void SyncIterators()
+    private void SetRootIteratorReferences()
     {
-      SyncParallelIterators();
-
-      Root.Iterator = mainIterator;
-
-      BehaviourIterator currentBranchIterator = mainIterator;
-      var parallelRoots = new Stack<ParallelComposite>();
-
-      // This function handles assigning the iterator and skipping nodes.
-      // The parallel root uses the same iterator as its parent, but the children
-      // of the parallel node use their own iterator.
-      Func<BehaviourNode, bool> skipAndAssign = (node) =>
-      {
-        node.Iterator = currentBranchIterator;
-
-        var parallelNode = node as ParallelComposite;
-
-        if (parallelNode)
-        {
-          parallelRoots.Push(parallelNode);
-        }
-
-        return parallelNode != null;
-      };
-
       // Assign the main iterator to nodes not under any parallel nodes.
-      TreeIterator<BehaviourNode>.Traverse(Root, delegate { }, skipAndAssign);
-
-      while (parallelRoots.Count != 0)
-      {
-        ParallelComposite parallel = parallelRoots.Pop();
-
-        // Do passes for each child, using the sub iterator associated with that child.
-        for (int i = 0; i < parallel.ChildCount(); ++i)
+      // Children under parallel nodes will have iterators assigned by the parallel parent.
+      // Each branch under a parallel node use their own branch iterator.
+      TreeIterator<BehaviourNode>.Traverse(
+        Root,
+        delegate { },
+        node =>
         {
-          currentBranchIterator = parallel.BranchIterators[i];
-          TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), delegate { }, skipAndAssign);
-        }
-      }
-    }
-
-    private void SyncParallelIterators()
-    {
-      parallelNodes = GetNodes<ParallelComposite>().ToArray();
-
-      // Cache the parallel nodes and syn their iterators.
-      foreach (ParallelComposite p in parallelNodes)
-      {
-        p.SyncSubIterators();
-      }
+          node.Iterator = mainIterator;
+          return node is ParallelComposite;
+        });
     }
 
     public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)

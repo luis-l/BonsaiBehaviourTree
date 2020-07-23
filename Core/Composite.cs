@@ -11,8 +11,8 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     protected List<BehaviourNode> _children = new List<BehaviourNode>();
 
-    protected Status _previousChildExitStatus;
-    protected int _currentChildIndex = 0;
+    protected Status lastChildExitStatus;
+    protected int CurrentChildIndex { get; private set; } = 0;
 
     /// <summary>
     /// Default behaviour is sequential from left to right.
@@ -20,9 +20,9 @@ namespace Bonsai.Core
     /// <returns></returns>
     public virtual BehaviourNode NextChild()
     {
-      if (IsInChildrenBounds(_currentChildIndex))
+      if (IsInChildrenBounds(CurrentChildIndex))
       {
-        return _children[_currentChildIndex];
+        return _children[CurrentChildIndex];
       }
 
       return null;
@@ -33,7 +33,7 @@ namespace Bonsai.Core
     /// </summary>
     public override void OnEnter()
     {
-      _currentChildIndex = 0;
+      CurrentChildIndex = 0;
       var next = NextChild();
       if (next)
       {
@@ -74,26 +74,6 @@ namespace Bonsai.Core
       return index >= 0 && index < _children.Count;
     }
 
-    public BehaviourNode First
-    {
-      get { return GetChildAt(0); }
-    }
-
-    public BehaviourNode Last
-    {
-      get { return GetChildAt(_children.Count - 1); }
-    }
-
-    public void UpdateIndexOrders()
-    {
-      // Fix other child orders
-      int indexOrder = 0;
-      foreach (var child in _children)
-      {
-        child.indexOrder = indexOrder++;
-      }
-    }
-
     /// <summary>
     /// Called when a composite node has a child that activates when it aborts.
     /// </summary>
@@ -102,45 +82,22 @@ namespace Bonsai.Core
     {
       // The default behaviour is to set the current child index of the composite
       // node to this child's index.
-      if (IsChild(child))
+      if (child.Parent == this)
       {
-        _currentChildIndex = child.indexOrder;
+        CurrentChildIndex = child.indexOrder;
       }
     }
 
     public override void OnChildExit(int childIndex, Status childStatus)
     {
-      _currentChildIndex++;
-      _previousChildExitStatus = childStatus;
+      CurrentChildIndex++;
+      lastChildExitStatus = childStatus;
     }
 
     public sealed override int MaxChildCount()
     {
       return int.MaxValue;
     }
-
-    /// <summary>
-    /// Tests if a node is a child of this composite node.
-    /// </summary>
-    /// <param name="child"></param>
-    /// <returns></returns>
-    public bool IsChild(BehaviourNode child)
-    {
-      return child.Parent != null && child.Parent.preOrderIndex == preOrderIndex;
-    }
-
-#if UNITY_EDITOR
-    /// <summary>
-    /// DANGER, this does not properly handle unparenting.
-    /// This is used for positional reordering in the editor.
-    /// </summary>
-    /// <param name="node"></param>
-    /// <param name="index"></param>
-    public void SetChildAtIndex(BehaviourNode node, int index)
-    {
-      _children[index] = node;
-    }
-#endif
 
   }
 }

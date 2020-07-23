@@ -11,12 +11,10 @@ namespace Tests
     [Test]
     public void SequencePass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Sequence>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.PassNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -26,12 +24,10 @@ namespace Tests
     [Test]
     public void SequenceFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Sequence>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.FailNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -41,12 +37,10 @@ namespace Tests
     [Test]
     public void RandomSequencePass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<RandomSequence>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.PassNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -56,12 +50,10 @@ namespace Tests
     [Test]
     public void RandomSequenceFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<RandomSequence>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.FailNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -71,12 +63,10 @@ namespace Tests
     [Test]
     public void SelectorPass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Selector>();
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.FailNode(), Helper.FailNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -86,12 +76,10 @@ namespace Tests
     [Test]
     public void SelectorFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Selector>();
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
+      root.SetChildren(new[] { Helper.FailNode(), Helper.FailNode(), Helper.FailNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -101,12 +89,10 @@ namespace Tests
     [Test]
     public void RandomSelectorPass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<RandomSelector>();
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.FailNode(), Helper.FailNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -116,12 +102,10 @@ namespace Tests
     [Test]
     public void RandomSelectorFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<RandomSelector>();
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.FailNode());
+      root.SetChildren(new[] { Helper.FailNode(), Helper.FailNode(), Helper.FailNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -131,12 +115,10 @@ namespace Tests
     [Test]
     public void ParallelPass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Parallel>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.PassNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -146,12 +128,10 @@ namespace Tests
     [Test]
     public void ParallelFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
       var root = Helper.CreateNode<Parallel>();
-      root.AddChild(Helper.PassNode());
-      root.AddChild(Helper.FailNode());
-      root.AddChild(Helper.PassNode());
+      root.SetChildren(new[] { Helper.PassNode(), Helper.FailNode(), Helper.PassNode() });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -161,20 +141,17 @@ namespace Tests
     [Test]
     public void UtilitySelectorPass()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
-      var root = Helper.CreateNode<UtilitySelector>();
-
       var alpha = Helper.PassNode().WithUtility(10f);
       var beta = Helper.FailNode().WithUtility(30f);
       var delta = Helper.FailNode().WithUtility(20f);
 
       var alphaDecorator = Helper.CreateNode<Success>();
-      alphaDecorator.AddChild(alpha);
+      alphaDecorator.SetChild(alpha);
 
-      root.AddChild(alphaDecorator);
-      root.AddChild(beta);
-      root.AddChild(delta);
+      var root = Helper.CreateNode<UtilitySelector>();
+      root.SetChildren(new BehaviourNode[] { alphaDecorator, beta, delta });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -184,23 +161,20 @@ namespace Tests
     [Test]
     public void UtilitySelectorOrder()
     {
-      BehaviourTree tree = Helper.CreateTree();
-
-      var root = Helper.CreateNode<UtilitySelector>();
-
       var alpha = Helper.PassNode().WithUtility(10f);
       var beta = Helper.FailNode().WithUtility(30f);
       var delta = Helper.FailNode().WithUtility(20f);
 
       var alphaDecorator = Helper.CreateNode<Success>();
-      alphaDecorator.AddChild(alpha);
+      alphaDecorator.SetChild(alpha);
 
       var betaDecorator = Helper.CreateNode<Failure>();
-      betaDecorator.AddChild(beta);
+      betaDecorator.SetChild(beta);
 
-      root.AddChild(alphaDecorator);
-      root.AddChild(betaDecorator);
-      root.AddChild(delta);
+      var root = Helper.CreateNode<UtilitySelector>();
+      root.SetChildren(new BehaviourNode[] { alphaDecorator, betaDecorator, delta });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);
@@ -213,16 +187,14 @@ namespace Tests
     [Test]
     public void UtilitySelectorFail()
     {
-      BehaviourTree tree = Helper.CreateTree();
-      var root = Helper.CreateNode<UtilitySelector>();
-
       var alpha = Helper.FailNode().WithUtility(10f);
       var beta = Helper.FailNode().WithUtility(30f);
       var delta = Helper.FailNode().WithUtility(20f);
 
-      root.AddChild(alpha);
-      root.AddChild(beta);
-      root.AddChild(delta);
+      var root = Helper.CreateNode<UtilitySelector>();
+      root.SetChildren(new[] { alpha, beta, delta });
+
+      BehaviourTree tree = Helper.CreateTree();
       tree.SetNodes(root);
 
       var result = Helper.RunBehaviourTree(tree);

@@ -31,22 +31,20 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Sets the child.
+    /// <para>Set the child for the decorator node.</para>
+    /// <para>
+    /// This should be called <b>once</b> when the tree is being built,
+    /// before Tree Start() and never during Tree Update()
+    /// </para>
     /// </summary>
-    /// <param name="child"></param>
-    internal sealed override void AddChildInternal(BehaviourNode child)
+    public void SetChild(BehaviourNode child)
     {
       _child = child;
-    }
-
-    /// <summary>
-    /// Unsets the child.
-    /// </summary>
-    /// 
-    internal sealed override void RemoveChildrenInternal()
-    {
-      // This decorator forgets about its child.
-      _child = null;
+      if (_child != null)
+      {
+        _child.Parent = this;
+        _child.indexOrder = 0;
+      }
     }
 
     public sealed override void OnAbort(ConditionalAbort aborter) { }

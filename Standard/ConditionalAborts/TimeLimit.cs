@@ -17,7 +17,7 @@ namespace Bonsai.Standard
     [ShowAtRuntime]
     private float timer = 0f;
 
-    protected override void OnEnable()
+    void OnEnable()
     {
       abortType = AbortType.Self;
     }

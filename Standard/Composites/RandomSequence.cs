@@ -26,7 +26,7 @@ namespace Bonsai.Standard
       base.OnEnter();
     }
 
-    public override BehaviourNode NextChild()
+    public override BehaviourNode CurrentChild()
     {
       if (CurrentChildIndex >= branchOrder.Length)
       {
@@ -34,7 +34,7 @@ namespace Bonsai.Standard
       }
 
       int index = branchOrder[CurrentChildIndex];
-      return _children[index];
+      return Children[index];
     }
 
     private void ShuffleChildOrder()

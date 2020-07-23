@@ -20,7 +20,7 @@ namespace Bonsai.Standard
       // Else child returned success.
 
       // Get the next child
-      var nextChild = NextChild();
+      var nextChild = CurrentChild();
 
       // If this was the last child then the sequence returns success.
       if (nextChild == null)

@@ -68,14 +68,14 @@ namespace Bonsai.Standard
     }
 
     // Get children by utility order.
-    public override BehaviourNode NextChild()
+    public override BehaviourNode CurrentChild()
     {
       if (branchesLeftToRun.Count == 0)
       {
         return null;
       }
 
-      return _children[highestUtilityChild];
+      return Children[highestUtilityChild];
     }
 
     public override bool CanTickOnBranch()

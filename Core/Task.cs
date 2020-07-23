@@ -12,8 +12,6 @@ namespace Bonsai.Core
     public sealed override void OnAbort(ConditionalAbort aborter) { }
     public sealed override void OnChildEnter(int childIndex) { }
     public sealed override void OnChildExit(int childIndex, Status childStatus) { }
-    internal sealed override void AddChildInternal(BehaviourNode child) { }
-    internal sealed override void RemoveChildrenInternal() { }
 
     public sealed override int MaxChildCount()
     {

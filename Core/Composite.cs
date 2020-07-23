@@ -1,5 +1,6 @@
-﻿using System.Collections.Generic;
+﻿
 using UnityEngine;
+using System.Linq;
 
 namespace Bonsai.Core
 {
@@ -9,20 +10,16 @@ namespace Bonsai.Core
   public abstract class Composite : BehaviourNode
   {
     [SerializeField, HideInInspector]
-    protected List<BehaviourNode> _children = new List<BehaviourNode>();
+    private BehaviourNode[] children;
 
     protected Status lastChildExitStatus;
     protected int CurrentChildIndex { get; private set; } = 0;
 
-    /// <summary>
-    /// Default behaviour is sequential from left to right.
-    /// </summary>
-    /// <returns></returns>
-    public virtual BehaviourNode NextChild()
+    public virtual BehaviourNode CurrentChild()
     {
-      if (IsInChildrenBounds(CurrentChildIndex))
+      if (CurrentChildIndex < children.Length)
       {
-        return _children[CurrentChildIndex];
+        return children[CurrentChildIndex];
       }
 
       return null;
@@ -34,44 +31,51 @@ namespace Bonsai.Core
     public override void OnEnter()
     {
       CurrentChildIndex = 0;
-      var next = NextChild();
+      var next = CurrentChild();
       if (next)
       {
         Iterator.Traverse(next);
       }
     }
 
-    public IEnumerable<BehaviourNode> Children
+    public BehaviourNode[] Children
     {
-      get { return _children; }
+      get { return children; }
     }
 
     public sealed override int ChildCount()
     {
-      return _children.Count;
+      return children.Length;
     }
 
     public sealed override BehaviourNode GetChildAt(int index)
     {
-      return _children[index];
+      return children[index];
     }
 
-    internal sealed override void AddChildInternal(BehaviourNode child)
+    /// <summary>
+    /// <para>Set the children for the composite node.</para>
+    /// <para>This should be called when the tree is being built.</para>
+    /// <para>It should be called before Tree Start() and never during Tree Update()</para>
+    /// </summary>
+    /// <param name="nodes"></param>
+    public void SetChildren(BehaviourNode[] nodes)
     {
-      if (child != null && child != this)
+      children = nodes;
+      if (children != null)
       {
-        _children.Add(child);
+        // Set index orders.
+        for (int i = 0; i < children.Length; i++)
+        {
+          children[i].indexOrder = i;
+        }
+
+        // Set parent references.
+        foreach (BehaviourNode child in children)
+        {
+          child.Parent = this;
+        }
       }
-    }
-
-    internal sealed override void RemoveChildrenInternal()
-    {
-      _children.Clear();
-    }
-
-    public bool IsInChildrenBounds(int index)
-    {
-      return index >= 0 && index < _children.Count;
     }
 
     /// <summary>
@@ -88,6 +92,10 @@ namespace Bonsai.Core
       }
     }
 
+    /// <summary>
+    /// Default behaviour is sequential traversal from first to last.
+    /// </summary>
+    /// <returns></returns>
     public override void OnChildExit(int childIndex, Status childStatus)
     {
       CurrentChildIndex++;

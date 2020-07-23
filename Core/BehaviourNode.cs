@@ -26,15 +26,13 @@ namespace Bonsai.Core
     internal int postOrderIndex = 0;
     internal int levelOrder = 0;
 
-    public BehaviourNode Parent { get; private set; }
+    public BehaviourNode Parent { get; internal set; }
     public BehaviourIterator Iterator { get; internal set; }
 
     /// <summary>
     /// The order of the node relative to its parent.
     /// </summary>
     protected internal int indexOrder = 0;
-
-    protected virtual void OnEnable() { }
 
     /// <summary>
     /// Called when the tree is started.
@@ -185,55 +183,23 @@ namespace Bonsai.Core
       get { return treeOwner.actor; }
     }
 
-
     public abstract BehaviourNode GetChildAt(int index);
     public abstract int ChildCount();
     public abstract int MaxChildCount();
 
-    // The current tree implementation does a "add-only" approach
-    // to simplify handling. This is because once a tree is built,
-    // it will never change during execution.
-    //
-    // The general work flow to change children: 
-    //   remove all children, add new children.
-    //
-    // This should be good enough for current use case.
-    public void AddChild(BehaviourNode child)
+    public bool IsComposite()
     {
-      // If unparented, add node.
-      if (!child.Parent)
-      {
-        AddChildOverride(child);
-      }
+      return MaxChildCount() > 1;
     }
 
-    /// <summary>
-    /// Removes all children and unsets their parent node.
-    /// </summary>
-    public void RemoveChildren()
+    public bool IsDecorator()
     {
-      for (int i = 0; i < ChildCount(); i++)
-      {
-        GetChildAt(i).Parent = null;
-      }
-
-      RemoveChildrenInternal();
+      return MaxChildCount() == 1;
     }
 
-    // Internal implementation to add a child to a node.
-    internal abstract void AddChildInternal(BehaviourNode node);
-
-    // Internal implementation to remove all children references.
-    internal abstract void RemoveChildrenInternal();
-
-    /// <summary>
-    /// Adds child regardless if it has a parent.
-    /// </summary>
-    internal void AddChildOverride(BehaviourNode child)
+    public bool IsTask()
     {
-      child.indexOrder = ChildCount();
-      AddChildInternal(child);
-      child.Parent = this;
+      return MaxChildCount() == 0;
     }
 
     /// <summary>

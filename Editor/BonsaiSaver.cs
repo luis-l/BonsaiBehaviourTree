@@ -163,13 +163,8 @@ namespace Bonsai.Designer
       }
 
       // Set parent-child connections matching those in the canvas. Only consider decorators and composites.
-      foreach (BonsaiNode node in canvas.Nodes.Where(node => node.ChildCount() > 0))
-      {
-        foreach (BonsaiNode child in node.Children)
-        {
-          node.Behaviour.AddChild(child.Behaviour);
-        }
-      }
+      SetCompositeChildren(canvas);
+      SetDecoratorChildren(canvas);
 
       // Re-add nodes to tree.
       if (canvas.Root != null)
@@ -185,6 +180,26 @@ namespace Bonsai.Designer
 
       SaveTreeMetaData(meta, canvas);
       AssetDatabase.SaveAssets();
+    }
+
+    private void SetCompositeChildren(BonsaiCanvas canvas)
+    {
+      IEnumerable<BonsaiNode> compositeNodes = canvas.Nodes.Where(n => n.Behaviour.IsComposite());
+      foreach (BonsaiNode node in compositeNodes)
+      {
+        var compositeBehaviour = node.Behaviour as Composite;
+        compositeBehaviour.SetChildren(node.Children.Select(ch => ch.Behaviour).ToArray());
+      }
+    }
+
+    private void SetDecoratorChildren(BonsaiCanvas canvas)
+    {
+      IEnumerable<BonsaiNode> decoratorNodes = canvas.Nodes.Where(n => n.Behaviour.IsDecorator());
+      foreach (BonsaiNode node in decoratorNodes)
+      {
+        var decoratorBehaviour = node.Behaviour as Decorator;
+        decoratorBehaviour.SetChild(node.GetChildAt(0).Behaviour);
+      }
     }
 
     private void AddNewNodeAssets(

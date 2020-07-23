@@ -16,9 +16,7 @@ namespace Tests
       var alpha = Helper.PassNode();
       var beta = Helper.PassNode();
       var delta = Helper.PassNode();
-      root.AddChild(alpha);
-      root.AddChild(beta);
-      root.AddChild(delta);
+      root.SetChildren(new[] { alpha, beta, delta });
       tree.SetNodes(root);
 
       BehaviourTree cloneTree = BehaviourTree.Clone(tree);

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEditor;
@@ -374,20 +373,23 @@ namespace Bonsai.Core
         BehaviourNode nodeSource = sourceTree.allNodes[i];
         BehaviourNode copyNode = GetInstanceVersion(cloneBt, nodeSource);
 
-        // When instantiating, the child list has references that point to the original.
-        // Need to clear when adding the cloned children.
-        copyNode.RemoveChildrenInternal();
-
-        // Child count for this node.
-        int childCount = nodeSource.ChildCount();
-
-        // Start from one since child pre-order indices are after parent pre-order index.
-        for (int childIndex = 0; childIndex < childCount; childIndex++)
+        if (copyNode.IsComposite())
         {
-          BehaviourNode childSource = nodeSource.GetChildAt(childIndex);
-          BehaviourNode copyChild = GetInstanceVersion(cloneBt, childSource);
-          copyNode.AddChildOverride(copyChild);
+          var sourceComposite = nodeSource as Composite;
+          var copyComposite = copyNode as Composite;
+          copyComposite.SetChildren(
+            sourceComposite
+            .Children
+            .Select(child => GetInstanceVersion(cloneBt, child))
+            .ToArray());
         }
+
+        else if (copyNode.IsDecorator() && nodeSource.ChildCount() == 1)
+        {
+          var copyDecorator = copyNode as Decorator;
+          copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0))); ;
+        }
+
       }
 
       foreach (BehaviourNode node in cloneBt.allNodes)
@@ -426,13 +428,29 @@ namespace Bonsai.Core
     {
       foreach (BehaviourNode node in allNodes)
       {
+        ClearChildrenStructure(node);
         node.preOrderIndex = BehaviourNode.kInvalidOrder;
         node.indexOrder = 0;
-        node.RemoveChildren();
+        node.Parent = null;
         node.treeOwner = null;
       }
 
       allNodes.Clear();
+    }
+
+    private void ClearChildrenStructure(BehaviourNode node)
+    {
+      if (node.IsComposite())
+      {
+        var composite = node as Composite;
+        composite.SetChildren(null);
+      }
+
+      else if (node.IsDecorator())
+      {
+        var decorator = node as Decorator;
+        decorator.SetChild(null);
+      }
     }
 
 #if UNITY_EDITOR

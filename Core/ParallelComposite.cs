@@ -44,10 +44,10 @@ namespace Bonsai.Core
     public override void OnEnter()
     {
       // Traverse children at the same time.
-      for (int i = 0; i < _children.Count; ++i)
+      for (int i = 0; i < Children.Length; ++i)
       {
         ChildStatuses[i] = Status.Running;
-        BranchIterators[i].Traverse(_children[i]);
+        BranchIterators[i].Traverse(Children[i]);
       }
     }
 
@@ -57,7 +57,7 @@ namespace Bonsai.Core
       {
         if (BranchIterators[i].IsRunning)
         {
-          Tree.Interrupt(_children[i], true);
+          Tree.Interrupt(Children[i], true);
         }
       }
     }

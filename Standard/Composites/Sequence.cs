@@ -12,7 +12,7 @@ namespace Bonsai.Standard
     public override Status Run()
     {
       // If a child failed then the sequence fails.
-      if (_previousChildExitStatus == Status.Failure)
+      if (lastChildExitStatus == Status.Failure)
       {
         return Status.Failure;
       }

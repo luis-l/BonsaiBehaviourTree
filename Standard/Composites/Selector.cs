@@ -12,7 +12,7 @@ namespace Bonsai.Standard
     public override Status Run()
     {
       // If a child succeeded then the selector succeeds.
-      if (_previousChildExitStatus == Status.Success)
+      if (lastChildExitStatus == Status.Success)
       {
         return Status.Success;
       }

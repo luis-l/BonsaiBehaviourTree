@@ -6,38 +6,38 @@ namespace Bonsai.Standard
   [BonsaiNode("Composites/", "ShuffleQuestion")]
   public class RandomSelector : Selector
   {
-    private int[] _childrenOrder;
+    private int[] branchOrder;
 
     public override void OnStart()
     {
       int childCount = ChildCount();
-      _childrenOrder = new int[childCount];
+      branchOrder = new int[childCount];
 
       // Fill in the orders with the default index order.
       for (int i = 0; i < childCount; ++i)
       {
-        _childrenOrder[i] = i;
+        branchOrder[i] = i;
       }
     }
 
     public override void OnEnter()
     {
-      shuffleChildOrder();
+      ShuffleChildOrder();
       base.OnEnter();
     }
 
     public override BehaviourNode NextChild()
     {
-      if (_currentChildIndex >= _childrenOrder.Length)
+      if (CurrentChildIndex >= branchOrder.Length)
       {
         return null;
       }
 
-      int index = _childrenOrder[_currentChildIndex];
+      int index = branchOrder[CurrentChildIndex];
       return _children[index];
     }
 
-    private void shuffleChildOrder()
+    private void ShuffleChildOrder()
     {
       int childCount = ChildCount();
 
@@ -46,9 +46,9 @@ namespace Bonsai.Standard
         int indexPivot = UnityEngine.Random.Range(0, childCount);
 
         // Swap the i-th and pivot elements.
-        int tmp = _childrenOrder[i];
-        _childrenOrder[i] = _childrenOrder[indexPivot];
-        _childrenOrder[indexPivot] = tmp;
+        int tmp = branchOrder[i];
+        branchOrder[i] = branchOrder[indexPivot];
+        branchOrder[indexPivot] = tmp;
       }
     }
   }

@@ -1,7 +1,7 @@
 ﻿
 using System;
 
-namespace Bonsai.Designer
+namespace Bonsai
 {
   [AttributeUsage(AttributeTargets.Class)]
   public class BonsaiNodeAttribute : Attribute

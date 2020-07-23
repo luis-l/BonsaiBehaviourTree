@@ -1,6 +1,5 @@
 ﻿
 using Bonsai.Core;
-using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
@@ -32,7 +31,7 @@ namespace Bonsai.Standard
       // Still need children to process.
       else
       {
-        _iterator.Traverse(nextChild);
+        Iterator.Traverse(nextChild);
         return Status.Running;
       }
     }

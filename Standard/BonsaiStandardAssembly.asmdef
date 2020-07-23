@@ -1,5 +1,5 @@
 {
-    "name": "BonsaiEditorAssembly",
+    "name": "BonsaiStandardAssembly",
     "references": [
         "GUID:e663252ae8cdac9448492a619a23dbb5"
     ],

@@ -26,7 +26,7 @@ namespace Bonsai.Core
     {
       if (_child)
       {
-        _iterator.Traverse(_child);
+        Iterator.Traverse(_child);
       }
     }
 

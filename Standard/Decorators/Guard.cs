@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Bonsai.Core;
-using Bonsai.Designer;
 using UnityEngine;
 
 namespace Bonsai.Standard
@@ -39,7 +38,7 @@ namespace Bonsai.Standard
       // the child already returned.
       if (childRan)
       {
-        return _iterator.LastStatusReturned;
+        return Iterator.LastStatusReturned;
       }
 
       bool bGuardsAvailable = IsRunningGuardsAvailable();
@@ -59,7 +58,7 @@ namespace Bonsai.Standard
         }
 
         childRan = true;
-        _iterator.Traverse(Child);
+        Iterator.Traverse(Child);
       }
 
       // Wait for child.

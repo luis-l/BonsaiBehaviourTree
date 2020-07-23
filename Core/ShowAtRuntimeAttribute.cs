@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Bonsai.Designer
+namespace Bonsai
 {
   /// <summary>
   /// Displays the field or property value in the BehaviourNode inspector when the tree runs.

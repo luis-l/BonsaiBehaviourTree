@@ -37,7 +37,7 @@ namespace Bonsai.Core
       var next = NextChild();
       if (next)
       {
-        _iterator.Traverse(next);
+        Iterator.Traverse(next);
       }
     }
 

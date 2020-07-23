@@ -1,6 +1,5 @@
 ﻿
 using System.Text;
-using Bonsai.Standard;
 
 namespace Bonsai.Core
 {
@@ -52,7 +51,7 @@ namespace Bonsai.Core
     {
       // Return failure if the condition failed, else
       // return what the child returns if the condition was true.
-      return lastConditionResult ? _iterator.LastStatusReturned : Status.Failure;
+      return lastConditionResult ? Iterator.LastStatusReturned : Status.Failure;
     }
 
     public bool IsAbortSatisfied()
@@ -65,7 +64,7 @@ namespace Bonsai.Core
 
       // The main node we wish to abort from if possible.
       // Aborts only occur within the same parent subtree of the aborter.
-      BehaviourNode active = Tree.AllNodes[_iterator.CurrentIndex];
+      BehaviourNode active = Tree.AllNodes[Iterator.CurrentIndex];
 
       // The abort type dictates the final criteria to check
       // if the abort is satisfied and if the condition check changed state.
@@ -75,7 +74,7 @@ namespace Bonsai.Core
           return
               !BehaviourTree.IsUnderSubtree(this, active) &&
               BehaviourTree.IsUnderSubtree(Parent, active) &&
-              Priority() > _iterator.GetRunningSubtree(Parent).Priority() &&
+              Priority() > Iterator.GetRunningSubtree(Parent).Priority() &&
               Reevaluate();
 
         // Self aborts always interrupt, regardless of the condition.
@@ -86,7 +85,7 @@ namespace Bonsai.Core
           return
                (BehaviourTree.IsUnderSubtree(this, active) ||
                (BehaviourTree.IsUnderSubtree(Parent, active) &&
-               Priority() > _iterator.GetRunningSubtree(Parent).Priority())) &&
+               Priority() > Iterator.GetRunningSubtree(Parent).Priority())) &&
                Reevaluate();
       }
 
@@ -110,7 +109,7 @@ namespace Bonsai.Core
       }
 
       // Parallel subtrees cannot abort each other.
-      if (aborter.Parent && aborter.Parent is Parallel)
+      if (aborter.Parent && aborter.Parent is ParallelComposite)
       {
         return false;
       }

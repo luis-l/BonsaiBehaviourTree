@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using Bonsai.Standard;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +16,7 @@ namespace Bonsai.Core
     private List<ConditionalAbort> observerAborts;
 
     // Store references to the parallel nodes;
-    private Parallel[] parallelNodes;
+    private ParallelComposite[] parallelNodes;
 
     /// <summary>
     /// Nodes that are allowed to update on tree tick.
@@ -156,7 +155,7 @@ namespace Bonsai.Core
     {
       SyncParallelIterators();
 
-      Root._iterator = mainIterator;
+      Root.Iterator = mainIterator;
 
       BehaviourIterator itr = mainIterator;
       var parallelRoots = new Stack<BehaviourNode>();
@@ -166,9 +165,9 @@ namespace Bonsai.Core
       // of the parallel node use their own iterator.
       Func<BehaviourNode, bool> skipAndAssign = (node) =>
       {
-        node._iterator = itr;
+        node.Iterator = itr;
 
-        bool isParallel = node as Parallel != null;
+        bool isParallel = node as ParallelComposite != null;
 
         if (isParallel)
         {
@@ -188,7 +187,7 @@ namespace Bonsai.Core
         // Do passes for each child, using the sub iterator associated with that child.
         for (int i = 0; i < parallel.ChildCount(); ++i)
         {
-          itr = (parallel as Parallel).GetIterator(i);
+          itr = (parallel as ParallelComposite).GetIterator(i);
           TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), delegate { }, skipAndAssign);
         }
       }
@@ -196,10 +195,10 @@ namespace Bonsai.Core
 
     private void SyncParallelIterators()
     {
-      parallelNodes = GetNodes<Parallel>().ToArray();
+      parallelNodes = GetNodes<ParallelComposite>().ToArray();
 
       // Cache the parallel nodes and syn their iterators.
-      foreach (Parallel p in parallelNodes)
+      foreach (ParallelComposite p in parallelNodes)
       {
         p.SyncSubIterators();
       }
@@ -216,7 +215,7 @@ namespace Bonsai.Core
       // parallel nodes.
       for (int pIndex = 0; pIndex < parallelNodes.Length; ++pIndex)
       {
-        Parallel p = parallelNodes[pIndex];
+        ParallelComposite p = parallelNodes[pIndex];
 
         if (IsUnderSubtree(subroot, p))
         {

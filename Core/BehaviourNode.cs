@@ -27,8 +27,7 @@ namespace Bonsai.Core
     internal int levelOrder = 0;
 
     public BehaviourNode Parent { get; private set; }
-
-    internal BehaviourIterator _iterator;
+    public BehaviourIterator Iterator { get; internal set; }
 
     /// <summary>
     /// The order of the node relative to its parent.
@@ -168,11 +167,6 @@ namespace Bonsai.Core
     public int LevelOrder
     {
       get { return levelOrder; }
-    }
-
-    public BehaviourIterator Iterator
-    {
-      get { return _iterator; }
     }
 
     /// <summary>

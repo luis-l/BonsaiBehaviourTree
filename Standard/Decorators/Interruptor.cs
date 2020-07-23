@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Bonsai.Core;
-using Bonsai.Designer;
 using UnityEngine;
 
 namespace Bonsai.Standard

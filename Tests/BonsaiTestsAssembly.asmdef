@@ -1,9 +1,10 @@
 {
-    "name": "Tests",
+    "name": "BonsaiTestsAssembly",
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
-        "BonsaiAssembly"
+        "BonsaiAssembly",
+        "BonsaiStandardAssembly"
     ],
     "includePlatforms": [
         "Editor"

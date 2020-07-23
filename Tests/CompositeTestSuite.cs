@@ -1,9 +1,8 @@
 ﻿
 using System.Collections.Generic;
-using NUnit.Framework;
-
 using Bonsai.Core;
 using Bonsai.Standard;
+using NUnit.Framework;
 
 namespace Tests
 {

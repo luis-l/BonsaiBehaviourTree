@@ -1,7 +1,4 @@
 ﻿
-using Bonsai.Core;
-using Bonsai.Designer;
-
 namespace Bonsai.Standard
 {
   [BonsaiNode("Composites/", "ParallelSelector")]
@@ -23,7 +20,7 @@ namespace Bonsai.Standard
       for (int i = 0; i < subIterators.Count; ++i)
       {
         // Keep updating the iterators that are not done.
-        BehaviourIterator itr = subIterators[i];
+        Core.BehaviourIterator itr = subIterators[i];
         if (itr.IsRunning)
         {
           itr.Update();

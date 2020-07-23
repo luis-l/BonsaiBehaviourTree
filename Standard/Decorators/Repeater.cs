@@ -1,7 +1,6 @@
 ﻿
 using System.Text;
 using Bonsai.Core;
-using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
@@ -11,11 +10,11 @@ namespace Bonsai.Standard
     public int loopCount = 1;
     public bool infiniteLoop = false;
 
-    private int _loopCounter = 0;
+    private int loopCounter = 0;
 
     public override void OnEnter()
     {
-      _loopCounter = 0;
+      loopCounter = 0;
     }
 
     public override Status Run()
@@ -23,25 +22,24 @@ namespace Bonsai.Standard
       // Infinite loop always returns running and always traverses the child.
       if (infiniteLoop)
       {
-        _iterator.Traverse(_child);
+        Iterator.Traverse(_child);
         return Status.Running;
       }
 
       else
       {
-
         // If we have not exceeded the loop count then traverse the child.
-        if (_loopCounter < loopCount)
+        if (loopCounter < loopCount)
         {
-          _loopCounter++;
-          _iterator.Traverse(_child);
+          loopCounter++;
+          Iterator.Traverse(_child);
           return Status.Running;
         }
 
         // Finished looping, return what the child returns.
         else
         {
-          return _iterator.LastStatusReturned;
+          return Iterator.LastStatusReturned;
         }
       }
     }

@@ -1,6 +1,5 @@
 ﻿
 using Bonsai.Core;
-using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
@@ -25,7 +24,7 @@ namespace Bonsai.Standard
         return returnStatus;
       }
 
-      return _iterator.LastStatusReturned;
+      return Iterator.LastStatusReturned;
     }
 
     public override void OnExit()

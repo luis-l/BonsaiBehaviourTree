@@ -468,7 +468,8 @@ namespace Bonsai.Designer
       behaviourNodes = new Dictionary<Type, NodeTypeProperties>();
 
       IEnumerable<Type> behaviourTypes = AppDomain.CurrentDomain.GetAssemblies()
-         .Where(asm => asm.FullName.Contains("Assembly") && !asm.FullName.Contains("Editor"))
+         .Where(asm => !asm.FullName.StartsWith("Unity") && !asm.FullName.Contains("Editor"))
+         .Where(asm => !asm.FullName.StartsWith("BonsaiTestsAssembly")) // Ignore nodes from test suite.
          .SelectMany(asm => asm.GetTypes())
          .Where(t => t.IsSubclassOf(typeof(BehaviourNode)) && !t.IsAbstract);
 

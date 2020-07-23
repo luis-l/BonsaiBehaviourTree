@@ -1,6 +1,5 @@
 ﻿
 using Bonsai.Core;
-using Bonsai.Designer;
 using UnityEngine;
 
 namespace Bonsai.Standard

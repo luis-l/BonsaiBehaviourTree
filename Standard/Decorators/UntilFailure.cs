@@ -1,6 +1,5 @@
 ﻿
 using Bonsai.Core;
-using Bonsai.Designer;
 
 namespace Bonsai.Standard
 {
@@ -12,7 +11,7 @@ namespace Bonsai.Standard
   {
     public override Status Run()
     {
-      Status s = _iterator.LastStatusReturned;
+      Status s = Iterator.LastStatusReturned;
 
       if (s == Status.Failure)
       {
@@ -20,7 +19,7 @@ namespace Bonsai.Standard
       }
 
       // Retraverse child.
-      _iterator.Traverse(_child);
+      Iterator.Traverse(_child);
 
       return Status.Running;
     }

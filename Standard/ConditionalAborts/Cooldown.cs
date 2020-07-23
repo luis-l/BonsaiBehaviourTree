@@ -1,9 +1,7 @@
 ﻿
-using UnityEngine;
-
-using Bonsai.Core;
-using Bonsai.Designer;
 using System.Text;
+using Bonsai.Core;
+using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -24,7 +22,7 @@ namespace Bonsai.Standard
       // We can only traverse the child if the cooldown is inactive.
       if (timer.IsDone)
       {
-        _iterator.Traverse(_child);
+        Iterator.Traverse(_child);
       }
     }
 

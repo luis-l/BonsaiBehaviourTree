@@ -8,7 +8,7 @@ namespace Bonsai.Core
   public abstract class ParallelComposite : Composite
   {
     // The iterators that will run branches concurrently.
-    protected BehaviourIterator[] subIterators;
+    public BehaviourIterator[] BranchIterators { get; private set; }
 
     protected Status[] ChildStatuses { get; private set; }
 
@@ -23,15 +23,15 @@ namespace Bonsai.Core
       for (int i = 0; i < _children.Count; ++i)
       {
         ChildStatuses[i] = Status.Running;
-        subIterators[i].Traverse(_children[i]);
+        BranchIterators[i].Traverse(_children[i]);
       }
     }
 
     public override void OnExit()
     {
-      for (int i = 0; i < subIterators.Length; ++i)
+      for (int i = 0; i < BranchIterators.Length; ++i)
       {
-        if (subIterators[i].IsRunning)
+        if (BranchIterators[i].IsRunning)
         {
           Tree.Interrupt(_children[i], true);
         }
@@ -50,7 +50,7 @@ namespace Bonsai.Core
 
     protected void RunChildBranches()
     {
-      foreach (BehaviourIterator i in subIterators)
+      foreach (BehaviourIterator i in BranchIterators)
       {
         if (i.IsRunning)
         {
@@ -94,15 +94,10 @@ namespace Bonsai.Core
       // Set the new iterators. All of the sub-iterators have this parallel node as the root.
       // Offset the level order by +1 since the parallel parent is not included
       // in the subtree child iterator traversal stack.
-      subIterators = Enumerable
+      BranchIterators = Enumerable
         .Range(0, _children.Count)
         .Select(i => new BehaviourIterator(Tree, levelOrder + 1))
         .ToArray();
-    }
-
-    public BehaviourIterator GetIterator(int index)
-    {
-      return subIterators[index];
     }
   }
 }

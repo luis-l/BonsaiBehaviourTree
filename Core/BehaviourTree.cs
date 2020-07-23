@@ -157,24 +157,24 @@ namespace Bonsai.Core
 
       Root.Iterator = mainIterator;
 
-      BehaviourIterator itr = mainIterator;
-      var parallelRoots = new Stack<BehaviourNode>();
+      BehaviourIterator currentBranchIterator = mainIterator;
+      var parallelRoots = new Stack<ParallelComposite>();
 
       // This function handles assigning the iterator and skipping nodes.
       // The parallel root uses the same iterator as its parent, but the children
       // of the parallel node use their own iterator.
       Func<BehaviourNode, bool> skipAndAssign = (node) =>
       {
-        node.Iterator = itr;
+        node.Iterator = currentBranchIterator;
 
-        bool isParallel = node as ParallelComposite != null;
+        var parallelNode = node as ParallelComposite;
 
-        if (isParallel)
+        if (parallelNode)
         {
-          parallelRoots.Push(node);
+          parallelRoots.Push(parallelNode);
         }
 
-        return isParallel;
+        return parallelNode != null;
       };
 
       // Assign the main iterator to nodes not under any parallel nodes.
@@ -182,12 +182,12 @@ namespace Bonsai.Core
 
       while (parallelRoots.Count != 0)
       {
-        BehaviourNode parallel = parallelRoots.Pop();
+        ParallelComposite parallel = parallelRoots.Pop();
 
         // Do passes for each child, using the sub iterator associated with that child.
         for (int i = 0; i < parallel.ChildCount(); ++i)
         {
-          itr = (parallel as ParallelComposite).GetIterator(i);
+          currentBranchIterator = parallel.BranchIterators[i];
           TreeIterator<BehaviourNode>.Traverse(parallel.GetChildAt(i), delegate { }, skipAndAssign);
         }
       }
@@ -213,23 +213,18 @@ namespace Bonsai.Core
       // Since the parallel count is usually small, we 
       // can just do a linear iteration to interrupt multiple
       // parallel nodes.
-      for (int pIndex = 0; pIndex < parallelNodes.Length; ++pIndex)
+      foreach (ParallelComposite p in parallelNodes)
       {
-        ParallelComposite p = parallelNodes[pIndex];
-
         if (IsUnderSubtree(subroot, p))
         {
-          for (int itrIndex = 0; itrIndex < p.ChildCount(); ++itrIndex)
+          foreach (BehaviourIterator itr in p.BranchIterators)
           {
-            BehaviourIterator itr = p.GetIterator(itrIndex);
-
             // Only interrupt running iterators.
             if (itr.IsRunning)
             {
               // Get the child of the parallel node, and interrupt the child subtree.
               int childIndex = itr.FirstInTraversal;
               BehaviourNode firstNode = allNodes[childIndex];
-
               itr.StepBackInterrupt(firstNode.Parent, bFullInterrupt);
             }
           }

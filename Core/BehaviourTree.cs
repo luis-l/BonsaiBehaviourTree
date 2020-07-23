@@ -409,11 +409,7 @@ namespace Bonsai.Core
         sourceTree.Root,
         node => cloneBt.AddNode(Instantiate(node)));
 
-      // At this point the clone BT has its children in pre order order
-      // and the original BT has pre-order indices calculated for each node.
-      //
-      // RELINK children and parents for the cloned nodes.
-      // The clone node count is <= original node count because the editor may have dangling nodes.
+      // Relink children and parents for the cloned nodes.
       int maxCloneNodeCount = cloneBt.allNodes.Count;
       for (int i = 0; i < maxCloneNodeCount; ++i)
       {

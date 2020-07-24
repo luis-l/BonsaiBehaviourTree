@@ -1,13 +1,18 @@
 ﻿namespace Bonsai.Utility
 {
+  /// <summary>
+  /// A fixed-sized array that provides stack operations.
+  /// It also provides random-access to contents.
+  /// </summary>
+  /// <typeparam name="T"></typeparam>
   public class FixedSizeStack<T>
   {
-    private readonly T[] _container;
+    private readonly T[] container;
 
     public FixedSizeStack(int length)
     {
       Count = 0;
-      _container = new T[length];
+      container = new T[length];
     }
 
     /// <summary>
@@ -16,9 +21,9 @@
     public void Clear()
     {
       Count = 0;
-      for (int i = 0; i < _container.Length; ++i)
+      for (int i = 0; i < container.Length; ++i)
       {
-        _container[i] = default;
+        container[i] = default;
       }
     }
 
@@ -32,24 +37,24 @@
 
     public T Peek()
     {
-      return _container[Count - 1];
+      return container[Count - 1];
     }
 
     public T Pop()
     {
-      return _container[--Count];
+      return container[--Count];
     }
 
     public void Push(T value)
     {
-      _container[Count++] = value;
+      container[Count++] = value;
     }
 
     public int Count { get; private set; }
 
     public T GetValue(int index)
     {
-      return _container[index];
+      return container[index];
     }
   }
 }

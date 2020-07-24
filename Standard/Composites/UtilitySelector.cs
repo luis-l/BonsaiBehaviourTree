@@ -23,12 +23,12 @@ namespace Bonsai.Standard
 
     private int highestUtilityChild = 0;
     private List<int> branchesLeftToRun;
-    private TreeQueryIterator utilityQueryIterator;
+    private TreeQuery utilityQueryIterator;
 
     public override void OnStart()
     {
       branchesLeftToRun = new List<int>(ChildCount());
-      utilityQueryIterator = new TreeQueryIterator(Tree.Height - LevelOrder);
+      utilityQueryIterator = new TreeQuery(Tree.Height - LevelOrder);
 
       timer.AutoRestart = true;
       timer.OnTimeout += Evaluate;

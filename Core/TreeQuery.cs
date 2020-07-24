@@ -1,20 +1,26 @@
 ﻿
 using System;
+using System.Collections.Generic;
 
 namespace Bonsai.Core
 {
-
   /// <summary>
-  /// A specialized fixed-sized iterator meant to query the behaviour tree without GC allocations.
+  /// <para>
+  /// Traverses the tree in pre-order and provides common query operations on the traversed branch.
+  /// </para>
+  /// <para>
+  /// The tree height is passed as the capacity for the traversal stack. 
+  /// To avoid GC allocations, make sure that the tree height passed matches the traversed branch height.
+  /// </para>
   /// </summary>
-  public class TreeQueryIterator
+  public class TreeQuery
   {
-    private readonly Utility.FixedSizeStack<BehaviourNode> traversal;
+    private readonly Stack<BehaviourNode> traversal;
 
-    public TreeQueryIterator(int treeHeight)
+    public TreeQuery(int treeHeight)
     {
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
-      traversal = new Utility.FixedSizeStack<BehaviourNode>(treeHeight + 1);
+      traversal = new Stack<BehaviourNode>(treeHeight + 1);
     }
 
     public BehaviourNode Next()
@@ -61,7 +67,7 @@ namespace Bonsai.Core
         initial = Math.Max(initial, node.UtilityValue());
       }
 
-      traversal.ResetCount();
+      traversal.Clear();
       return initial;
     }
 
@@ -81,7 +87,7 @@ namespace Bonsai.Core
         initial += node.UtilityValue();
       }
 
-      traversal.ResetCount();
+      traversal.Clear();
       return initial;
     }
 

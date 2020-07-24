@@ -20,7 +20,7 @@ namespace Tests
       tree.SetNodes(root);
 
       BehaviourTree cloneTree = BehaviourTree.Clone(tree);
-      Assert.AreEqual(4, cloneTree.AllNodes.Count);
+      Assert.AreEqual(4, cloneTree.AllNodes.Length);
 
       Assert.AreEqual(0, cloneTree.AllNodes[0].PreOrderIndex);
       Assert.AreEqual(1, cloneTree.AllNodes[1].PreOrderIndex);

@@ -14,20 +14,22 @@ namespace Bonsai.Designer
     public static void PositionNodesNicely(BonsaiNode root, Vector2 anchor)
     {
       // Sort parent-child connections so formatter uses latest changes.
-      TreeIterator<BonsaiNode>.Traverse(
-        root,
-        node => node.SortChildren());
+      foreach (BonsaiNode node in TreeTraversal.PreOrder(root))
+      {
+        node.SortChildren();
+      }
 
       var positioning = new FormatPositioning();
 
-      TreeIterator<BonsaiNode>.Traverse(
-        root,
-        node => PositionHorizontal(node, positioning),
-        Traversal.PostOrder);
+      foreach (BonsaiNode node in TreeTraversal.PostOrder(root))
+      {
+        PositionHorizontal(node, positioning);
+      }
 
-      TreeIterator<BonsaiNode>.Traverse(
-        root,
-        node => PositionVertical(node));
+      foreach (BonsaiNode node in TreeTraversal.PreOrder(root))
+      {
+        PositionVertical(node);
+      }
 
       // Move the entire subtree to the anchor.
       Vector2 offset = EditorSingleDrag.StartDrag(root, root.Center);

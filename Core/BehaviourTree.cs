@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
@@ -24,7 +23,7 @@ namespace Bonsai.Core
 
     public BehaviourNode Root
     {
-      get { return allNodes.Count == 0 ? null : allNodes[0]; }
+      get { return allNodes.Length == 0 ? null : allNodes[0]; }
     }
 
     private bool isTreeInitialized = false;
@@ -45,8 +44,9 @@ namespace Bonsai.Core
 
     // allNodes must always be kept in pre-order.
     [SerializeField, HideInInspector]
-    [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Unity cannot serialize readonly fields")]
-    private List<BehaviourNode> allNodes = new List<BehaviourNode>();
+#pragma warning disable IDE0044 // Add readonly modifier
+    private BehaviourNode[] allNodes = { };
+#pragma warning restore IDE0044 // Add readonly modifier
 
     public void SetBlackboard(Blackboard bb)
     {
@@ -157,14 +157,10 @@ namespace Bonsai.Core
       // Assign the main iterator to nodes not under any parallel nodes.
       // Children under parallel nodes will have iterators assigned by the parallel parent.
       // Each branch under a parallel node use their own branch iterator.
-      TreeIterator<BehaviourNode>.Traverse(
-        Root,
-        delegate { },
-        node =>
-        {
-          node.Iterator = mainIterator;
-          return node is ParallelComposite;
-        });
+      foreach (BehaviourNode node in TreeTraversal.PreOrderSkipChildren(Root, n => n is ParallelComposite))
+      {
+        node.Iterator = mainIterator;
+      }
     }
 
     public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)
@@ -200,20 +196,17 @@ namespace Bonsai.Core
     /// </summary>
     private void SetPostandLevelOrders()
     {
-      int orderCounter = 0;
-      TreeIterator<BehaviourNode>.Traverse(
-        Root,
-        node => node.postOrderIndex = orderCounter++,
-        Traversal.PostOrder);
+      int postOrderIndex = 0;
+      foreach (BehaviourNode node in TreeTraversal.PostOrder(Root))
+      {
+        node.postOrderIndex = postOrderIndex++;
+      }
 
-      TreeIterator<BehaviourNode>.Traverse(
-        Root,
-        (node, itr) =>
-        {
-          node.levelOrder = itr.CurrentLevel;
-          Height = itr.CurrentLevel;
-        },
-        Traversal.LevelOrder);
+      foreach ((BehaviourNode node, int level) in TreeTraversal.LevelOrder(Root))
+      {
+        node.levelOrder = level;
+        Height = level;
+      }
     }
 
     /// <summary>
@@ -312,19 +305,24 @@ namespace Bonsai.Core
 
     public int Height { get; private set; } = 0;
 
-    public void SetNodes(BehaviourNode root)
+    /// <summary>
+    /// Sets the tree nodes. Must be in Pre-Order.
+    /// </summary>
+    /// <param name="node">The nodes in pre-order.</param>
+    public void SetNodes(IEnumerable<BehaviourNode> nodes)
     {
-      allNodes.Clear();
-      TreeIterator<BehaviourNode>.Traverse(
-        root,
-        node => AddNode(node));
+      allNodes = nodes.ToArray();
+      int preOrderIndex = 0;
+      foreach (BehaviourNode node in allNodes)
+      {
+        node.treeOwner = this;
+        node.preOrderIndex = preOrderIndex++;
+      }
     }
 
-    private void AddNode(BehaviourNode node)
+    public void SetNodes(BehaviourNode root)
     {
-      node.preOrderIndex = allNodes.Count;
-      node.treeOwner = this;
-      allNodes.Add(node);
+      SetNodes(TreeTraversal.PreOrder(root));
     }
 
     /// <summary>
@@ -362,13 +360,10 @@ namespace Bonsai.Core
       }
 
       // Source tree nodes should already be in pre-order.
-      foreach (BehaviourNode node in sourceTree.AllNodes)
-      {
-        cloneBt.AddNode(Instantiate(node));
-      }
+      cloneBt.SetNodes(sourceTree.AllNodes.Select(n => Instantiate(n)));
 
       // Relink children and parents for the cloned nodes.
-      int maxCloneNodeCount = cloneBt.allNodes.Count;
+      int maxCloneNodeCount = cloneBt.allNodes.Length;
       for (int i = 0; i < maxCloneNodeCount; ++i)
       {
         BehaviourNode nodeSource = sourceTree.allNodes[i];
@@ -388,7 +383,6 @@ namespace Bonsai.Core
           var copyDecorator = copyNode as Decorator;
           copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0))); ;
         }
-
       }
 
       foreach (BehaviourNode node in cloneBt.allNodes)
@@ -409,7 +403,7 @@ namespace Bonsai.Core
       return allNodes[preOrderIndex];
     }
 
-    public IReadOnlyList<BehaviourNode> AllNodes
+    public BehaviourNode[] AllNodes
     {
       get { return allNodes; }
     }
@@ -434,7 +428,7 @@ namespace Bonsai.Core
         node.treeOwner = null;
       }
 
-      allNodes.Clear();
+      allNodes = new BehaviourNode[] { };
     }
 
     private void ClearChildrenStructure(BehaviourNode node)

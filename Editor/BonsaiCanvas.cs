@@ -24,11 +24,9 @@ namespace Bonsai.Designer
     public BonsaiCanvas(BehaviourTree tree)
     {
       Tree = tree;
-      {
-        var nodeMap = ReconstructEditorNodes(tree.AllNodes.Concat(tree.unusedNodes));
-        ReconstructEditorConnections(nodeMap);
-        Root = nodes.FirstOrDefault(n => n.Behaviour == tree.Root);
-      }
+      var nodeMap = ReconstructEditorNodes(tree.AllNodes.Concat(tree.unusedNodes));
+      ReconstructEditorConnections(nodeMap);
+      Root = nodes.FirstOrDefault(n => n.Behaviour == tree.Root);
     }
 
     /// <summary>

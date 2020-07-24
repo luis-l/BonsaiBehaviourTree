@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Linq;
+using UnityEngine;
 
 namespace Bonsai.Designer
 {
@@ -57,12 +58,11 @@ namespace Bonsai.Designer
 
       // Move the entire subtree of the root.
       // For all children, pan by the same amount that the parent changed by.
-      Core.TreeIterator<BonsaiNode>.Traverse(
-        root,
-        node => node.Center = Utility.MathExtensions.SnapPosition(node.Center + pan, snap),
-        Core.Traversal.PreOrder,
-        Core.TraversalSkip.Root
-      );
+      foreach (BonsaiNode node in Core.TreeTraversal.PreOrder(root).Skip(1))
+      {
+        node.Center = Utility.MathExtensions.SnapPosition(node.Center + pan, snap);
+      }
     }
+
   }
 }

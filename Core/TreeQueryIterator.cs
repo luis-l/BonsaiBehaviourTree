@@ -9,27 +9,27 @@ namespace Bonsai.Core
   /// </summary>
   public class TreeQueryIterator
   {
-    private readonly Utility.FixedSizeStack<BehaviourNode> _traversal;
+    private readonly Utility.FixedSizeStack<BehaviourNode> traversal;
 
     public TreeQueryIterator(int treeHeight)
     {
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
-      _traversal = new Utility.FixedSizeStack<BehaviourNode>(treeHeight + 1);
+      traversal = new Utility.FixedSizeStack<BehaviourNode>(treeHeight + 1);
     }
 
     public BehaviourNode Next()
     {
-      return preOrderNext();
+      return PreOrderNext();
     }
 
-    private BehaviourNode preOrderNext()
+    private BehaviourNode PreOrderNext()
     {
-      BehaviourNode current = _traversal.Pop();
+      BehaviourNode current = traversal.Pop();
 
       for (int i = current.ChildCount() - 1; i >= 0; --i)
       {
         BehaviourNode child = current.GetChildAt(i);
-        _traversal.Push(child);
+        traversal.Push(child);
       }
 
       return current;
@@ -41,7 +41,7 @@ namespace Bonsai.Core
     /// <returns></returns>
     public bool HasNext()
     {
-      return _traversal.Count != 0;
+      return traversal.Count != 0;
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ namespace Bonsai.Core
     /// <returns></returns>
     public float MaxUtility(BehaviourNode root, float initial = int.MinValue)
     {
-      _traversal.Push(root);
+      traversal.Push(root);
 
       while (HasNext())
       {
@@ -61,7 +61,7 @@ namespace Bonsai.Core
         initial = Math.Max(initial, node.UtilityValue());
       }
 
-      _traversal.ResetCount();
+      traversal.ResetCount();
       return initial;
     }
 
@@ -73,7 +73,7 @@ namespace Bonsai.Core
     /// <returns></returns>
     public float SumUtility(BehaviourNode root, float initial = 0f)
     {
-      _traversal.Push(root);
+      traversal.Push(root);
 
       while (HasNext())
       {
@@ -81,7 +81,7 @@ namespace Bonsai.Core
         initial += node.UtilityValue();
       }
 
-      _traversal.ResetCount();
+      traversal.ResetCount();
       return initial;
     }
 

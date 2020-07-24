@@ -36,11 +36,11 @@ namespace Bonsai.Core
     public GameObject actor;
 
     [SerializeField, HideInInspector]
-    private Blackboard _blackboard;
+    private Blackboard blackboard;
 
     public Blackboard Blackboard
     {
-      get { return _blackboard; }
+      get { return blackboard; }
     }
 
     // allNodes must always be kept in pre-order.
@@ -50,7 +50,7 @@ namespace Bonsai.Core
 
     public void SetBlackboard(Blackboard bb)
     {
-      _blackboard = bb;
+      blackboard = bb;
     }
 
     /// <summary>
@@ -356,9 +356,9 @@ namespace Bonsai.Core
       var cloneBt = CreateInstance<BehaviourTree>();
       cloneBt.name = sourceTree.name;
 
-      if (sourceTree._blackboard)
+      if (sourceTree.blackboard)
       {
-        cloneBt._blackboard = Instantiate(sourceTree._blackboard);
+        cloneBt.blackboard = Instantiate(sourceTree.blackboard);
       }
 
       // This will add nodes in pre-order to the main node list.
@@ -456,11 +456,11 @@ namespace Bonsai.Core
     [ContextMenu("Add Blackboard")]
     void AddBlackboardAsset()
     {
-      if (_blackboard == null && !EditorApplication.isPlaying)
+      if (blackboard == null && !EditorApplication.isPlaying)
       {
-        _blackboard = CreateInstance<Blackboard>();
-        _blackboard.hideFlags = HideFlags.HideInHierarchy;
-        AssetDatabase.AddObjectToAsset(_blackboard, this);
+        blackboard = CreateInstance<Blackboard>();
+        blackboard.hideFlags = HideFlags.HideInHierarchy;
+        AssetDatabase.AddObjectToAsset(blackboard, this);
       }
     }
 

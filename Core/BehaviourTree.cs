@@ -436,7 +436,7 @@ namespace Bonsai.Core
       if (node.IsComposite())
       {
         var composite = node as Composite;
-        composite.SetChildren(null);
+        composite.SetChildren(new BehaviourNode[] { });
       }
 
       else if (node.IsDecorator())

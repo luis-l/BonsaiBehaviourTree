@@ -56,24 +56,22 @@ namespace Bonsai.Core
     /// <para>Set the children for the composite node.</para>
     /// <para>This should be called when the tree is being built.</para>
     /// <para>It should be called before Tree Start() and never during Tree Update()</para>
+    /// <note>To clear children references, pass an empty array.</note>
     /// </summary>
-    /// <param name="nodes"></param>
+    /// <param name="nodes">The children for the node. Should not be null.</param>
     public void SetChildren(BehaviourNode[] nodes)
     {
       children = nodes;
-      if (children != null)
+      // Set index orders.
+      for (int i = 0; i < children.Length; i++)
       {
-        // Set index orders.
-        for (int i = 0; i < children.Length; i++)
-        {
-          children[i].indexOrder = i;
-        }
+        children[i].indexOrder = i;
+      }
 
-        // Set parent references.
-        foreach (BehaviourNode child in children)
-        {
-          child.Parent = this;
-        }
+      // Set parent references.
+      foreach (BehaviourNode child in children)
+      {
+        child.Parent = this;
       }
     }
 

@@ -361,10 +361,11 @@ namespace Bonsai.Core
         cloneBt.blackboard = Instantiate(sourceTree.blackboard);
       }
 
-      // This will add nodes in pre-order to the main node list.
-      TreeIterator<BehaviourNode>.Traverse(
-        sourceTree.Root,
-        node => cloneBt.AddNode(Instantiate(node)));
+      // Source tree nodes should already be in pre-order.
+      foreach (BehaviourNode node in sourceTree.AllNodes)
+      {
+        cloneBt.AddNode(Instantiate(node));
+      }
 
       // Relink children and parents for the cloned nodes.
       int maxCloneNodeCount = cloneBt.allNodes.Count;

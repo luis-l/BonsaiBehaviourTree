@@ -1,3 +1,6 @@
+
+[![Join the chat at https://gitter.im/BonsaiBehaviourTree/community](https://badges.gitter.im/BonsaiBehaviourTree/community.svg)](https://gitter.im/BonsaiBehaviourTree/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Bonsai Behaviour Tree
 
 ![Bonsai Logo](https://i.imgur.com/WTxGOZC.png) 
@@ -125,7 +128,7 @@ Since the goal of this project was a lightweight system, a complete, built-in fu
 
 ### Old Screenshots and videos
 
-[![Bonsai Behaviour Tree Showcase](https://i.imgur.com/Cuddqco.png)](https://www.youtube.com/watch?v=BL6TUJwAFWg) [![Join the chat at https://gitter.im/BonsaiBehaviourTree/community](https://badges.gitter.im/BonsaiBehaviourTree/community.svg)](https://gitter.im/BonsaiBehaviourTree/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Bonsai Behaviour Tree Showcase](https://i.imgur.com/Cuddqco.png)](https://www.youtube.com/watch?v=BL6TUJwAFWg)
 
 Videos:
 - [Quick showcase of multiple features](https://twitter.com/i/status/866473174577401856)

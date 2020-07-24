@@ -9,14 +9,14 @@ namespace Bonsai.Core
   public abstract class Decorator : BehaviourNode
   {
     [SerializeField, HideInInspector]
-    protected BehaviourNode _child;
+    protected BehaviourNode child;
 
     /// <summary>
     /// Gets the child.
     /// </summary>
     public BehaviourNode Child
     {
-      get { return _child; }
+      get { return child; }
     }
 
     /// <summary>
@@ -24,9 +24,9 @@ namespace Bonsai.Core
     /// </summary>
     public override void OnEnter()
     {
-      if (_child)
+      if (child)
       {
-        Iterator.Traverse(_child);
+        Iterator.Traverse(child);
       }
     }
 
@@ -37,13 +37,13 @@ namespace Bonsai.Core
     /// before Tree Start() and never during Tree Update()
     /// </para>
     /// </summary>
-    public void SetChild(BehaviourNode child)
+    public void SetChild(BehaviourNode node)
     {
-      _child = child;
-      if (_child != null)
+      child = node;
+      if (child != null)
       {
-        _child.Parent = this;
-        _child.indexOrder = 0;
+        child.Parent = this;
+        child.indexOrder = 0;
       }
     }
 
@@ -56,12 +56,12 @@ namespace Bonsai.Core
 
     public sealed override int ChildCount()
     {
-      return _child == null ? 0 : 1;
+      return child == null ? 0 : 1;
     }
 
     public sealed override BehaviourNode GetChildAt(int index)
     {
-      return _child;
+      return child;
     }
   }
 }

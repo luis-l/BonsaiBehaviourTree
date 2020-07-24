@@ -22,7 +22,7 @@ namespace Bonsai.Standard
       // Infinite loop always returns running and always traverses the child.
       if (infiniteLoop)
       {
-        Iterator.Traverse(_child);
+        Iterator.Traverse(child);
         return Status.Running;
       }
 
@@ -32,7 +32,7 @@ namespace Bonsai.Standard
         if (loopCounter < loopCount)
         {
           loopCounter++;
-          Iterator.Traverse(_child);
+          Iterator.Traverse(child);
           return Status.Running;
         }
 

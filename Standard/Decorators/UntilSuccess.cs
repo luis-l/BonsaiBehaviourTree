@@ -19,7 +19,7 @@ namespace Bonsai.Standard
       }
 
       // Retraverse child.
-      Iterator.Traverse(_child);
+      Iterator.Traverse(child);
 
       return Status.Running;
     }

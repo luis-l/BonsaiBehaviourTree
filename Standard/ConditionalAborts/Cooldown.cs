@@ -22,7 +22,7 @@ namespace Bonsai.Standard
       // We can only traverse the child if the cooldown is inactive.
       if (timer.IsDone)
       {
-        Iterator.Traverse(_child);
+        Iterator.Traverse(child);
       }
     }
 

@@ -92,7 +92,7 @@ namespace Bonsai.Designer
     public static BehaviourTree CreateBehaviourTree()
     {
       var bt = ScriptableObject.CreateInstance<BehaviourTree>();
-      bt.SetBlackboard(CreateBlackboard());
+      bt.blackboard = CreateBlackboard();
       return bt;
     }
 
@@ -117,14 +117,14 @@ namespace Bonsai.Designer
 
     public static void AddBlackboardIfMissing(BehaviourTree tree)
     {
-      if (tree && (tree.Blackboard == null || !AssetDatabase.Contains(tree.Blackboard)))
+      if (tree && (tree.blackboard == null || !AssetDatabase.Contains(tree.blackboard)))
       {
-        if (tree.Blackboard == null)
+        if (tree.blackboard == null)
         {
-          tree.SetBlackboard(CreateBlackboard());
+          tree.blackboard = CreateBlackboard();
         }
 
-        AssetDatabase.AddObjectToAsset(tree.Blackboard, tree);
+        AssetDatabase.AddObjectToAsset(tree.blackboard, tree);
       }
     }
 
@@ -133,7 +133,7 @@ namespace Bonsai.Designer
     {
       // Save tree and black board assets
       AssetDatabase.CreateAsset(canvas.Tree, path);
-      AssetDatabase.AddObjectToAsset(canvas.Tree.Blackboard, canvas.Tree);
+      AssetDatabase.AddObjectToAsset(canvas.Tree.blackboard, canvas.Tree);
 
       // Save nodes.
       SaveTree(meta, canvas);
@@ -149,7 +149,7 @@ namespace Bonsai.Designer
 
       AddNewNodeAssets(
         canvas.Tree,
-        canvas.Tree.AllNodes.Concat(canvas.Tree.unusedNodes),
+        canvas.Tree.Nodes.Concat(canvas.Tree.unusedNodes),
         canvasBehaviours);
 
       // Clear all parent-child connections. These will be reconstructed to match the connection in the BonsaiNodes.

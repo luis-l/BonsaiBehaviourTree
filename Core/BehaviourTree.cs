@@ -8,39 +8,23 @@ namespace Bonsai.Core
   [CreateAssetMenu(fileName = "BonsaiBT", menuName = "Bonsai/Behaviour Tree")]
   public class BehaviourTree : ScriptableObject
   {
+    // The iterator that ticks branches under the tree root.
+    // Does not tick branches under parallel nodes since those use their own parallel iterators.
     private BehaviourIterator mainIterator;
 
     // Only conditional decorator nodes can have observer properties.
     private List<ConditionalAbort> observerAborts;
 
-    // Store references to the parallel nodes;
+    // Store references to the parallel nodes.
     private ParallelComposite[] parallelNodes;
 
-    /// <summary>
-    /// Nodes that are allowed to update on tree tick.
-    /// </summary>
+    // Nodes that are allowed to update on tree tick.
     private BehaviourNode[] treeTickNodes;
 
-    public BehaviourNode Root
-    {
-      get { return allNodes.Length == 0 ? null : allNodes[0]; }
-    }
-
+    // Flags if the tree has been initialized and is ready to run.
+    // This is set on tree Start. 
+    // If false, the tree will not be traversed for running.
     private bool isTreeInitialized = false;
-
-    /// <summary>
-    /// The game object binded to the tree.
-    /// This is assigned at runtime when the tree instance starts.
-    /// </summary>
-    public GameObject actor;
-
-    [SerializeField, HideInInspector]
-    private Blackboard blackboard;
-
-    public Blackboard Blackboard
-    {
-      get { return blackboard; }
-    }
 
     // allNodes must always be kept in pre-order.
     [SerializeField, HideInInspector]
@@ -48,10 +32,34 @@ namespace Bonsai.Core
     private BehaviourNode[] allNodes = { };
 #pragma warning restore IDE0044 // Add readonly modifier
 
-    public void SetBlackboard(Blackboard bb)
+    /// <summary>
+    /// The nodes in the tree in pre-order.
+    /// </summary>
+    public BehaviourNode[] Nodes { get { return allNodes; } }
+
+    [SerializeField, HideInInspector]
+    public Blackboard blackboard;
+
+    /// <summary>
+    /// The first node in the tree. 
+    /// Also the entry point to run the tree.
+    /// </summary>
+    public BehaviourNode Root
     {
-      blackboard = bb;
+      get { return allNodes.Length == 0 ? null : allNodes[0]; }
     }
+
+    /// <summary>
+    /// <para>The game object actor associated with the tree.</para>
+    /// <para>Field is optional. The tree core can run without the actor.</para>
+    /// </summary>
+    public GameObject actor;
+
+    /// <summary>
+    /// The maximum height of the tree. 
+    /// This is the height measured from the root to the furthest leaf.
+    /// </summary>
+    public int Height { get; private set; } = 0;
 
     /// <summary>
     /// <para>Preprocesses and starts the tree.
@@ -78,11 +86,15 @@ namespace Bonsai.Core
       isTreeInitialized = true;
     }
 
+    /// <summary>
+    /// Ticks (steps) the tree once.
+    /// The tree must be started beforehand.
+    /// <seealso cref="Start"/>
+    /// </summary>
     public void Update()
     {
       if (isTreeInitialized && mainIterator.IsRunning)
       {
-
         if (treeTickNodes.Length != 0)
         {
           NodeTreeTick();
@@ -110,6 +122,78 @@ namespace Bonsai.Core
       {
         mainIterator.Traverse(Root);
       }
+    }
+
+    /// <summary>
+    /// Sets the tree nodes. Must be in pre-order.
+    /// </summary>
+    /// <param name="node">The nodes in pre-order.</param>
+    public void SetNodes(IEnumerable<BehaviourNode> nodes)
+    {
+      allNodes = nodes.ToArray();
+      int preOrderIndex = 0;
+      foreach (BehaviourNode node in allNodes)
+      {
+        node.treeOwner = this;
+        node.preOrderIndex = preOrderIndex++;
+      }
+    }
+
+    /// <summary>
+    /// Traverses the nodes under the root in pre-order and sets the tree nodes.
+    /// </summary>
+    /// <param name="root">The tree root</param>
+    public void SetNodes(BehaviourNode root)
+    {
+      SetNodes(TreeTraversal.PreOrder(root));
+    }
+
+    /// <summary>
+    /// Gets the node at the specified pre-order index.
+    /// </summary>
+    /// <param name="preOrderIndex"></param>
+    /// <returns></returns>
+    public BehaviourNode GetNode(int preOrderIndex)
+    {
+      return allNodes[preOrderIndex];
+    }
+
+    public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)
+    {
+      // Interrupt this subtree.
+      subroot.Iterator.StepBackInterrupt(subroot, bFullInterrupt);
+
+      // Look for parallel nodes under the subroot.
+      // Since the parallel count is usually small, we 
+      // can just do a linear iteration to interrupt multiple
+      // parallel nodes.
+      foreach (ParallelComposite p in parallelNodes)
+      {
+        if (IsUnderSubtree(subroot, p))
+        {
+          foreach (BehaviourIterator itr in p.BranchIterators)
+          {
+            // Only interrupt running iterators.
+            if (itr.IsRunning)
+            {
+              // Get the child of the parallel node, and interrupt the child subtree.
+              int childIndex = itr.FirstInTraversal;
+              BehaviourNode firstNode = allNodes[childIndex];
+              itr.StepBackInterrupt(firstNode.Parent, bFullInterrupt);
+            }
+          }
+        }
+      }
+    }
+
+    /// <summary>
+    /// Gets the nodes of type T.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public IEnumerable<T> GetNodes<T>() where T : BehaviourNode
+    {
+      return allNodes.Select(node => node as T).Where(casted => casted != null);
     }
 
     /// <summary>
@@ -163,34 +247,6 @@ namespace Bonsai.Core
       }
     }
 
-    public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)
-    {
-      // Interrupt this subtree.
-      subroot.Iterator.StepBackInterrupt(subroot, bFullInterrupt);
-
-      // Look for parallel nodes under the subroot.
-      // Since the parallel count is usually small, we 
-      // can just do a linear iteration to interrupt multiple
-      // parallel nodes.
-      foreach (ParallelComposite p in parallelNodes)
-      {
-        if (IsUnderSubtree(subroot, p))
-        {
-          foreach (BehaviourIterator itr in p.BranchIterators)
-          {
-            // Only interrupt running iterators.
-            if (itr.IsRunning)
-            {
-              // Get the child of the parallel node, and interrupt the child subtree.
-              int childIndex = itr.FirstInTraversal;
-              BehaviourNode firstNode = allNodes[childIndex];
-              itr.StepBackInterrupt(firstNode.Parent, bFullInterrupt);
-            }
-          }
-        }
-      }
-    }
-
     /// <summary>
     /// Sets the nodes post and level order numbering.
     /// </summary>
@@ -207,16 +263,6 @@ namespace Bonsai.Core
         node.levelOrder = level;
         Height = level;
       }
-    }
-
-    /// <summary>
-    /// Gets the nodes of type T.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public IEnumerable<T> GetNodes<T>() where T : BehaviourNode
-    {
-      return allNodes.Select(node => node as T).Where(casted => casted != null);
     }
 
     // Note on multiple aborts:
@@ -303,28 +349,6 @@ namespace Bonsai.Core
       return mainIterator.LastStatusReturned;
     }
 
-    public int Height { get; private set; } = 0;
-
-    /// <summary>
-    /// Sets the tree nodes. Must be in Pre-Order.
-    /// </summary>
-    /// <param name="node">The nodes in pre-order.</param>
-    public void SetNodes(IEnumerable<BehaviourNode> nodes)
-    {
-      allNodes = nodes.ToArray();
-      int preOrderIndex = 0;
-      foreach (BehaviourNode node in allNodes)
-      {
-        node.treeOwner = this;
-        node.preOrderIndex = preOrderIndex++;
-      }
-    }
-
-    public void SetNodes(BehaviourNode root)
-    {
-      SetNodes(TreeTraversal.PreOrder(root));
-    }
-
     /// <summary>
     /// Gets the instantiated copy version of a behaviour node from its original version.
     /// </summary>
@@ -360,7 +384,7 @@ namespace Bonsai.Core
       }
 
       // Source tree nodes should already be in pre-order.
-      cloneBt.SetNodes(sourceTree.AllNodes.Select(n => Instantiate(n)));
+      cloneBt.SetNodes(sourceTree.Nodes.Select(n => Instantiate(n)));
 
       // Relink children and parents for the cloned nodes.
       int maxCloneNodeCount = cloneBt.allNodes.Length;
@@ -391,21 +415,6 @@ namespace Bonsai.Core
       }
 
       return cloneBt;
-    }
-
-    /// <summary>
-    /// Gets the node at the specified pre-order index.
-    /// </summary>
-    /// <param name="preOrderIndex"></param>
-    /// <returns></returns>
-    public BehaviourNode GetNode(int preOrderIndex)
-    {
-      return allNodes[preOrderIndex];
-    }
-
-    public BehaviourNode[] AllNodes
-    {
-      get { return allNodes; }
     }
 
     /// <summary>

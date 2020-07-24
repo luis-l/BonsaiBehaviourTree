@@ -172,7 +172,7 @@ namespace Bonsai.Core
     /// </summary>
     protected Blackboard Blackboard
     {
-      get { return treeOwner.Blackboard; }
+      get { return treeOwner.blackboard; }
     }
 
     /// <summary>

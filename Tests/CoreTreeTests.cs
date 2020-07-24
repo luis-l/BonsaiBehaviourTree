@@ -20,22 +20,22 @@ namespace Tests
       tree.SetNodes(root);
 
       BehaviourTree cloneTree = BehaviourTree.Clone(tree);
-      Assert.AreEqual(4, cloneTree.AllNodes.Length);
+      Assert.AreEqual(4, cloneTree.Nodes.Length);
 
-      Assert.AreEqual(0, cloneTree.AllNodes[0].PreOrderIndex);
-      Assert.AreEqual(1, cloneTree.AllNodes[1].PreOrderIndex);
-      Assert.AreEqual(2, cloneTree.AllNodes[2].PreOrderIndex);
-      Assert.AreEqual(3, cloneTree.AllNodes[3].PreOrderIndex);
+      Assert.AreEqual(0, cloneTree.Nodes[0].PreOrderIndex);
+      Assert.AreEqual(1, cloneTree.Nodes[1].PreOrderIndex);
+      Assert.AreEqual(2, cloneTree.Nodes[2].PreOrderIndex);
+      Assert.AreEqual(3, cloneTree.Nodes[3].PreOrderIndex);
 
-      Assert.AreEqual(0, cloneTree.AllNodes[0].ChildOrder);
-      Assert.AreEqual(0, cloneTree.AllNodes[1].ChildOrder);
-      Assert.AreEqual(1, cloneTree.AllNodes[2].ChildOrder);
-      Assert.AreEqual(2, cloneTree.AllNodes[3].ChildOrder);
+      Assert.AreEqual(0, cloneTree.Nodes[0].ChildOrder);
+      Assert.AreEqual(0, cloneTree.Nodes[1].ChildOrder);
+      Assert.AreEqual(1, cloneTree.Nodes[2].ChildOrder);
+      Assert.AreEqual(2, cloneTree.Nodes[3].ChildOrder);
 
       var parent = cloneTree.Root;
-      Assert.AreEqual(parent, cloneTree.AllNodes[1].Parent);
-      Assert.AreEqual(parent, cloneTree.AllNodes[2].Parent);
-      Assert.AreEqual(parent, cloneTree.AllNodes[3].Parent);
+      Assert.AreEqual(parent, cloneTree.Nodes[1].Parent);
+      Assert.AreEqual(parent, cloneTree.Nodes[2].Parent);
+      Assert.AreEqual(parent, cloneTree.Nodes[3].Parent);
 
       var result = Helper.RunBehaviourTree(cloneTree);
       Assert.AreEqual(BehaviourNode.Status.Success, result);

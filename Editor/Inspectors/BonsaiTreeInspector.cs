@@ -32,7 +32,7 @@ namespace Bonsai.Designer
     public override void OnInspectorGUI()
     {
       var tree = target as BehaviourTree;
-      var bb = tree.Blackboard;
+      var bb = tree.blackboard;
 
       EditorGUILayout.LabelField("Behaviour Tree", tree.name);
       EditorGUILayout.Space();

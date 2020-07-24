@@ -44,7 +44,7 @@ namespace Bonsai.Core
       TickBranch();
 
       int index = traversal.Peek();
-      BehaviourNode node = tree.AllNodes[index];
+      BehaviourNode node = tree.Nodes[index];
       LastStatusReturned = node.Run();
 
 #if UNITY_EDITOR
@@ -68,7 +68,7 @@ namespace Bonsai.Core
       for (int i = 0; i < branchTicks.Count; i++)
       {
         int nodeIndex = branchTicks.GetValue(i);
-        tree.AllNodes[nodeIndex].OnBranchTick();
+        tree.Nodes[nodeIndex].OnBranchTick();
       }
     }
 
@@ -78,7 +78,7 @@ namespace Bonsai.Core
       while (requestedTraversals.Count != 0)
       {
         int i = requestedTraversals.Dequeue();
-        BehaviourNode node = tree.AllNodes[i];
+        BehaviourNode node = tree.Nodes[i];
         node.OnEnter();
 
         if (node.CanTickOnBranch())
@@ -169,7 +169,7 @@ namespace Bonsai.Core
       int subtreeIndexInTraversal = parentIndexInTraversal + 1;
 
       int subtreePreOrder = traversal.GetValue(subtreeIndexInTraversal);
-      return tree.AllNodes[subtreePreOrder];
+      return tree.Nodes[subtreePreOrder];
     }
 
     /// <summary>
@@ -253,7 +253,7 @@ namespace Bonsai.Core
     private BehaviourNode PopNode()
     {
       int index = traversal.Pop();
-      BehaviourNode node = tree.AllNodes[index];
+      BehaviourNode node = tree.Nodes[index];
       node.OnExit();
 
       // Guard against empty branch tick pop.

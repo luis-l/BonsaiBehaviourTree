@@ -64,7 +64,7 @@ namespace Bonsai.Core
 
       // The main node we wish to abort from if possible.
       // Aborts only occur within the same parent subtree of the aborter.
-      BehaviourNode active = Tree.AllNodes[Iterator.CurrentIndex];
+      BehaviourNode active = Tree.Nodes[Iterator.CurrentIndex];
 
       // The abort type dictates the final criteria to check
       // if the abort is satisfied and if the condition check changed state.

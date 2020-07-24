@@ -9,7 +9,6 @@ namespace Bonsai.Standard
   [BonsaiNode("Tasks/", "Hourglass")]
   public class Idle : Core.Task
   {
-
     public override Status Run()
     {
       return Status.Running;

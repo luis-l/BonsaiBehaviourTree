@@ -375,12 +375,10 @@ namespace Bonsai.Core
 
         if (copyNode.IsComposite())
         {
-          var sourceComposite = nodeSource as Composite;
           var copyComposite = copyNode as Composite;
           copyComposite.SetChildren(
-            sourceComposite
-            .Children
-            .Select(child => GetInstanceVersion(cloneBt, child))
+            Enumerable.Range(0, nodeSource.ChildCount())
+            .Select(childIndex => GetInstanceVersion(cloneBt, nodeSource.GetChildAt(childIndex)))
             .ToArray());
         }
 

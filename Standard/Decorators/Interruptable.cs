@@ -24,7 +24,7 @@ namespace Bonsai.Standard
         return returnStatus;
       }
 
-      return Iterator.LastStatusReturned;
+      return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
     }
 
     public override void OnExit()

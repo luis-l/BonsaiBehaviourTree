@@ -1,7 +1,6 @@
 ﻿
 using System.Text;
 using Bonsai.Core;
-using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -10,45 +9,53 @@ namespace Bonsai.Standard
   /// If the time is up, the decorator returns failure.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class TimeLimit : ConditionalAbort
+  public sealed class TimeLimit : ConditionalAbort
   {
-    public float timeLimit = 1f;
-
-    [ShowAtRuntime]
-    private float timer = 0f;
+    [ShowAtRuntime, TreeTimer]
+    [UnityEngine.SerializeField]
+    public Utility.Timer timer = new Utility.Timer();
 
     void OnEnable()
     {
       abortType = AbortType.Self;
     }
 
+    public override void OnStart()
+    {
+      timer.OnTimeout += OnTimeout;
+    }
+
     public override void OnEnter()
     {
-      timer = 0f;
+      Tree.AddTimer(timer);
+      timer.Start();
       base.OnEnter();
+    }
+
+    public override void OnExit()
+    {
+      Tree.RemoveTimer(timer);
     }
 
     public override bool Condition()
     {
-      return timer < timeLimit;
+      return timer.IsDone;
     }
 
-    public override void OnBranchTick()
+    private void OnTimeout()
     {
-      timer += Time.deltaTime;
+      // Timer complete, notify abort.
+      Evaluate();
     }
 
-    public override bool CanTickOnBranch()
-    {
-      // Enable branch ticking so we can update the timer.
-      return true;
-    }
+    protected override void OnObserverBegin() { }
+    protected override void OnObserverEnd() { }
 
     public override void Description(StringBuilder builder)
     {
       base.Description(builder);
       builder.AppendLine();
-      builder.AppendFormat("Abort and fail after {0:0.00}s", timeLimit);
+      builder.AppendFormat("Abort and fail after {0:0.00}s", timer.interval);
     }
   }
 }

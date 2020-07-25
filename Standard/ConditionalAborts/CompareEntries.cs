@@ -1,4 +1,5 @@
 ﻿
+using System.Text;
 using Bonsai.Core;
 using UnityEngine;
 
@@ -34,6 +35,41 @@ namespace Bonsai.Standard
       bool bResult = val1.Equals(val2);
 
       return compareInequality ? !bResult : bResult;
+    }
+
+    protected override void OnObserverBegin()
+    {
+      Blackboard.BlackboardChange += BlackboardChanged;
+    }
+
+    protected override void OnObserverEnd()
+    {
+      Blackboard.BlackboardChange -= BlackboardChanged;
+    }
+
+    private void BlackboardChanged(Blackboard.KeyEvent e)
+    {
+      if (e.Key == key1 || e.Key == key2)
+      {
+        Evaluate();
+      }
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      base.Description(builder);
+      builder.AppendLine();
+
+      if (string.IsNullOrEmpty(key1) || string.IsNullOrEmpty(key2))
+      {
+        builder.AppendLine("Keys are not set");
+      }
+
+      else
+      {
+        builder.AppendFormat("Compare {0} and {1}", key1, key2);
+      }
+
     }
   }
 }

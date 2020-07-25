@@ -1,7 +1,7 @@
 ﻿
 using System.Collections.Generic;
+using System.Text;
 using Bonsai.Core;
-using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -17,9 +17,10 @@ namespace Bonsai.Standard
     public enum Evaluation { Sum, Max }
 
     public Evaluation evaluation = Evaluation.Sum;
-    public float interval = 0.1f;
 
-    private readonly Utility.Timer timer = new Utility.Timer();
+    [TreeTimer]
+    [UnityEngine.SerializeField]
+    public Utility.Timer timer = new Utility.Timer();
 
     private int highestUtilityChild = 0;
     private List<int> branchesLeftToRun;
@@ -36,7 +37,7 @@ namespace Bonsai.Standard
 
     public override void OnEnter()
     {
-      timer.WaitTime = interval;
+      Tree.AddTimer(timer);
       timer.Start();
 
       branchesLeftToRun.Clear();
@@ -48,6 +49,11 @@ namespace Bonsai.Standard
       highestUtilityChild = HighestUtilityBranch();
 
       base.OnEnter();
+    }
+
+    public override void OnExit()
+    {
+      Tree.RemoveTimer(timer);
     }
 
     public override void OnChildExit(int childIndex, Status childStatus)
@@ -62,9 +68,9 @@ namespace Bonsai.Standard
       base.OnChildExit(childIndex, childStatus);
     }
 
-    public override void OnAbort(ConditionalAbort child)
+    public override void OnAbort(int childIndex)
     {
-      highestUtilityChild = child.ChildOrder;
+      highestUtilityChild = childIndex;
     }
 
     // Get children by utility order.
@@ -76,16 +82,6 @@ namespace Bonsai.Standard
       }
 
       return Children[highestUtilityChild];
-    }
-
-    public override bool CanTickOnBranch()
-    {
-      return true;
-    }
-
-    public override void OnBranchTick()
-    {
-      timer.Update(Time.deltaTime);
     }
 
     private void Evaluate()
@@ -150,6 +146,11 @@ namespace Bonsai.Standard
         }
       }
       return highestChild;
+    }
+
+    public override void Description(StringBuilder builder)
+    {
+      builder.AppendFormat("Reevaluate every {0:0.00}s", timer.interval);
     }
 
   }

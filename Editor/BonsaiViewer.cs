@@ -1,6 +1,7 @@
 ﻿
 using System;
-using UnityEditor;
+using System.Linq;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Bonsai.Designer
@@ -18,6 +19,11 @@ namespace Bonsai.Designer
 
     public BonsaiCanvas Canvas { get; set; }
     public EditorSelection NodeSelection { get; set; }
+
+    /// <summary>
+    /// The current nodes that can be aborted from the currently selected ConditionalAbort.
+    /// </summary>
+    private HashSet<BonsaiNode> abortableSelected = new HashSet<BonsaiNode>();
 
     private static BonsaiPreferences Preferences
     {
@@ -151,7 +157,7 @@ namespace Bonsai.Designer
 
     private Color NodeStatusColor(BonsaiNode node)
     {
-      if (IsNodeEvaluating(node))
+      if (IsNodeObserving(node))
       {
         return Preferences.evaluateColor;
       }
@@ -167,7 +173,7 @@ namespace Bonsai.Designer
       {
         return Preferences.referenceColor;
       }
-      else if (IsNodeAbortable(node))
+      else if (abortableSelected.Contains(node))
       {
         return Preferences.abortColor;
       }
@@ -184,57 +190,87 @@ namespace Bonsai.Designer
       return node.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running;
     }
 
-    // Highlights nodes that can be aborted by the currently selected node.
-    private bool IsNodeAbortable(BonsaiNode node)
-    {
-      // Root must exist.
-      if (!Canvas.Tree.Root)
-      {
-        return false;
-      }
-
-      BonsaiNode selected = NodeSelection.SingleSelectedNode;
-
-      // A node must be selected.
-      if (selected == null)
-      {
-        return false;
-      }
-
-      // The selected node must be a conditional abort.
-      var aborter = selected.Behaviour as Core.ConditionalAbort;
-
-      // Node can be aborted by the selected aborter.
-      return aborter && Core.ConditionalAbort.IsAbortable(aborter, node.Behaviour);
-    }
-
     /// <summary>
     /// Highlights nodes that are being re-evaluated, like abort nodes.
     /// </summary>
     /// <param name="node"></param>
-    private bool IsNodeEvaluating(BonsaiNode node)
+    private bool IsNodeObserving(BonsaiNode node)
     {
-      if (!EditorApplication.isPlaying)
-      {
-        return false;
-      }
-
-      Core.BehaviourIterator itr = node.Behaviour.Iterator;
+      Core.BehaviourNode behaviour = node.Behaviour;
+      Core.BehaviourIterator itr = behaviour.Iterator;
 
       if (itr != null && itr.IsRunning)
       {
-        var aborter = node.Behaviour as Core.ConditionalAbort;
-        int index = itr.CurrentIndex;
-        if (index != -1)
-        {
-          Core.BehaviourNode currentNode = Canvas.Tree.GetNode(index);
-
-          // The current running node can be aborted by it.
-          return aborter && Core.ConditionalAbort.IsAbortable(aborter, currentNode);
-        }
+        var aborter = behaviour as Core.ConditionalAbort;
+        return aborter && aborter.IsObserving;
       }
 
       return false;
+    }
+
+    public void UpdateAbortableSelection(BonsaiNode node)
+    {
+      abortableSelected.Clear();
+
+      var aborter = node.Behaviour as Core.ConditionalAbort;
+      if (aborter)
+      {
+        abortableSelected = new HashSet<BonsaiNode>(Abortables(node, aborter.abortType));
+      }
+    }
+
+    public void ClearAbortableSelection()
+    {
+      abortableSelected.Clear();
+    }
+
+    private IEnumerable<BonsaiNode> Abortables(BonsaiNode aborter, Core.AbortType abortType)
+    {
+      switch (abortType)
+      {
+        case Core.AbortType.Self:
+          return SelfAbortables(aborter);
+        case Core.AbortType.LowerPriority:
+          return LowerPriorityAbortables(aborter);
+        case Core.AbortType.Both:
+          return SelfAbortables(aborter).Concat(LowerPriorityAbortables(aborter));
+        default:
+          return Enumerable.Empty<BonsaiNode>();
+      }
+    }
+
+    private IEnumerable<BonsaiNode> SelfAbortables(BonsaiNode aborter)
+    {
+      return Core.TreeTraversal.PreOrder(aborter).Skip(1);
+    }
+
+    private IEnumerable<BonsaiNode> LowerPriorityAbortables(BonsaiNode aborter)
+    {
+      GetCompositeParent(aborter, out BonsaiNode parent, out BonsaiNode directChild);
+      if (parent != null)
+      {
+        parent.SortChildren();
+        int abortIndex = parent.IndexOf(directChild);
+        if (abortIndex >= 0)
+        {
+          return Enumerable
+            .Range(0, parent.ChildCount())
+            .Where(i => i > abortIndex)
+            .SelectMany(i => Core.TreeTraversal.PreOrder(parent.GetChildAt(i)));
+        }
+      }
+      return Enumerable.Empty<BonsaiNode>();
+    }
+
+    private static void GetCompositeParent(BonsaiNode aborter, out BonsaiNode compositeParent, out BonsaiNode directChild)
+    {
+      directChild = aborter;
+      compositeParent = aborter.Parent;
+      while (compositeParent != null && !compositeParent.Behaviour.IsComposite())
+      {
+        directChild = compositeParent;
+        compositeParent = compositeParent.Parent;
+      }
     }
   }
 }

@@ -22,7 +22,7 @@ namespace Bonsai.Standard
 
     // Since Unity cannot serialize Type, we need to store the full name of the type.
     [SerializeField, HideInInspector]
-    private string _typename;
+    private string typename;
 
     [Tooltip("Use Type.IsAssignableFrom() to take into account inheritance.")]
     public bool useIsAssignableFrom = false;
@@ -49,14 +49,14 @@ namespace Bonsai.Standard
 
     public void OnAfterDeserialize()
     {
-      if (string.IsNullOrEmpty(_typename))
+      if (string.IsNullOrEmpty(typename))
       {
         type = null;
       }
 
       else
       {
-        type = Type.GetType(_typename);
+        type = Type.GetType(typename);
       }
     }
 
@@ -64,12 +64,30 @@ namespace Bonsai.Standard
     {
       if (type != null)
       {
-        _typename = type.AssemblyQualifiedName;
+        typename = type.AssemblyQualifiedName;
       }
 
       else
       {
-        _typename = "";
+        typename = "";
+      }
+    }
+
+    protected override void OnObserverBegin()
+    {
+      Blackboard.BlackboardChange += BlackboardChanged;
+    }
+
+    protected override void OnObserverEnd()
+    {
+      Blackboard.BlackboardChange -= BlackboardChanged;
+    }
+
+    private void BlackboardChanged(Blackboard.KeyEvent e)
+    {
+      if (e.Key == key)
+      {
+        Evaluate();
       }
     }
 

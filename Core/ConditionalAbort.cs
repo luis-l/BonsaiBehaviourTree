@@ -17,7 +17,8 @@ namespace Bonsai.Core
     /// </summary>
     public AbortType abortType = AbortType.None;
 
-    private bool lastConditionResult = false;
+    public bool IsObserving { get; private set; } = false;
+    private bool IsActive { get; set; } = false;
 
     /// <summary>
     /// The condition that needs to be satisfied for the node to run its children or to abort.
@@ -25,125 +26,116 @@ namespace Bonsai.Core
     /// <returns></returns>
     public abstract bool Condition();
 
+    protected abstract void OnObserverBegin();
+    protected abstract void OnObserverEnd();
+
     /// <summary>
     /// Only runs the child if the condition is true.
     /// </summary>
     public override void OnEnter()
     {
-      lastConditionResult = Condition();
-      if (lastConditionResult)
+      IsActive = true;
+
+      // Observer has become relevant in current context.
+      if (abortType != AbortType.None)
+      {
+        if (!IsObserving)
+        {
+          IsObserving = true;
+          OnObserverBegin();
+        }
+      }
+
+      if (Condition())
       {
         base.OnEnter();
       }
     }
 
-    /// <summary>
-    /// Returns true if the condition changed state since the last re-evaluation.
-    /// </summary>
-    /// <returns></returns>
-    public bool Reevaluate()
+    public override void OnExit()
     {
-      lastConditionResult = Condition();
-      return lastConditionResult;
+      // Observer no longer relevant in current context.
+      if (abortType == AbortType.None || abortType == AbortType.Self)
+      {
+        if (IsObserving)
+        {
+          IsObserving = false;
+          OnObserverEnd();
+        }
+      }
+
+      IsActive = false;
+    }
+
+    // When the parent composite exits, all observers in child branches become irrelevant.
+    public override void OnCompositeParentExit()
+    {
+      if (IsObserving)
+      {
+        IsObserving = false;
+        OnObserverEnd();
+      }
     }
 
     public override Status Run()
     {
-      // Return failure if the condition failed, else
-      // return what the child returns if the condition was true.
-      return lastConditionResult ? Iterator.LastStatusReturned : Status.Failure;
+      // Return what the child returns if it ran, else fail.
+      return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
     }
 
-    public bool IsAbortSatisfied()
+    protected void Evaluate()
     {
-      // Aborts need to be enabled in order to test them.
-      if (abortType == AbortType.None)
+      bool conditionResult = Condition();
+
+      if (IsActive && !conditionResult)
       {
-        return false;
+        AbortCurrentBranch();
       }
 
-      // The main node we wish to abort from if possible.
-      // Aborts only occur within the same parent subtree of the aborter.
-      BehaviourNode active = Tree.Nodes[Iterator.CurrentIndex];
-
-      // The abort type dictates the final criteria to check
-      // if the abort is satisfied and if the condition check changed state.
-      switch (abortType)
+      else if (!IsActive && conditionResult)
       {
-        case AbortType.LowerPriority:
-          return
-              !BehaviourTree.IsUnderSubtree(this, active) &&
-              BehaviourTree.IsUnderSubtree(Parent, active) &&
-              Priority() > Iterator.GetRunningSubtree(Parent).Priority() &&
-              Reevaluate();
-
-        // Self aborts always interrupt, regardless of the condition.
-        case AbortType.Self:
-          return BehaviourTree.IsUnderSubtree(this, active) && Reevaluate();
-
-        case AbortType.Both:
-          return
-               (BehaviourTree.IsUnderSubtree(this, active) ||
-               (BehaviourTree.IsUnderSubtree(Parent, active) &&
-               Priority() > Iterator.GetRunningSubtree(Parent).Priority())) &&
-               Reevaluate();
+        AbortLowerPriorityBranch();
       }
-
-      return false;
     }
 
-    /// <summary>
-    /// Test if the aborter may abort the node.
-    /// Make sure that the node orders are pre-computed before calling this function.
-    /// This method is mainly used by the editor.
-    /// </summary>
-    /// <param name="aborter">The node to perform the abort.</param>
-    /// <param name="node">The node that gets aborted.</param>
-    /// <returns></returns>
-    public static bool IsAbortable(ConditionalAbort aborter, BehaviourNode node)
+    private void AbortCurrentBranch()
     {
-      // This makes sure that dangling nodes do not show that they can abort nodes under main tree.
-      if (aborter.preOrderIndex == kInvalidOrder)
+      if (abortType == AbortType.Self || abortType == AbortType.Both)
       {
-        return false;
+        Iterator.AbortRunningChildBranch(Parent, ChildOrder);
       }
-
-      // Parallel subtrees cannot abort each other.
-      if (aborter.Parent && aborter.Parent is ParallelComposite)
-      {
-        return false;
-      }
-
-      switch (aborter.abortType)
-      {
-        case AbortType.LowerPriority:
-          return
-              !BehaviourTree.IsUnderSubtree(aborter, node) &&
-              BehaviourTree.IsUnderSubtree(aborter.Parent, node) &&
-              aborter.Priority() > GetSubtree(aborter.Parent, node).Priority();
-
-        // Self aborts always interrupt, regardless of the condition.
-        case AbortType.Self:
-          return BehaviourTree.IsUnderSubtree(aborter, node);
-
-        case AbortType.Both:
-          return
-               BehaviourTree.IsUnderSubtree(aborter, node) ||
-               (BehaviourTree.IsUnderSubtree(aborter.Parent, node) &&
-               aborter.Priority() > GetSubtree(aborter.Parent, node).Priority());
-      }
-
-      return false;
     }
 
-    private static BehaviourNode GetSubtree(BehaviourNode parent, BehaviourNode grandchild)
+    private void AbortLowerPriorityBranch()
     {
-      BehaviourNode sub = grandchild;
-      while (sub.Parent != parent)
+      if (abortType == AbortType.LowerPriority || abortType == AbortType.Both)
       {
-        sub = sub.Parent;
+        GetCompositeParent(this, out BehaviourNode compositeParent, out int branchIndex);
+
+        if (compositeParent && compositeParent.IsComposite())
+        {
+          bool isLowerPriority = (compositeParent as Composite).CurrentChildIndex > branchIndex;
+          if (isLowerPriority)
+          {
+            Iterator.AbortRunningChildBranch(compositeParent, branchIndex);
+          }
+        }
       }
-      return sub;
+    }
+
+    private static void GetCompositeParent(
+      BehaviourNode child,
+      out BehaviourNode compositeParent,
+      out int branchIndex)
+    {
+      compositeParent = child.Parent;
+      branchIndex = child.indexOrder;
+
+      while (compositeParent && !compositeParent.IsComposite())
+      {
+        branchIndex = compositeParent.indexOrder;
+        compositeParent = compositeParent.Parent;
+      }
     }
 
     public override void Description(StringBuilder builder)

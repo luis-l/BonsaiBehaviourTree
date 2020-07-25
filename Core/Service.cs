@@ -6,14 +6,11 @@ namespace Bonsai.Core
 {
   public abstract class Service : Decorator
   {
-    public float interval = 0.5f;
-    public float randomDeviation = 0f;
     public bool restartTimerOnEnter = true;
 
-    [ShowAtRuntime]
-    protected readonly Utility.Timer timer = new Utility.Timer();
-
-    public Action OnEvaluation = delegate { };
+    [ShowAtRuntime, TreeTimer]
+    [UnityEngine.SerializeField]
+    public Utility.Timer timer = new Utility.Timer();
 
     public sealed override void OnStart()
     {
@@ -23,7 +20,7 @@ namespace Bonsai.Core
 
     public sealed override void OnEnter()
     {
-      UpdateWaitTime();
+      Tree.AddTimer(timer);
 
       if (timer.IsDone || restartTimerOnEnter)
       {
@@ -33,23 +30,15 @@ namespace Bonsai.Core
       base.OnEnter();
     }
 
+    public sealed override void OnExit()
+    {
+      Tree.RemoveTimer(timer);
+    }
+
     public sealed override Status Run()
     {
       // Simply pass the status.
-      return Iterator.LastStatusReturned;
-    }
-
-    public sealed override bool CanTickOnBranch()
-    {
-      return true;
-    }
-
-    /// <summary>
-    /// Ticks the service.
-    /// </summary>
-    public sealed override void OnBranchTick()
-    {
-      timer.Update(UnityEngine.Time.deltaTime);
+      return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
     }
 
     /// <summary>
@@ -57,21 +46,16 @@ namespace Bonsai.Core
     /// </summary>
     protected abstract void ServiceTick();
 
-    private void UpdateWaitTime()
-    {
-      timer.WaitTime = interval + UnityEngine.Random.Range(-randomDeviation, randomDeviation);
-    }
-
     public override void Description(StringBuilder builder)
     {
-      if (randomDeviation == 0f)
+      if (timer.deviation == 0f)
       {
-        builder.AppendFormat("Tick {0:0.00}s", interval);
+        builder.AppendFormat("Tick {0:0.00}s", timer.interval);
       }
       else
       {
-        float lower = interval - randomDeviation;
-        float upper = interval + randomDeviation;
+        float lower = timer.interval - timer.deviation;
+        float upper = timer.interval + timer.deviation;
         builder.AppendFormat("Tick {0:0.00}s - {1:0.00}s", lower, upper);
       }
 

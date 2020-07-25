@@ -63,7 +63,7 @@ namespace Bonsai.Core
       ChildStatuses[childIndex] = childStatus;
     }
 
-    public override void OnAbort(ConditionalAbort child)
+    public override void OnAbort(int childIndex)
     {
       // Do nothing. Parallel branches have same priority.
     }

@@ -11,7 +11,7 @@ namespace Bonsai.Standard
   {
     public override Status Run()
     {
-      Status s = Iterator.LastStatusReturned;
+      Status s = Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
 
       if (s == Status.Failure)
       {

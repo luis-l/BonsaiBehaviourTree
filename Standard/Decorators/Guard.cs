@@ -38,7 +38,7 @@ namespace Bonsai.Standard
       // the child already returned.
       if (childRan)
       {
-        return Iterator.LastStatusReturned;
+        return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
       }
 
       bool bGuardsAvailable = IsRunningGuardsAvailable();

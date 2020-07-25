@@ -39,7 +39,7 @@ namespace Bonsai.Standard
         // Finished looping, return what the child returns.
         else
         {
-          return Iterator.LastStatusReturned;
+          return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
         }
       }
     }

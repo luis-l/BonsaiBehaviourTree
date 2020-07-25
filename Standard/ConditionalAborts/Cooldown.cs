@@ -1,7 +1,6 @@
 ﻿
 using System.Text;
 using Bonsai.Core;
-using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -11,11 +10,15 @@ namespace Bonsai.Standard
   [BonsaiNode("Conditional/", "Condition")]
   public class Cooldown : ConditionalAbort
   {
-    [Tooltip("The amount of time to wait at the cooldown decorator.")]
-    public float cooldownTime = 1f;
+    [ShowAtRuntime, TreeTimer]
+    [UnityEngine.SerializeField]
+    public Utility.Timer timer = new Utility.Timer();
 
-    [ShowAtRuntime]
-    private readonly Utility.Timer timer = new Utility.Timer();
+    public override void OnStart()
+    {
+      // When the timer finishes, automatically unregister from tree update.
+      timer.OnTimeout += RemoveTimerFromTreeTick;
+    }
 
     public override void OnEnter()
     {
@@ -31,7 +34,7 @@ namespace Bonsai.Standard
       // Only start time if not yet running 
       if (timer.IsDone)
       {
-        timer.WaitTime = cooldownTime;
+        Tree.AddTimer(timer);
         timer.Start();
       }
     }
@@ -51,27 +54,25 @@ namespace Bonsai.Standard
       }
 
       // Cooldown is not active, pass the child branch status.
-      return Iterator.LastStatusReturned;
+      return Iterator.LastChildExitStatus.GetValueOrDefault(Status.Failure);
     }
 
-    public override void OnTreeTick()
+    private void RemoveTimerFromTreeTick()
     {
-      if (!timer.IsDone)
-      {
-        timer.Update(Time.deltaTime);
-      }
+      Tree.RemoveTimer(timer);
+
+      // Time is done. Notify abort.
+      Evaluate();
     }
 
-    public override bool CanTickOnTree()
-    {
-      return true;
-    }
+    protected override void OnObserverBegin() { }
+    protected override void OnObserverEnd() { }
 
     public override void Description(StringBuilder builder)
     {
       base.Description(builder);
       builder.AppendLine();
-      builder.AppendFormat("Lock execution for {0:0.00}s", cooldownTime);
+      builder.AppendFormat("Lock execution for {0:0.00}s", timer.interval);
     }
   }
 }

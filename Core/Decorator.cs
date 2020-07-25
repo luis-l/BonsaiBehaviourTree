@@ -47,7 +47,17 @@ namespace Bonsai.Core
       }
     }
 
-    public sealed override void OnAbort(ConditionalAbort aborter) { }
+    public sealed override void OnAbort(int childIndex) { }
+
+    public override void OnCompositeParentExit()
+    {
+      // Propogate composite parent exit through decorator chain only.
+      // No need to call for composite children since composite nodes handle that.
+      if (child && child.IsDecorator())
+      {
+        child.OnCompositeParentExit();
+      }
+    }
 
     public sealed override int MaxChildCount()
     {
@@ -56,7 +66,7 @@ namespace Bonsai.Core
 
     public sealed override int ChildCount()
     {
-      return child == null ? 0 : 1;
+      return child ? 1 : 0;
     }
 
     public sealed override BehaviourNode GetChildAt(int index)

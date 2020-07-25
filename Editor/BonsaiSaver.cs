@@ -147,10 +147,7 @@ namespace Bonsai.Designer
 
       var canvasBehaviours = canvas.Nodes.Select(n => n.Behaviour);
 
-      AddNewNodeAssets(
-        canvas.Tree,
-        canvas.Tree.Nodes.Concat(canvas.Tree.unusedNodes),
-        canvasBehaviours);
+      AddNewNodeAssets(canvas.Tree, canvasBehaviours);
 
       // Clear all parent-child connections. These will be reconstructed to match the connection in the BonsaiNodes.
       canvas.Tree.ClearStructure();
@@ -194,7 +191,9 @@ namespace Bonsai.Designer
 
     private void SetDecoratorChildren(BonsaiCanvas canvas)
     {
-      IEnumerable<BonsaiNode> decoratorNodes = canvas.Nodes.Where(n => n.Behaviour.IsDecorator());
+      IEnumerable<BonsaiNode> decoratorNodes = canvas.Nodes
+        .Where(n => n.Behaviour.IsDecorator() && n.ChildCount() == 1);
+
       foreach (BonsaiNode node in decoratorNodes)
       {
         var decoratorBehaviour = node.Behaviour as Decorator;
@@ -204,14 +203,16 @@ namespace Bonsai.Designer
 
     private void AddNewNodeAssets(
       BehaviourTree treeAsset,
-      IEnumerable<BehaviourNode> assetNodes,
       IEnumerable<BehaviourNode> canvasNodes)
     {
-      foreach (BehaviourNode newNodes in canvasNodes.Except(assetNodes))
+      foreach (BehaviourNode node in canvasNodes)
       {
-        newNodes.name = newNodes.GetType().Name;
-        newNodes.hideFlags = HideFlags.HideInHierarchy;
-        AssetDatabase.AddObjectToAsset(newNodes, treeAsset);
+        if (!AssetDatabase.Contains(node))
+        {
+          node.name = node.GetType().Name;
+          node.hideFlags = HideFlags.HideInHierarchy;
+          AssetDatabase.AddObjectToAsset(node, treeAsset);
+        }
       }
     }
 

@@ -12,7 +12,7 @@ namespace Bonsai.Core
     private BehaviourNode[] children;
 
     protected Status lastChildExitStatus;
-    protected int CurrentChildIndex { get; private set; } = 0;
+    public int CurrentChildIndex { get; private set; } = 0;
 
     public virtual BehaviourNode CurrentChild()
     {
@@ -79,14 +79,10 @@ namespace Bonsai.Core
     /// Called when a composite node has a child that activates when it aborts.
     /// </summary>
     /// <param name="child"></param>
-    public override void OnAbort(ConditionalAbort child)
+    public override void OnAbort(int childIndex)
     {
-      // The default behaviour is to set the current child index of the composite
-      // node to this child's index.
-      if (child.Parent == this)
-      {
-        CurrentChildIndex = child.indexOrder;
-      }
+      // The default behaviour is to set the current child index of the composite node.
+      CurrentChildIndex = childIndex;
     }
 
     /// <summary>

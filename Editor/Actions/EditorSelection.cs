@@ -11,7 +11,6 @@ namespace Bonsai.Designer
   public class EditorSelection : IReadOnlySelection
   {
     public event EventHandler<BonsaiNode> SingleSelected;
-    public event EventHandler<ConditionalAbort> AbortSelected;
 
     private readonly List<BonsaiNode> selectedNodes = new List<BonsaiNode>();
     private readonly List<BehaviourNode> referencedNodes = new List<BehaviourNode>();
@@ -68,7 +67,6 @@ namespace Bonsai.Designer
       Selection.objects = null;
       Selection.activeObject = newSingleSelected.Behaviour;
       SingleSelected?.Invoke(this, newSingleSelected);
-      NotifyIfAbortSelected(newSingleSelected);
       SelectReferencedNodes(newSingleSelected);
     }
 
@@ -89,7 +87,6 @@ namespace Bonsai.Designer
         Selection.objects = null;
         Selection.activeObject = selectedNode.Behaviour;
         SingleSelected?.Invoke(this, selectedNode);
-        NotifyIfAbortSelected(selectedNode);
         SelectReferencedNodes(selectedNode);
       }
 
@@ -150,15 +147,6 @@ namespace Bonsai.Designer
     public bool IsReferenced(BonsaiNode node)
     {
       return Referenced.Contains(node.Behaviour);
-    }
-
-    private void NotifyIfAbortSelected(BonsaiNode node)
-    {
-      var aborter = node.Behaviour as ConditionalAbort;
-      if (aborter && aborter.abortType != AbortType.None)
-      {
-        AbortSelected?.Invoke(this, aborter);
-      }
     }
 
     private void SelectReferencedNodes(BonsaiNode node)

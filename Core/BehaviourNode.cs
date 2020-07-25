@@ -56,29 +56,6 @@ namespace Bonsai.Core
     public virtual void OnExit() { }
 
     /// <summary>
-    /// Executes every tick when the branch is active.
-    /// Can be used to run concurrent behaviour.
-    /// </summary>
-    public virtual void OnBranchTick() { }
-
-    /// <summary>
-    /// Default behaviour is to not run OnBranchTick.
-    /// </summary>
-    public virtual bool CanTickOnBranch() { return false; }
-
-
-    /// <summary>
-    /// Exectues every tick when the tree is active.
-    /// Can be used to tick concurrent behaviour in the background. e.g. Cooldown timers.
-    /// </summary>
-    public virtual void OnTreeTick() { }
-
-    /// <summary>
-    /// Default behaviour is to not run OnTreeTick.
-    /// </summary>
-    public virtual bool CanTickOnTree() { return false; }
-
-    /// <summary>
     /// The priority value of the node.
     /// </summary>
     /// <returns>The negated pre-order index, since lower preorders are executed first.</returns>
@@ -100,7 +77,7 @@ namespace Bonsai.Core
     /// Called when a child fires an abort.
     /// </summary>
     /// <param name="aborter"></param>
-    public virtual void OnAbort(ConditionalAbort aborter) { }
+    public virtual void OnAbort(int childIndex) { }
 
     /// <summary>
     /// Called when the iterator traverses the child.
@@ -114,6 +91,11 @@ namespace Bonsai.Core
     /// <param name="childIndex"></param>
     /// <param name="childStatus"></param>
     public virtual void OnChildExit(int childIndex, Status childStatus) { }
+
+    /// <summary>
+    /// Called foreach child of the composite node when it exits.
+    /// </summary>
+    public virtual void OnCompositeParentExit() { }
 
     /// <summary>
     /// Called when after the entire tree is finished being copied.
@@ -249,10 +231,13 @@ namespace Bonsai.Core
       _statusEditor = s;
     }
 
-    [Header("Description")]
+    // Hide. The BehaviourNode Editor will handle drawing.
+    [HideInInspector]
     public string title;
 
-    [Multiline]
+    // Hide. The BehaviourNode Editor will handle drawing.
+    // Use multi-line so BehaviourNode Editor applies correct styling as a text area.
+    [HideInInspector, Multiline]
     public string comment;
 
     [HideInInspector]

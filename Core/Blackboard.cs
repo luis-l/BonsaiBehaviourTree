@@ -1,5 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
 
 namespace Bonsai.Core
@@ -9,6 +9,33 @@ namespace Bonsai.Core
   ///</summary>
   public class Blackboard : ScriptableObject, ISerializationCallbackReceiver
   {
+    /// <summary>
+    /// Blackboard event type.
+    /// </summary>
+    public enum EventType
+    {
+      Add,
+      Remove,
+      Change
+    }
+
+    /// <summary>
+    /// Blackboard key event.
+    /// </summary>
+    public struct KeyEvent
+    {
+      public KeyEvent(EventType type, string key, object value)
+      {
+        Type = type;
+        Key = key;
+        Value = value;
+      }
+
+      public EventType Type { get; }
+      public string Key { get; }
+      public object Value { get; }
+    }
+
     private readonly Dictionary<string, object> memory = new Dictionary<string, object>();
 
     /// <summary>
@@ -22,8 +49,11 @@ namespace Bonsai.Core
     // Used to serailize the key names.
     // Note: Cannot be readonly since it will not serialize in the ScriptableObject.
     [SerializeField, HideInInspector]
-    [SuppressMessage("Style", "IDE0044:Add readonly modifier", Justification = "Unity cannot serialize readonly fields")]
+#pragma warning disable IDE0044 // Add readonly modifier
     private List<string> keys = new List<string>();
+#pragma warning restore IDE0044 // Add readonly modifier
+
+    public event Action<KeyEvent> BlackboardChange;
 
     ///<summary>
     /// Sets key in the blackboard with an unset value.
@@ -33,6 +63,7 @@ namespace Bonsai.Core
       if (!memory.ContainsKey(key))
       {
         memory.Add(key, null);
+        BlackboardChange?.Invoke(new KeyEvent(EventType.Add, key, null));
       }
     }
 
@@ -43,7 +74,21 @@ namespace Bonsai.Core
     /// <param name="value"></param>
     public void Set(string key, object value)
     {
-      memory[key] = value;
+      if (!memory.ContainsKey(key))
+      {
+        memory.Add(key, value);
+        BlackboardChange?.Invoke(new KeyEvent(EventType.Add, key, value));
+      }
+
+      else
+      {
+        var oldValue = memory[key];
+        if ((oldValue == null && value != null) || (oldValue != null && !oldValue.Equals(value)))
+        {
+          memory[key] = value;
+          BlackboardChange?.Invoke(new KeyEvent(EventType.Change, key, value));
+        }
+      }
     }
 
     ///<summary>
@@ -83,7 +128,10 @@ namespace Bonsai.Core
     ///</summary>
     public void Remove(string key)
     {
-      memory.Remove(key);
+      if (memory.Remove(key))
+      {
+        BlackboardChange?.Invoke(new KeyEvent(EventType.Remove, key, null));
+      }
     }
 
     /// <summary>
@@ -94,6 +142,7 @@ namespace Bonsai.Core
       if (Contains(key))
       {
         memory[key] = null;
+        BlackboardChange?.Invoke(new KeyEvent(EventType.Change, key, null));
       }
     }
 
@@ -118,7 +167,7 @@ namespace Bonsai.Core
     /// </summary>
     public bool IsSet(string key)
     {
-      return Contains(key) && Get(key) != null;
+      return Contains(key) && memory[key] != null;
     }
 
     /// <summary>
@@ -126,7 +175,7 @@ namespace Bonsai.Core
     /// </summary>
     public bool IsUnset(string key)
     {
-      return Contains(key) && Get(key) == null;
+      return Contains(key) && memory[key] == null;
     }
 
     /// <summary>

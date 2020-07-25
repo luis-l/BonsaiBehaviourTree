@@ -33,7 +33,9 @@ namespace Bonsai.Standard
       if (RunningSubTree)
       {
         RunningSubTree.Update();
-        return RunningSubTree.IsRunning() ? Status.Running : RunningSubTree.LastStatus();
+        return RunningSubTree.IsRunning()
+          ? Status.Running
+          : RunningSubTree.LastStatus();
       }
 
       // No tree was included. Just fail.

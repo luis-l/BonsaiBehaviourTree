@@ -140,6 +140,11 @@ namespace Bonsai.Designer
       return children.Count;
     }
 
+    public int IndexOf(BonsaiNode child)
+    {
+      return children.IndexOf(child);
+    }
+
     public bool Contains(BonsaiNode child)
     {
       return children.Contains(child);

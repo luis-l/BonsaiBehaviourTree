@@ -18,6 +18,24 @@ namespace Bonsai.Standard
       return Blackboard.IsSet(key);
     }
 
+    protected override void OnObserverBegin()
+    {
+      Blackboard.BlackboardChange += BlackboardChanged;
+    }
+
+    protected override void OnObserverEnd()
+    {
+      Blackboard.BlackboardChange -= BlackboardChanged;
+    }
+
+    private void BlackboardChanged(Blackboard.KeyEvent e)
+    {
+      if (key == e.Key)
+      {
+        Evaluate();
+      }
+    }
+
     public override void Description(StringBuilder builder)
     {
       base.Description(builder);

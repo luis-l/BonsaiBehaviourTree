@@ -48,10 +48,10 @@ namespace Bonsai.Designer
     public BonsaiEditor()
     {
       NodeSelection.SingleSelected += OnSingleSelected;
-      NodeSelection.AbortSelected += OnAbortSelected;
 
       Input.selection = NodeSelection;
-      Input.MouseDown += MouseDown;
+      Input.MouseDown += BeginActionOnMouseDown;
+      Input.MouseDown += (s, e) => UpdateAbortableSelection();
       Input.Click += Clicked;
       Input.DoubleClick += DoubleClicked;
       Input.MouseUp += MouseUp;
@@ -82,6 +82,7 @@ namespace Bonsai.Designer
       {
         EditorNodeConnecting.FinishConnection(Canvas, pendingParentConnection, node);
         pendingParentConnection = null;
+        UpdateAbortableSelection();
       }
     }
 
@@ -112,6 +113,8 @@ namespace Bonsai.Designer
           RemoveSelectedNodes();
           break;
       }
+
+      UpdateAbortableSelection();
     }
 
     private void MultiNodeAction(object sender, BonsaiInput.NodeContext actionType)
@@ -126,9 +129,11 @@ namespace Bonsai.Designer
           RemoveSelectedNodes();
           break;
       }
+
+      UpdateAbortableSelection();
     }
 
-    private void MouseDown(object sender, BonsaiInputEvent inputEvent)
+    private void BeginActionOnMouseDown(object sender, BonsaiInputEvent inputEvent)
     {
       // Busy, action is active.
       if (MotionAction != null)
@@ -214,6 +219,9 @@ namespace Bonsai.Designer
     {
       ApplyAction?.Invoke(inputEvent);
       ClearActions();
+
+      // Update selection caused by changing connections or clicks.
+      UpdateAbortableSelection();
     }
 
     public void ClearActions()
@@ -233,11 +241,6 @@ namespace Bonsai.Designer
     {
       // Push to end so it is rendered above all other nodes.
       Canvas.PushToEnd(node);
-    }
-
-    private void OnAbortSelected(object sender, ConditionalAbort abort)
-    {
-      // TODO: Hightlight abortable nodes.
     }
 
     private void OnCanvasChanged()
@@ -434,6 +437,8 @@ namespace Bonsai.Designer
         // So connections align with snap.
         node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
       }
+
+      UpdateAbortableSelection();
     }
 
     public void UpdateNodeGUI(BehaviourNode behaviour)
@@ -443,6 +448,20 @@ namespace Bonsai.Designer
       {
         node.UpdateGui();
         node.Center = MathExtensions.SnapPosition(node.Center, SnapStep);
+      }
+
+      UpdateAbortableSelection();
+    }
+
+    private void UpdateAbortableSelection()
+    {
+      if (NodeSelection.IsSingleSelection)
+      {
+        Viewer.UpdateAbortableSelection(NodeSelection.SingleSelectedNode);
+      }
+      else
+      {
+        Viewer.ClearAbortableSelection();
       }
     }
 

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,14 +13,12 @@ namespace Bonsai.Core
     // Does not tick branches under parallel nodes since those use their own parallel iterators.
     private BehaviourIterator mainIterator;
 
-    // Only conditional decorator nodes can have observer properties.
-    private List<ConditionalAbort> observerAborts;
-
     // Store references to the parallel nodes.
     private ParallelComposite[] parallelNodes;
 
-    // Nodes that are allowed to update on tree tick.
-    private BehaviourNode[] treeTickNodes;
+    // Active timers that tick while the tree runs.
+    private List<Utility.Timer> activeTimers;
+    private List<Utility.Timer> timersToRemove;
 
     // Flags if the tree has been initialized and is ready to run.
     // This is set on tree Start. 
@@ -66,7 +65,7 @@ namespace Bonsai.Core
     /// This can be thought of as the tree initializer.
     /// </para>
     /// Does not begin the tree traversal.
-    /// <seealso cref="BeginTraversal"/>
+    /// <see cref="BeginTraversal"/>
     /// </summary>
     public void Start()
     {
@@ -89,22 +88,13 @@ namespace Bonsai.Core
     /// <summary>
     /// Ticks (steps) the tree once.
     /// The tree must be started beforehand.
-    /// <seealso cref="Start"/>
+    /// <see cref="Start"/>
     /// </summary>
     public void Update()
     {
       if (isTreeInitialized && mainIterator.IsRunning)
       {
-        if (treeTickNodes.Length != 0)
-        {
-          NodeTreeTick();
-        }
-
-        if (observerAborts.Count != 0)
-        {
-          TickObservers();
-        }
-
+        UpdateTimers();
         mainIterator.Update();
       }
     }
@@ -114,7 +104,7 @@ namespace Bonsai.Core
     /// Can only be done if the tree is not yet running.
     /// </para>
     /// The tree should be initialized before calling this.
-    /// <seealso cref="Start"/>
+    /// <see cref="Start"/>
     /// </summary>
     public void BeginTraversal()
     {
@@ -187,6 +177,40 @@ namespace Bonsai.Core
     }
 
     /// <summary>
+    /// Add the timer so it gets ticked whenever the tree ticks.
+    /// </summary>
+    public void AddTimer(Utility.Timer timer)
+    {
+      activeTimers.Add(timer);
+    }
+
+    /// <summary>
+    /// Remove the timer from being ticked by the tree.
+    /// </summary>
+    public void RemoveTimer(Utility.Timer timer)
+    {
+      timersToRemove.Add(timer);
+    }
+
+    private void UpdateTimers()
+    {
+      foreach (Utility.Timer timer in activeTimers)
+      {
+        timer.Update(Time.deltaTime);
+      }
+
+      if (timersToRemove.Count != 0)
+      {
+        foreach (Utility.Timer timer in timersToRemove)
+        {
+          activeTimers.Remove(timer);
+        }
+
+        timersToRemove.Clear();
+      }
+    }
+
+    /// <summary>
     /// Gets the nodes of type T.
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -196,44 +220,28 @@ namespace Bonsai.Core
       return allNodes.Select(node => node as T).Where(casted => casted != null);
     }
 
-    /// <summary>
-    /// Processes the tree to calculate certain properties like node priorities,
-    /// caching observers, and sync parallel iterators.
-    /// The root must be set.
-    /// </summary>
-    void PreProcess()
+    // Helper method to pre-process the tree before calling Start on nodes.
+    // Mainly does caching and sets node index orders.
+    private void PreProcess()
     {
-      if (Root == null)
-      {
-        Debug.Log("The tree must have a valid root in order to be pre-processed");
-        return;
-      }
-
       SetPostandLevelOrders();
 
       mainIterator = new BehaviourIterator(this, 0);
 
-      // Setup a new list for the observer nodes.
-      observerAborts = new List<ConditionalAbort>();
-
       parallelNodes = GetNodes<ParallelComposite>().ToArray();
 
-      CacheObservers();
-      CacheTreeTickNodes();
+      // Estimate how many timers will be used.
+      int maxActiveTimers = allNodes
+        .SelectMany(n => n.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
+        .Where(f => f.FieldType == typeof(Utility.Timer))
+        .Select(f => f.GetCustomAttribute<TreeTimerAttribute>())
+        .Where(att => att != null)
+        .Count();
+
+      activeTimers = new List<Utility.Timer>(maxActiveTimers);
+      timersToRemove = new List<Utility.Timer>(maxActiveTimers);
+
       SetRootIteratorReferences();
-    }
-
-    private void CacheObservers()
-    {
-      observerAborts.Clear();
-      observerAborts.AddRange(
-        GetNodes<ConditionalAbort>()
-        .Where(node => node.abortType != AbortType.None));
-    }
-
-    private void CacheTreeTickNodes()
-    {
-      treeTickNodes = allNodes.Where(node => node.CanTickOnTree()).ToArray();
     }
 
     private void SetRootIteratorReferences()
@@ -262,38 +270,6 @@ namespace Bonsai.Core
       {
         node.levelOrder = level;
         Height = level;
-      }
-    }
-
-    // Note on multiple aborts:
-    // If there are multiple satisfied aborts, then
-    // the tree picks the highest order abort (left most).
-    private void TickObservers()
-    {
-      for (int i = 0; i < observerAborts.Count; ++i)
-      {
-        ConditionalAbort node = observerAborts[i];
-
-        // The iterator must be running since aborts can only occur under 
-        // actively running subtrees.
-        if (!node.Iterator.IsRunning)
-        {
-          continue;
-        }
-
-        // If the condition is true then apply an abort.
-        if (node.IsAbortSatisfied())
-        {
-          node.Iterator.OnAbort(node);
-        }
-      }
-    }
-
-    private void NodeTreeTick()
-    {
-      for (int i = 0; i < treeTickNodes.Length; i++)
-      {
-        treeTickNodes[i].OnTreeTick();
       }
     }
 
@@ -346,7 +322,7 @@ namespace Bonsai.Core
 
     public BehaviourNode.Status LastStatus()
     {
-      return mainIterator.LastStatusReturned;
+      return mainIterator.LastExecutedStatus;
     }
 
     /// <summary>

@@ -1,7 +1,6 @@
 ﻿
 using System.Text;
 using Bonsai.Core;
-using UnityEngine;
 
 namespace Bonsai.Standard
 {
@@ -9,30 +8,23 @@ namespace Bonsai.Standard
   public class Wait : Task
   {
     [ShowAtRuntime]
-    private float timer = 0f;
-
-    public float waitTime = 1f;
+    [UnityEngine.SerializeField]
+    public Utility.Timer timer = new Utility.Timer();
 
     public override void OnEnter()
     {
-      timer = 0f;
+      timer.Start();
     }
 
     public override Status Run()
     {
-      timer += Time.deltaTime;
-
-      if (timer >= waitTime)
-      {
-        return Status.Success;
-      }
-
-      return Status.Running;
+      timer.Update(UnityEngine.Time.deltaTime);
+      return timer.IsDone ? Status.Success : Status.Running;
     }
 
     public override void Description(StringBuilder builder)
     {
-      builder.AppendFormat("Wait for {0:0.00}s", waitTime);
+      builder.AppendFormat("Wait for {0:0.00}s", timer.interval);
     }
   }
 }

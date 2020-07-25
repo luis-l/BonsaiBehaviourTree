@@ -56,15 +56,6 @@ namespace Bonsai.Core
     public virtual void OnExit() { }
 
     /// <summary>
-    /// The priority value of the node.
-    /// </summary>
-    /// <returns>The negated pre-order index, since lower preorders are executed first.</returns>
-    public float Priority()
-    {
-      return -preOrderIndex;
-    }
-
-    /// <summary>
     /// Used to evaluate which branch should execute first with the utility selector.
     /// </summary>
     /// <returns></returns>

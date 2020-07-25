@@ -17,15 +17,21 @@ namespace Bonsai.Designer
     // The bonsai window associated with the target's inspector behaviour.
     protected BonsaiWindow ParentWindow { get; private set; }
 
+    private readonly GUIContent descriptionHeader = new GUIContent("Node Description");
     private GUIContent runtimeHeading;
-    private GUIStyle runtimeHeaderStyle;
 
     // BehaviourNode fields to show when the tree is running in Play mode. e.g. The time left on a timer.
     private Dictionary<string, FieldInfo> runtimeFields = new Dictionary<string, FieldInfo>();
 
+    SerializedProperty nodeTitle;
+    SerializedProperty nodeComment;
+
     protected virtual void OnEnable()
     {
       var edited = target as BehaviourNode;
+
+      nodeTitle = serializedObject.FindProperty("title");
+      nodeComment = serializedObject.FindProperty("comment");
 
       // Find the the editor window with the tree associated with this behaviour.
       if (ParentWindow == null)
@@ -35,7 +41,6 @@ namespace Bonsai.Designer
         if (ParentWindow.EditorMode == BonsaiEditor.Mode.View)
         {
           runtimeHeading = new GUIContent("Runtime values");
-          runtimeHeaderStyle = new GUIStyle { fontSize = 12, fontStyle = FontStyle.Bold };
           runtimeFields = GetRuntimeFields(edited);
         }
       }
@@ -43,12 +48,15 @@ namespace Bonsai.Designer
 
     public override void OnInspectorGUI()
     {
+      serializedObject.Update();
       DrawDefaultInspector();
       OnBehaviourNodeInspectorGUI();
+      DrawNodeDescription();
 
       // If the behaviour was edited, update the tree editor and repaint.
       if (GUI.changed)
       {
+        serializedObject.ApplyModifiedProperties();
         ParentWindow.UpdateSelectedNodesGUI();
       }
 
@@ -69,12 +77,20 @@ namespace Bonsai.Designer
       return ParentWindow.EditorMode == BonsaiEditor.Mode.View && runtimeFields.Count != 0;
     }
 
+    private void DrawNodeDescription()
+    {
+      EditorGUILayout.Space();
+      EditorGUILayout.LabelField(descriptionHeader, EditorStyles.boldLabel);
+      EditorGUILayout.PropertyField(nodeTitle);
+      EditorGUILayout.PropertyField(nodeComment);
+    }
+
     private void DrawRuntimeValues()
     {
       if (runtimeFields.Count != 0)
       {
         EditorGUILayout.Space();
-        GUILayout.Label(runtimeHeading, runtimeHeaderStyle);
+        GUILayout.Label(runtimeHeading, EditorStyles.boldLabel);
 
         foreach (var fields in runtimeFields)
         {

@@ -26,8 +26,17 @@ namespace Bonsai.Core
     /// <returns></returns>
     public abstract bool Condition();
 
-    protected abstract void OnObserverBegin();
-    protected abstract void OnObserverEnd();
+    /// <summary>
+    /// Called when the observer starts.
+    /// This can be used to subscribe to events.
+    /// </summary>
+    protected virtual void OnObserverBegin() { }
+
+    /// <summary>
+    /// Called when the observerer stops.
+    /// This can be used unsubscribe from events.
+    /// </summary>
+    protected virtual void OnObserverEnd() { }
 
     /// <summary>
     /// Only runs the child if the condition is true.
@@ -68,13 +77,16 @@ namespace Bonsai.Core
     }
 
     // When the parent composite exits, all observers in child branches become irrelevant.
-    public override void OnCompositeParentExit()
+    public sealed override void OnCompositeParentExit()
     {
       if (IsObserving)
       {
         IsObserving = false;
         OnObserverEnd();
       }
+
+      // Propogate composite parent exit through decorator chain only.
+      base.OnCompositeParentExit();
     }
 
     public override Status Run()

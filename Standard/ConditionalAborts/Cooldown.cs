@@ -65,9 +65,6 @@ namespace Bonsai.Standard
       Evaluate();
     }
 
-    protected override void OnObserverBegin() { }
-    protected override void OnObserverEnd() { }
-
     public override void Description(StringBuilder builder)
     {
       base.Description(builder);

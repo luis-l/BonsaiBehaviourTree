@@ -1,5 +1,4 @@
 ﻿
-using System;
 using System.Text;
 
 namespace Bonsai.Core
@@ -8,7 +7,7 @@ namespace Bonsai.Core
   {
     public bool restartTimerOnEnter = true;
 
-    [ShowAtRuntime, TreeTimer]
+    [ShowAtRuntime]
     [UnityEngine.SerializeField]
     public Utility.Timer timer = new Utility.Timer();
 

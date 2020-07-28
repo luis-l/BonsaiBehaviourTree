@@ -18,7 +18,6 @@ namespace Bonsai.Standard
 
     public Evaluation evaluation = Evaluation.Sum;
 
-    [TreeTimer]
     [UnityEngine.SerializeField]
     public Utility.Timer timer = new Utility.Timer();
 

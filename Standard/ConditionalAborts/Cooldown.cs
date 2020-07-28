@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   [BonsaiNode("Conditional/", "Condition")]
   public class Cooldown : ConditionalAbort
   {
-    [ShowAtRuntime, TreeTimer]
+    [ShowAtRuntime]
     [UnityEngine.SerializeField]
     public Utility.Timer timer = new Utility.Timer();
 

@@ -230,16 +230,8 @@ namespace Bonsai.Core
 
       parallelNodes = GetNodes<ParallelComposite>().ToArray();
 
-      // Estimate how many timers will be used.
-      int maxActiveTimers = allNodes
-        .SelectMany(n => n.GetType().GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
-        .Where(f => f.FieldType == typeof(Utility.Timer))
-        .Select(f => f.GetCustomAttribute<TreeTimerAttribute>())
-        .Where(att => att != null)
-        .Count();
-
-      activeTimers = new List<Utility.Timer>(maxActiveTimers);
-      timersToRemove = new List<Utility.Timer>(maxActiveTimers);
+      activeTimers = new List<Utility.Timer>();
+      timersToRemove = new List<Utility.Timer>();
 
       SetRootIteratorReferences();
     }

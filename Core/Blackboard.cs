@@ -199,6 +199,11 @@ namespace Bonsai.Core
       observers.Remove(observer);
     }
 
+    public int ObserverCount
+    {
+      get { return observers.Count; }
+    }
+
     /// <summary>
     /// The number of keys in the Blackboard.
     /// </summary>

@@ -147,10 +147,10 @@ namespace Bonsai.Core
       return allNodes[preOrderIndex];
     }
 
-    public void Interrupt(BehaviourNode subroot, bool bFullInterrupt = false)
+    public void Interrupt(BehaviourNode subroot, bool isFullInterrupt = false)
     {
       // Interrupt this subtree.
-      subroot.Iterator.StepBackInterrupt(subroot, bFullInterrupt);
+      subroot.Iterator.StepBackInterrupt(subroot, isFullInterrupt);
 
       // Look for parallel nodes under the subroot.
       // Since the parallel count is usually small, we 
@@ -168,7 +168,7 @@ namespace Bonsai.Core
               // Get the child of the parallel node, and interrupt the child subtree.
               int childIndex = itr.FirstInTraversal;
               BehaviourNode firstNode = allNodes[childIndex];
-              itr.StepBackInterrupt(firstNode.Parent, bFullInterrupt);
+              itr.StepBackInterrupt(firstNode.Parent, isFullInterrupt);
             }
           }
         }
@@ -199,6 +199,11 @@ namespace Bonsai.Core
       }
 
       activeTimers.AddAndRemoveQueued();
+    }
+
+    public int ActiveTimerCount
+    {
+      get { return activeTimers.data.Count; }
     }
 
     /// <summary>

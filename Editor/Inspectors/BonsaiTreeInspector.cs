@@ -53,6 +53,20 @@ namespace Bonsai.Designer
       {
         EditorGUILayout.LabelField("Blackboard", "Unset");
       }
+
+      EditorGUILayout.Space();
+      ShowTreeStats(tree);
+    }
+
+    private void ShowTreeStats(BehaviourTree tree)
+    {
+      if (EditorApplication.isPlaying)
+      {
+        EditorGUILayout.LabelField("Stats", EditorStyles.boldLabel);
+        EditorGUILayout.LabelField("Total nodes", tree.Nodes.Length.ToString());
+        EditorGUILayout.LabelField("Active timers", tree.ActiveTimerCount.ToString());
+        EditorGUILayout.LabelField("Observer count", tree.blackboard ? tree.blackboard.ObserverCount.ToString() : "0");
+      }
     }
 
     private void ShowBlackboardGUI(Blackboard bb)

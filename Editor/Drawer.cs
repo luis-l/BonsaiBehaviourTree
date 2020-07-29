@@ -164,7 +164,7 @@ namespace Bonsai.Designer
       var rect = new Rect(contentRect.xMax - statusSize, contentRect.yMin, statusSize, statusSize);
 
       var prefs = BonsaiPreferences.Instance;
-      var status = node.Behaviour.GetStatusEditor();
+      var status = node.Behaviour.StatusEditorResult;
 
       if (status == Core.BehaviourNode.StatusEditor.Success)
       {
@@ -217,7 +217,7 @@ namespace Bonsai.Designer
       Color connectionColor = prefs.defaultConnectionColor;
       float connectionWidth = prefs.defaultConnectionWidth;
 
-      if (node.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
+      if (node.Behaviour.StatusEditorResult == Core.BehaviourNode.StatusEditor.Running)
       {
         connectionColor = prefs.runningStatusColor;
         connectionWidth = prefs.runningConnectionWidth;
@@ -267,7 +267,7 @@ namespace Bonsai.Designer
         var anchorLineConnection = new Vector2(center.x, anchorY);
 
         // The node is running, hightlight the connection.
-        if (child.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running)
+        if (child.Behaviour.StatusEditorResult == Core.BehaviourNode.StatusEditor.Running)
         {
           DrawLineCanvasSpace(
             t,

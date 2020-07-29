@@ -187,7 +187,7 @@ namespace Bonsai.Designer
 
     private bool IsNodeRunning(BonsaiNode node)
     {
-      return node.Behaviour.GetStatusEditor() == Core.BehaviourNode.StatusEditor.Running;
+      return node.Behaviour.StatusEditorResult == Core.BehaviourNode.StatusEditor.Running;
     }
 
     /// <summary>

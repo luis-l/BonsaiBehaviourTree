@@ -77,7 +77,7 @@ namespace Bonsai.Core
       LastExecutedStatus = s;
 
 #if UNITY_EDITOR
-      node.SetStatusEditor(s);
+      node.StatusEditorResult = (BehaviourNode.StatusEditor)s;
 #endif
 
       if (s != BehaviourNode.Status.Running)
@@ -133,7 +133,7 @@ namespace Bonsai.Core
       requestedTraversals.Enqueue(index);
 
 #if UNITY_EDITOR
-      next.SetStatusEditor(BehaviourNode.Status.Running);
+      next.StatusEditorResult = BehaviourNode.StatusEditor.Running;
 #endif
     }
 
@@ -173,7 +173,7 @@ namespace Bonsai.Core
       var node = PopNode();
 
 #if UNITY_EDITOR
-      node.SetStatusEditor(BehaviourNode.StatusEditor.Aborted);
+      node.StatusEditorResult = BehaviourNode.StatusEditor.Aborted;
 #endif
     }
 
@@ -188,7 +188,7 @@ namespace Bonsai.Core
         var node = PopNode();
 
 #if UNITY_EDITOR
-        node.SetStatusEditor(BehaviourNode.StatusEditor.Interruption);
+        node.StatusEditorResult = BehaviourNode.StatusEditor.Interruption;
 #endif
 
       }
@@ -198,7 +198,7 @@ namespace Bonsai.Core
         var node = PopNode();
 
 #if UNITY_EDITOR
-        node.SetStatusEditor(BehaviourNode.StatusEditor.Interruption);
+        node.StatusEditorResult = BehaviourNode.StatusEditor.Interruption;
 #endif
 
         // Any requested traversals are cancelled on interruption.

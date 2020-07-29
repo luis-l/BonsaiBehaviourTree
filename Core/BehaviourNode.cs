@@ -197,30 +197,7 @@ namespace Bonsai.Core
     };
 
 
-    private StatusEditor _statusEditor = StatusEditor.None;
-
-    /// <summary>
-    /// Gets the status of the node for editor purposes.
-    /// </summary>
-    /// <returns></returns>
-    public StatusEditor GetStatusEditor()
-    {
-      return _statusEditor;
-    }
-
-    /// <summary>
-    /// Converts the runtime status to an editor status.
-    /// </summary>
-    /// <param name="s"></param>
-    public void SetStatusEditor(Status s)
-    {
-      _statusEditor = (StatusEditor)(int)s;
-    }
-
-    public void SetStatusEditor(StatusEditor s)
-    {
-      _statusEditor = s;
-    }
+    public StatusEditor StatusEditorResult { get; set; } = StatusEditor.None;
 
     // Hide. The BehaviourNode Editor will handle drawing.
     [HideInInspector]

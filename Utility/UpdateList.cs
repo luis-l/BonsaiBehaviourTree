@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Bonsai.Utility
 {
@@ -10,6 +11,16 @@ namespace Bonsai.Utility
     public readonly List<T> data = new List<T>();
     private readonly List<T> addQueue = new List<T>();
     private readonly List<T> removeQueue = new List<T>();
+
+    private readonly Predicate<T> IsInRemovalQueue;
+
+    public UpdateList()
+    {
+      IsInRemovalQueue = delegate (T value)
+      {
+        return removeQueue.Contains(value);
+      };
+    }
 
     /// <summary>
     /// Queues an item to add to the list.
@@ -36,7 +47,7 @@ namespace Bonsai.Utility
     {
       if (removeQueue.Count != 0)
       {
-        RemoveAll();
+        data.RemoveAll(IsInRemovalQueue);
         removeQueue.Clear();
       }
 
@@ -45,44 +56,6 @@ namespace Bonsai.Utility
         data.AddRange(addQueue);
         addQueue.Clear();
       }
-    }
-
-    // Reimplemented from List RemoveAll to avoid GC allocs from lambda closures.
-    private void RemoveAll()
-    {
-      // The first free slot in items array
-      int open = 0;
-      int size = data.Count;
-
-      // Find the first item which needs to be removed.
-      while (open < size && !IsInRemovalQueue(data[open]))
-      {
-        open++;
-      }
-
-      if (open < size)
-      {
-        int current = open + 1;
-        while (current < size)
-        {
-          // Find the first item which needs to be kept.
-          while (current < size && IsInRemovalQueue(data[current]))
-          {
-            current++;
-          }
-
-          if (current < size)
-          {
-            // Copy item to the free slot.
-            data[open++] = data[current++];
-          }
-        }
-      }
-    }
-
-    private bool IsInRemovalQueue(T item)
-    {
-      return removeQueue.Contains(item);
     }
   }
 }

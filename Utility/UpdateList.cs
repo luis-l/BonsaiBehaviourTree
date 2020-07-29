@@ -8,11 +8,13 @@ namespace Bonsai.Utility
   /// </summary>
   public class UpdateList<T>
   {
-    public readonly List<T> data = new List<T>();
+    private readonly List<T> data = new List<T>();
     private readonly List<T> addQueue = new List<T>();
     private readonly List<T> removeQueue = new List<T>();
 
     private readonly Predicate<T> IsInRemovalQueue;
+
+    public IReadOnlyList<T> Data { get { return data; } }
 
     public UpdateList()
     {

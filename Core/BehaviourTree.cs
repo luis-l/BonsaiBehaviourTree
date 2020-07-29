@@ -193,9 +193,11 @@ namespace Bonsai.Core
 
     private void UpdateTimers()
     {
-      foreach (Utility.Timer timer in activeTimers.data)
+      var timers = activeTimers.Data;
+      var count = activeTimers.Data.Count;
+      for (int i = 0; i < count; i++)
       {
-        timer.Update(Time.deltaTime);
+        timers[i].Update(Time.deltaTime);
       }
 
       activeTimers.AddAndRemoveQueued();
@@ -203,7 +205,7 @@ namespace Bonsai.Core
 
     public int ActiveTimerCount
     {
-      get { return activeTimers.data.Count; }
+      get { return activeTimers.Data.Count; }
     }
 
     /// <summary>

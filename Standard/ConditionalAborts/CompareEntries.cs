@@ -9,7 +9,7 @@ namespace Bonsai.Standard
   /// Compares two values from the blackboard.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class CompareEntries : ConditionalAbort
+  public class CompareEntries : ConditionalAbort, Blackboard.IObserver
   {
     public string key1;
     public string key2;
@@ -39,15 +39,15 @@ namespace Bonsai.Standard
 
     protected override void OnObserverBegin()
     {
-      Blackboard.BlackboardChange += BlackboardChanged;
+      Blackboard.AddObserver(this);
     }
 
     protected override void OnObserverEnd()
     {
-      Blackboard.BlackboardChange -= BlackboardChanged;
+      Blackboard.RemoveObserver(this);
     }
 
-    private void BlackboardChanged(Blackboard.KeyEvent e)
+    public void OnBlackboardChange(Blackboard.KeyEvent e)
     {
       if (e.Key == key1 || e.Key == key2)
       {
@@ -71,5 +71,6 @@ namespace Bonsai.Standard
       }
 
     }
+
   }
 }

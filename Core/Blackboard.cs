@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,6 +8,18 @@ namespace Bonsai.Core
   ///</summary>
   public class Blackboard : ScriptableObject, ISerializationCallbackReceiver
   {
+    /// <summary>
+    /// A simple observer interface for blackboard changes. 
+    /// </summary>
+    public interface IObserver
+    {
+      /// <summary>
+      /// Occurs when the blackboard was changed.
+      /// </summary>
+      /// <param name="e"></param>
+      void OnBlackboardChange(KeyEvent e);
+    }
+
     /// <summary>
     /// Blackboard event type.
     /// </summary>
@@ -53,7 +64,7 @@ namespace Bonsai.Core
     private List<string> keys = new List<string>();
 #pragma warning restore IDE0044 // Add readonly modifier
 
-    public event Action<KeyEvent> BlackboardChange;
+    private readonly List<IObserver> observers = new List<IObserver>();
 
     ///<summary>
     /// Sets key in the blackboard with an unset value.
@@ -63,7 +74,7 @@ namespace Bonsai.Core
       if (!memory.ContainsKey(key))
       {
         memory.Add(key, null);
-        BlackboardChange?.Invoke(new KeyEvent(EventType.Add, key, null));
+        NotifyObservers(new KeyEvent(EventType.Add, key, null));
       }
     }
 
@@ -77,7 +88,7 @@ namespace Bonsai.Core
       if (!memory.ContainsKey(key))
       {
         memory.Add(key, value);
-        BlackboardChange?.Invoke(new KeyEvent(EventType.Add, key, value));
+        NotifyObservers(new KeyEvent(EventType.Add, key, value));
       }
 
       else
@@ -86,7 +97,7 @@ namespace Bonsai.Core
         if ((oldValue == null && value != null) || (oldValue != null && !oldValue.Equals(value)))
         {
           memory[key] = value;
-          BlackboardChange?.Invoke(new KeyEvent(EventType.Change, key, value));
+          NotifyObservers(new KeyEvent(EventType.Change, key, value));
         }
       }
     }
@@ -130,7 +141,7 @@ namespace Bonsai.Core
     {
       if (memory.Remove(key))
       {
-        BlackboardChange?.Invoke(new KeyEvent(EventType.Remove, key, null));
+        NotifyObservers(new KeyEvent(EventType.Remove, key, null));
       }
     }
 
@@ -142,7 +153,7 @@ namespace Bonsai.Core
       if (Contains(key))
       {
         memory[key] = null;
-        BlackboardChange?.Invoke(new KeyEvent(EventType.Change, key, null));
+        NotifyObservers(new KeyEvent(EventType.Change, key, null));
       }
     }
 
@@ -178,6 +189,16 @@ namespace Bonsai.Core
       return Contains(key) && memory[key] == null;
     }
 
+    public void AddObserver(IObserver observer)
+    {
+      observers.Add(observer);
+    }
+
+    public void RemoveObserver(IObserver observer)
+    {
+      observers.Remove(observer);
+    }
+
     /// <summary>
     /// The number of keys in the Blackboard.
     /// </summary>
@@ -204,6 +225,14 @@ namespace Bonsai.Core
       foreach (string key in memory.Keys)
       {
         keys.Add(key);
+      }
+    }
+
+    private void NotifyObservers(KeyEvent e)
+    {
+      foreach (IObserver observer in observers)
+      {
+        observer.OnBlackboardChange(e);
       }
     }
   }

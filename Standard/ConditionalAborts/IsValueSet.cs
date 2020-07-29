@@ -8,7 +8,7 @@ namespace Bonsai.Standard
   /// Tests if the value at a given key is not set to its default value.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class IsValueSet : ConditionalAbort
+  public class IsValueSet : ConditionalAbort, Blackboard.IObserver
   {
     [Tooltip("The key to check if it has a value set.")]
     public string key;
@@ -20,15 +20,15 @@ namespace Bonsai.Standard
 
     protected override void OnObserverBegin()
     {
-      Blackboard.BlackboardChange += BlackboardChanged;
+      Blackboard.AddObserver(this);
     }
 
     protected override void OnObserverEnd()
     {
-      Blackboard.BlackboardChange -= BlackboardChanged;
+      Blackboard.RemoveObserver(this);
     }
 
-    private void BlackboardChanged(Blackboard.KeyEvent e)
+    public void OnBlackboardChange(Blackboard.KeyEvent e)
     {
       if (key == e.Key)
       {

@@ -10,7 +10,7 @@ namespace Bonsai.Standard
   /// Tests if the value at the given key is a certain type.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class IsValueOfType : ConditionalAbort, ISerializationCallbackReceiver
+  public class IsValueOfType : ConditionalAbort, Blackboard.IObserver, ISerializationCallbackReceiver
   {
     [Tooltip("The key of the value to test its type.")]
     public string key;
@@ -23,9 +23,6 @@ namespace Bonsai.Standard
     // Since Unity cannot serialize Type, we need to store the full name of the type.
     [SerializeField, HideInInspector]
     private string typename;
-
-    [Tooltip("Use Type.IsAssignableFrom() to take into account inheritance.")]
-    public bool useIsAssignableFrom = false;
 
     public override bool Condition()
     {
@@ -42,9 +39,7 @@ namespace Bonsai.Standard
         return false;
       }
 
-      Type valueType = value.GetType();
-
-      return useIsAssignableFrom ? type.IsAssignableFrom(valueType) : valueType == type;
+      return value.GetType() == type;
     }
 
     public void OnAfterDeserialize()
@@ -75,15 +70,15 @@ namespace Bonsai.Standard
 
     protected override void OnObserverBegin()
     {
-      Blackboard.BlackboardChange += BlackboardChanged;
+      Blackboard.AddObserver(this);
     }
 
     protected override void OnObserverEnd()
     {
-      Blackboard.BlackboardChange -= BlackboardChanged;
+      Blackboard.RemoveObserver(this);
     }
 
-    private void BlackboardChanged(Blackboard.KeyEvent e)
+    public void OnBlackboardChange(Blackboard.KeyEvent e)
     {
       if (e.Key == key)
       {

@@ -17,8 +17,7 @@ namespace Bonsai.Core
     private ParallelComposite[] parallelNodes;
 
     // Active timers that tick while the tree runs.
-    private List<Utility.Timer> activeTimers;
-    private List<Utility.Timer> timersToRemove;
+    private Utility.UpdateList<Utility.Timer> activeTimers;
 
     // Flags if the tree has been initialized and is ready to run.
     // This is set on tree Start. 
@@ -189,25 +188,17 @@ namespace Bonsai.Core
     /// </summary>
     public void RemoveTimer(Utility.Timer timer)
     {
-      timersToRemove.Add(timer);
+      activeTimers.Remove(timer);
     }
 
     private void UpdateTimers()
     {
-      foreach (Utility.Timer timer in activeTimers)
+      foreach (Utility.Timer timer in activeTimers.data)
       {
         timer.Update(Time.deltaTime);
       }
 
-      if (timersToRemove.Count != 0)
-      {
-        foreach (Utility.Timer timer in timersToRemove)
-        {
-          activeTimers.Remove(timer);
-        }
-
-        timersToRemove.Clear();
-      }
+      activeTimers.AddAndRemoveQueued();
     }
 
     /// <summary>
@@ -227,11 +218,8 @@ namespace Bonsai.Core
       SetPostandLevelOrders();
 
       mainIterator = new BehaviourIterator(this, 0);
-
       parallelNodes = GetNodes<ParallelComposite>().ToArray();
-
-      activeTimers = new List<Utility.Timer>();
-      timersToRemove = new List<Utility.Timer>();
+      activeTimers = new Utility.UpdateList<Utility.Timer>();
 
       SetRootIteratorReferences();
     }

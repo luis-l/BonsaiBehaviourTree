@@ -60,7 +60,7 @@ namespace Bonsai.Designer
 
     private void ShowTreeStats(BehaviourTree tree)
     {
-      if (EditorApplication.isPlaying)
+      if (EditorApplication.isPlaying && tree.IsInitialized())
       {
         EditorGUILayout.LabelField("Stats", EditorStyles.boldLabel);
         EditorGUILayout.LabelField("Total nodes", tree.Nodes.Length.ToString());

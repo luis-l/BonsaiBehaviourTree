@@ -320,6 +320,11 @@ namespace Bonsai.Core
       return mainIterator != null && mainIterator.IsRunning;
     }
 
+    public bool IsInitialized()
+    {
+      return isTreeInitialized;
+    }
+
     public BehaviourNode.Status LastStatus()
     {
       return mainIterator.LastExecutedStatus;

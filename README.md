@@ -29,12 +29,12 @@ Behaviour tree running.
 
 ### Editor Features and Limitations
 
-During Play mode you can view how the a tree executes and see which nodes are running, the statuses returned (success/failure) or if the nodes were aborted/interrupted.
+During Play mode you can view how the a tree executes and see which nodes are running, the statuses returned (sucesss, failure, aborted, interrupted).
 
 You can also edit certain properties of a node, like changing the abort type, or setting a new waiting time for the wait task via the Unity Inspector.
 
 Things that cannot be currently edited in Play mode:
-- Adding/deleting nodes
+- Add or delete nodes
 - Changing the root
 - Changing connections between nodes
 

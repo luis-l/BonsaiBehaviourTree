@@ -1,3 +1,5 @@
+
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -8,18 +10,6 @@ namespace Bonsai.Core
   ///</summary>
   public class Blackboard : ScriptableObject, ISerializationCallbackReceiver
   {
-    /// <summary>
-    /// A simple observer interface for blackboard changes. 
-    /// </summary>
-    public interface IObserver
-    {
-      /// <summary>
-      /// Occurs when the blackboard was changed.
-      /// </summary>
-      /// <param name="e"></param>
-      void OnBlackboardChange(KeyEvent e);
-    }
-
     /// <summary>
     /// Blackboard event type.
     /// </summary>
@@ -64,7 +54,7 @@ namespace Bonsai.Core
     private List<string> keys = new List<string>();
 #pragma warning restore IDE0044 // Add readonly modifier
 
-    private readonly List<IObserver> observers = new List<IObserver>();
+    private readonly List<Action<KeyEvent>> observers = new List<Action<KeyEvent>>();
 
     ///<summary>
     /// Sets key in the blackboard with an unset value.
@@ -189,12 +179,12 @@ namespace Bonsai.Core
       return Contains(key) && memory[key] == null;
     }
 
-    public void AddObserver(IObserver observer)
+    public void AddObserver(Action<KeyEvent> observer)
     {
       observers.Add(observer);
     }
 
-    public void RemoveObserver(IObserver observer)
+    public void RemoveObserver(Action<KeyEvent> observer)
     {
       observers.Remove(observer);
     }
@@ -235,9 +225,9 @@ namespace Bonsai.Core
 
     private void NotifyObservers(KeyEvent e)
     {
-      foreach (IObserver observer in observers)
+      foreach (Action<KeyEvent> observer in observers)
       {
-        observer.OnBlackboardChange(e);
+        observer(e);
       }
     }
   }

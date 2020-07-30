@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿
+using System;
+using System.Text;
 using Bonsai.Core;
 using UnityEngine;
 
@@ -8,10 +10,23 @@ namespace Bonsai.Standard
   /// Tests if the value at a given key is not set to its default value.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class IsValueSet : ConditionalAbort, Blackboard.IObserver
+  public class IsValueSet : ConditionalAbort
   {
     [Tooltip("The key to check if it has a value set.")]
     public string key;
+
+    private Action<Blackboard.KeyEvent> OnBlackboardChanged;
+
+    public override void OnStart()
+    {
+      OnBlackboardChanged = delegate (Blackboard.KeyEvent e)
+      {
+        if (key == e.Key)
+        {
+          Evaluate();
+        }
+      };
+    }
 
     public override bool Condition()
     {
@@ -20,20 +35,12 @@ namespace Bonsai.Standard
 
     protected override void OnObserverBegin()
     {
-      Blackboard.AddObserver(this);
+      Blackboard.AddObserver(OnBlackboardChanged);
     }
 
     protected override void OnObserverEnd()
     {
-      Blackboard.RemoveObserver(this);
-    }
-
-    public void OnBlackboardChange(Blackboard.KeyEvent e)
-    {
-      if (key == e.Key)
-      {
-        Evaluate();
-      }
+      Blackboard.RemoveObserver(OnBlackboardChanged);
     }
 
     public override void Description(StringBuilder builder)

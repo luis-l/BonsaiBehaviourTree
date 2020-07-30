@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Text;
 using Bonsai.Core;
 using UnityEngine;
@@ -9,13 +10,27 @@ namespace Bonsai.Standard
   /// Compares two values from the blackboard.
   /// </summary>
   [BonsaiNode("Conditional/", "Condition")]
-  public class CompareEntries : ConditionalAbort, Blackboard.IObserver
+  public class CompareEntries : ConditionalAbort
   {
     public string key1;
     public string key2;
 
     [Tooltip("If the comparison should test for inequality")]
     public bool compareInequality = false;
+
+    private Action<Blackboard.KeyEvent> OnBlackboardChanged;
+
+    public override void OnStart()
+    {
+      OnBlackboardChanged = delegate (Blackboard.KeyEvent e)
+      {
+        if (e.Key == key1 || e.Key == key2)
+        {
+          Evaluate();
+        }
+      };
+
+    }
 
     public override bool Condition()
     {
@@ -39,20 +54,12 @@ namespace Bonsai.Standard
 
     protected override void OnObserverBegin()
     {
-      Blackboard.AddObserver(this);
+      Blackboard.AddObserver(OnBlackboardChanged);
     }
 
     protected override void OnObserverEnd()
     {
-      Blackboard.RemoveObserver(this);
-    }
-
-    public void OnBlackboardChange(Blackboard.KeyEvent e)
-    {
-      if (e.Key == key1 || e.Key == key2)
-      {
-        Evaluate();
-      }
+      Blackboard.RemoveObserver(OnBlackboardChanged);
     }
 
     public override void Description(StringBuilder builder)

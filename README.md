@@ -8,7 +8,7 @@ Advanced behavior tree solution with a graphical editor
 
 Goals of the project
 - Lightweight, robust, and fast behaviour trees.
-- Visual editor to improve the workflow when creating, running, and testing behaviour trees.
+- Visual editor to build and view behaviour trees.
 - Seamless integration with the Unity workflow/environment.
 - No GC overhead.
 
@@ -17,9 +17,9 @@ Features Overview:
 - The core behaviour tree engine with a set of standard composite, decorator, and task nodes.
 - Blackboard to share data between tasks.
 - A visual editor to create, edit, view, and debug trees.
-- Conditional Aborts (Observer aborts) which are event driven.
+- Conditional Aborts (observer aborts) which are event driven.
 - Includes: Parallel execution, Interrupts, Guards, Services, Timers.
-- Supports including Sub-trees.
+- Supports including Subtrees.
 - Can easily create custom Composites, Decorators, Tasks.
 - Behaviour trees are ScriptableObjects, so it integrates perfectly with the Unity Editor.
 

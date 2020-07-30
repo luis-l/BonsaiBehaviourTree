@@ -55,13 +55,13 @@ Things that cannot be currently edited in Play mode:
 
 ### API and Custom Tasks
 
-There are four main categories of nodes which you can extend from to add functionality:
+These are the base nodes which can be extended:
 
 - Composite
+  - Parallel
 - Decorator
-- Services
-- Conditional Abort
-- Conditional Task
+  - Services
+  - Conditional Abort
 - Task
 
 In order to add custom functionality you can override key methods:

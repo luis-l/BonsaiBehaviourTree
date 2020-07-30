@@ -92,7 +92,7 @@ namespace Bonsai.Standard
       // Found new higher utility.
       if (previousChild != highestUtilityChild)
       {
-        Tree.Interrupt(GetChildAt(previousChild), true);
+        BehaviourTree.Interrupt(GetChildAt(previousChild));
 
         // Mark the interruption as a failure, so the select goes to next child.
         lastChildExitStatus = Status.Failure;

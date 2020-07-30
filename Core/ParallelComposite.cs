@@ -53,7 +53,7 @@ namespace Bonsai.Core
       {
         if (BranchIterators[i].IsRunning)
         {
-          Tree.Interrupt(Children[i], true);
+          BehaviourTree.Interrupt(Children[i]);
         }
       }
     }

@@ -38,7 +38,7 @@ namespace Bonsai.Standard
       {
         isInterrupted = true;
         returnStatus = interruptionStatus;
-        Tree.Interrupt(this);
+        BehaviourTree.Interrupt(Child);
       }
     }
   }

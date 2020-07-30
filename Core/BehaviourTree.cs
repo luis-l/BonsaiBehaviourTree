@@ -13,9 +13,6 @@ namespace Bonsai.Core
     // Does not tick branches under parallel nodes since those use their own parallel iterators.
     private BehaviourIterator mainIterator;
 
-    // Store references to the parallel nodes.
-    private ParallelComposite[] parallelNodes;
-
     // Active timers that tick while the tree runs.
     private Utility.UpdateList<Utility.Timer> activeTimers;
 
@@ -151,33 +148,10 @@ namespace Bonsai.Core
     /// Interrupts the branch from the subroot.
     /// </summary>
     /// <param name="subroot">The node where the interruption will begin from.</param>
-    /// <param name="isFullInterrupt">If the subroot should also be interrupted.</param>
-    public void Interrupt(BehaviourNode subroot, bool isFullInterrupt = false)
+    public static void Interrupt(BehaviourNode subroot)
     {
       // Interrupt this subtree.
-      subroot.Iterator.StepBackInterrupt(subroot, isFullInterrupt);
-
-      // Look for parallel nodes under the subroot.
-      // Since the parallel count is usually small, we 
-      // can just do a linear iteration to interrupt multiple
-      // parallel nodes.
-      foreach (ParallelComposite p in parallelNodes)
-      {
-        if (IsUnderSubtree(subroot, p))
-        {
-          foreach (BehaviourIterator itr in p.BranchIterators)
-          {
-            // Only interrupt running iterators.
-            if (itr.IsRunning)
-            {
-              // Get the child of the parallel node, and interrupt the child subtree.
-              int childIndex = itr.FirstInTraversal;
-              BehaviourNode firstNode = allNodes[childIndex];
-              itr.StepBackInterrupt(firstNode.Parent, isFullInterrupt);
-            }
-          }
-        }
-      }
+      subroot.Iterator.Interrupt(subroot);
     }
 
     /// <summary>
@@ -185,7 +159,7 @@ namespace Bonsai.Core
     /// </summary>
     public void Interrupt()
     {
-      Interrupt(Root, true);
+      Interrupt(Root);
     }
 
     /// <summary>
@@ -238,7 +212,6 @@ namespace Bonsai.Core
       SetPostandLevelOrders();
 
       mainIterator = new BehaviourIterator(this, 0);
-      parallelNodes = GetNodes<ParallelComposite>().ToArray();
       activeTimers = new Utility.UpdateList<Utility.Timer>();
 
       SetRootIteratorReferences();

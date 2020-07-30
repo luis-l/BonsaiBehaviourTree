@@ -178,28 +178,24 @@ namespace Bonsai.Core
     }
 
     /// <summary>
-    /// Only interrupts the subtree until a parallel node.
+    /// Interrupts the subtree traversed by the iterator.
     /// </summary>
     /// <param name="subtree"></param>
-    internal void StepBackInterrupt(BehaviourNode subtree, bool bFullInterrupt = false)
+    internal void Interrupt(BehaviourNode subtree)
     {
-      while (traversal.Count != 0 && traversal.Peek() != subtree.preOrderIndex)
+      // Keep interrupting up to the parent of subtree. 
+      // The parent is not interrupted; subtree node is interrupted.
+      if (subtree)
       {
-        var node = PopNode();
+        int parentIndex = subtree.Parent ? subtree.Parent.PreOrderIndex : BehaviourNode.kInvalidOrder;
+        while (traversal.Count != 0 && traversal.Peek() != parentIndex)
+        {
+          var node = PopNode();
 
 #if UNITY_EDITOR
-        node.StatusEditorResult = BehaviourNode.StatusEditor.Interruption;
+          node.StatusEditorResult = BehaviourNode.StatusEditor.Interruption;
 #endif
-
-      }
-
-      if (bFullInterrupt && traversal.Count != 0)
-      {
-        var node = PopNode();
-
-#if UNITY_EDITOR
-        node.StatusEditorResult = BehaviourNode.StatusEditor.Interruption;
-#endif
+        }
 
         // Any requested traversals are cancelled on interruption.
         requestedTraversals.Clear();

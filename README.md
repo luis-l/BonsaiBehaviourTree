@@ -19,7 +19,7 @@ Features Overview:
 - A visual editor to create, edit, view, and debug trees.
 - Conditional Aborts (observer aborts) which are event driven.
 - Includes: Parallel execution, Interrupts, Guards, Services, Timers.
-- Supports including Subtrees.
+- Supports running Subtrees.
 - Can easily create custom Composites, Decorators, Tasks.
 - Behaviour trees are ScriptableObjects, so it integrates perfectly with the Unity Editor.
 

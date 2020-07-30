@@ -147,6 +147,11 @@ namespace Bonsai.Core
       return allNodes[preOrderIndex];
     }
 
+    /// <summary>
+    /// Interrupts the branch from the subroot.
+    /// </summary>
+    /// <param name="subroot">The node where the interruption will begin from.</param>
+    /// <param name="isFullInterrupt">If the subroot should also be interrupted.</param>
     public void Interrupt(BehaviourNode subroot, bool isFullInterrupt = false)
     {
       // Interrupt this subtree.
@@ -173,6 +178,14 @@ namespace Bonsai.Core
           }
         }
       }
+    }
+
+    /// <summary>
+    /// Interrupts the entire tree.
+    /// </summary>
+    public void Interrupt()
+    {
+      Interrupt(Root, true);
     }
 
     /// <summary>

@@ -28,6 +28,14 @@ namespace Bonsai.Standard
       RunningSubTree.BeginTraversal();
     }
 
+    public override void OnExit()
+    {
+      if (RunningSubTree.IsRunning())
+      {
+        RunningSubTree.Interrupt();
+      }
+    }
+
     public override Status Run()
     {
       if (RunningSubTree)

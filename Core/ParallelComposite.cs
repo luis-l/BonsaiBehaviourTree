@@ -12,16 +12,18 @@ namespace Bonsai.Core
 
     protected Status[] ChildStatuses { get; private set; }
 
-    public override void OnStart()
+    public sealed override void OnStart()
     {
       int count = ChildCount();
       ChildStatuses = new Status[count];
 
       // Set the branch iterators. Branch iterators have this parallel node as their root.
       // Offset level order by +1 since the parallel parent is not included in branch traversal.
+      int childLevelOrder = levelOrder + 1;
+      int maxSubtreeHeight = Tree.Height - childLevelOrder; // max depth of child branches.
       BranchIterators = Enumerable
         .Range(0, count)
-        .Select(i => new BehaviourIterator(Tree, levelOrder + 1))
+        .Select(i => new BehaviourIterator(Tree.Nodes, maxSubtreeHeight))
         .ToArray();
 
       // Assign the branch iterator to nodes not under any parallel nodes.
@@ -37,7 +39,7 @@ namespace Bonsai.Core
       }
     }
 
-    public override void OnEnter()
+    public sealed override void OnEnter()
     {
       // Traverse children at the same time.
       for (int i = 0; i < Children.Length; ++i)
@@ -47,7 +49,7 @@ namespace Bonsai.Core
       }
     }
 
-    public override void OnExit()
+    public sealed override void OnExit()
     {
       for (int i = 0; i < BranchIterators.Length; ++i)
       {
@@ -58,12 +60,12 @@ namespace Bonsai.Core
       }
     }
 
-    public override void OnChildExit(int childIndex, Status childStatus)
+    public sealed override void OnChildExit(int childIndex, Status childStatus)
     {
       ChildStatuses[childIndex] = childStatus;
     }
 
-    public override void OnAbort(int childIndex)
+    public sealed override void OnAbort(int childIndex)
     {
       // Do nothing. Parallel branches have same priority.
     }

@@ -23,7 +23,6 @@ namespace Bonsai.Core
     [SerializeField, HideInInspector]
     internal int preOrderIndex = 0;
 
-    internal int postOrderIndex = 0;
     internal int levelOrder = 0;
 
     public BehaviourNode Parent { get; internal set; }
@@ -125,14 +124,6 @@ namespace Bonsai.Core
     public int PreOrderIndex
     {
       get { return preOrderIndex; }
-    }
-
-    /// <summary>
-    /// The order of the node in post order.
-    /// </summary>
-    public int PostOrderIndex
-    {
-      get { return postOrderIndex; }
     }
 
     public int LevelOrder

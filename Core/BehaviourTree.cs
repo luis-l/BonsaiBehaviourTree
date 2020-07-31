@@ -64,20 +64,24 @@ namespace Bonsai.Core
     /// </summary>
     public void Start()
     {
-      if (Root == null)
+      if (Root)
+      {
+        SetLevelOrders();
+        mainIterator = new BehaviourIterator(allNodes, Height);
+        activeTimers = new Utility.UpdateList<Utility.Timer>();
+        SetRootIteratorReferences();
+
+        foreach (BehaviourNode node in allNodes)
+        {
+          node.OnStart();
+        }
+
+        isTreeInitialized = true;
+      }
+      else
       {
         Debug.LogWarning("Cannot start tree with a null root.");
-        return;
       }
-
-      PreProcess();
-
-      foreach (BehaviourNode node in allNodes)
-      {
-        node.OnStart();
-      }
-
-      isTreeInitialized = true;
     }
 
     /// <summary>
@@ -194,28 +198,6 @@ namespace Bonsai.Core
       get { return activeTimers.Data.Count; }
     }
 
-    /// <summary>
-    /// Gets the nodes of type T.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <returns></returns>
-    public IEnumerable<T> GetNodes<T>() where T : BehaviourNode
-    {
-      return allNodes.Select(node => node as T).Where(casted => casted != null);
-    }
-
-    // Helper method to pre-process the tree before calling Start on nodes.
-    // Mainly does caching and sets node index orders.
-    private void PreProcess()
-    {
-      SetPostandLevelOrders();
-
-      mainIterator = new BehaviourIterator(this, 0);
-      activeTimers = new Utility.UpdateList<Utility.Timer>();
-
-      SetRootIteratorReferences();
-    }
-
     private void SetRootIteratorReferences()
     {
       // Assign the main iterator to nodes not under any parallel nodes.
@@ -230,61 +212,13 @@ namespace Bonsai.Core
     /// <summary>
     /// Sets the nodes post and level order numbering.
     /// </summary>
-    private void SetPostandLevelOrders()
+    private void SetLevelOrders()
     {
-      int postOrderIndex = 0;
-      foreach (BehaviourNode node in TreeTraversal.PostOrder(Root))
-      {
-        node.postOrderIndex = postOrderIndex++;
-      }
-
       foreach ((BehaviourNode node, int level) in TreeTraversal.LevelOrder(Root))
       {
         node.levelOrder = level;
         Height = level;
       }
-    }
-
-    /// <summary>
-    /// Tests if the order of a is lower than b.
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    public static bool IsLowerOrder(int orderA, int orderB)
-    {
-      // 1 is the highest priority.
-      // Greater numbers means lower priority.
-      return orderA > orderB;
-    }
-
-    /// <summary>
-    /// Tests if the order of a is higher than b.
-    /// </summary>
-    /// <param name="a"></param>
-    /// <param name="b"></param>
-    /// <returns></returns>
-    public static bool IsHigherOrder(int orderA, int orderB)
-    {
-      return orderA < orderB;
-    }
-
-    /// <summary>
-    /// Tests if node is under the root tree.
-    /// </summary>
-    /// <param name="root"></param>
-    /// <param name="node"></param>
-    /// <returns></returns>
-    public static bool IsUnderSubtree(BehaviourNode root, BehaviourNode node)
-    {
-      // Assume that this is the root of the tree root.
-      // This would happen when checking IsUnderSubtree(node.parent, other)
-      if (root == null)
-      {
-        return true;
-      }
-
-      return root.PostOrderIndex > node.PostOrderIndex && root.PreOrderIndex < node.PreOrderIndex;
     }
 
     public bool IsRunning()

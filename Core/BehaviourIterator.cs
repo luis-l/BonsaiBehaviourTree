@@ -12,14 +12,10 @@ namespace Bonsai.Core
     // Useful to help on aborts and interrupts.
     private readonly Utility.FixedSizeStack<int> traversal;
 
-    // Access to the tree so we can find any node from pre-order index.
-    private readonly BehaviourTree tree;
-    private readonly Queue<int> requestedTraversals;
+    // The tree nodes in pre-order index.
+    private readonly BehaviourNode[] nodes;
 
-    /// <summary>
-    /// Called when the iterators finishes iterating the entire tree.
-    /// </summary>
-    public Action OnDone = delegate { };
+    private readonly Queue<int> requestedTraversals;
 
     public bool IsRunning
     {
@@ -35,8 +31,6 @@ namespace Bonsai.Core
       get { return traversal.Count == 0 ? BehaviourNode.kInvalidOrder : traversal.Peek(); }
     }
 
-    public int LevelOffset { get; }
-
     /// <summary>
     /// The last status returned by an exiting child.
     /// Reset when nodes are entered.
@@ -45,23 +39,18 @@ namespace Bonsai.Core
     public BehaviourNode.Status LastExecutedStatus { get; private set; }
 
     /// <summary>
-    /// Gets the pre-order index of the node at the beginning of the traversal stack.
+    /// Creates an iterator that will traverse the nodes.
     /// </summary>
-    public int FirstInTraversal
+    /// <param name="nodes">All the tree nodes in pre-order that can be traversed.</param>
+    /// <param name="treeHeight">The max height of the tree branch that will be traversed.</param>
+    public BehaviourIterator(BehaviourNode[] nodes, int treeHeight)
     {
-      get { return traversal.GetValue(0); }
-    }
-
-    public BehaviourIterator(BehaviourTree tree, int levelOffset)
-    {
-      this.tree = tree;
+      this.nodes = nodes;
 
       // Since tree heights starts from zero, the stack needs to have treeHeight + 1 slots.
-      int maxTraversalLength = this.tree.Height + 1;
+      int maxTraversalLength = treeHeight + 1;
       traversal = new Utility.FixedSizeStack<int>(maxTraversalLength);
       requestedTraversals = new Queue<int>(maxTraversalLength);
-
-      LevelOffset = levelOffset;
     }
 
     /// <summary>
@@ -71,7 +60,7 @@ namespace Bonsai.Core
     {
       CallOnEnterOnQueuedNodes();
       int index = traversal.Peek();
-      BehaviourNode node = tree.Nodes[index];
+      BehaviourNode node = nodes[index];
       BehaviourNode.Status s = node.Run();
 
       LastExecutedStatus = s;
@@ -85,11 +74,6 @@ namespace Bonsai.Core
         PopNode();
         OnChildExit(node, s);
       }
-
-      if (traversal.Count == 0)
-      {
-        OnDone();
-      }
     }
 
     private void CallOnEnterOnQueuedNodes()
@@ -98,7 +82,7 @@ namespace Bonsai.Core
       while (requestedTraversals.Count != 0)
       {
         int i = requestedTraversals.Dequeue();
-        BehaviourNode node = tree.Nodes[i];
+        BehaviourNode node = nodes[i];
         node.OnEnter();
         OnChildEnter(node);
       }
@@ -205,7 +189,7 @@ namespace Bonsai.Core
     private BehaviourNode PopNode()
     {
       int index = traversal.Pop();
-      BehaviourNode node = tree.Nodes[index];
+      BehaviourNode node = nodes[index];
 
       if (node.IsComposite())
       {

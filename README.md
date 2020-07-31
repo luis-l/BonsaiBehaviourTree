@@ -3,7 +3,7 @@
 
 ## Bonsai Behaviour Tree
 
-![Bonsai Logo](https://i.imgur.com/WTxGOZC.png) 
+![Bonsai Logo](https://i.imgur.com/WTxGOZC.png)
 
 Advanced behavior tree solution with a graphical editor
 
@@ -54,7 +54,7 @@ Things that cannot be currently edited in Play mode:
 - Viewing a running behaviour tree just requires clicking on a game object with behaviour tree component.
 - Behaviour tree assets can be opened by double clicking on the asset file.
 - Editor Preferences to change editor behaviour. Node look can be customized. Colors, size, and layouts can be changed.
-- View variables when tree is running. e.g. The time left for the Wait Task. 
+- View variables when tree is running. e.g. The time left for the Wait Task.
 
 ### API and Custom Tasks
 
@@ -82,7 +82,7 @@ In order to add custom functionality you can override key methods:
     public virtual void OnExit() { }
 
     // Called when a child caused an abort.
-    public virtual void OnAbort(ConditionalAbort aborter) { }
+    public virtual void OnAbort(int childIndex) { }
 
     // Call when a child finished executing
     public virtual void OnChildExit(int childIndex, Status childStatus) { }

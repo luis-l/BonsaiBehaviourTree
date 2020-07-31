@@ -1,3 +1,6 @@
+
+[![Join the chat at https://gitter.im/BonsaiBehaviourTree/community](https://badges.gitter.im/BonsaiBehaviourTree/community.svg)](https://gitter.im/BonsaiBehaviourTree/community?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 ## Bonsai Behaviour Tree
 
 ![Bonsai Logo](https://i.imgur.com/WTxGOZC.png) 

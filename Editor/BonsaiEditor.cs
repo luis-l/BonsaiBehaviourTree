@@ -478,6 +478,11 @@ namespace Bonsai.Designer
       {
         return typeof(Decorator);
       }
+      
+      if (behaviour is Comparator)
+      {
+        return typeof(Comparator);
+      }
 
       return typeof(Task);
     }

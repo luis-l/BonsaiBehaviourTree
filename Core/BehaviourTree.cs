@@ -358,7 +358,17 @@ namespace Bonsai.Core
         else if (copyNode.IsDecorator() && nodeSource.ChildCount() == 1)
         {
           var copyDecorator = copyNode as Decorator;
-          copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0))); ;
+          copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0)));
+        }
+        
+        else if (copyNode.IsComparator() && nodeSource.ChildCount() > 0)
+        {
+          var copyComparator = copyNode as Comparator;
+          copyComparator.SetChildX(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0)));
+          if (nodeSource.ChildCount() == 2)
+          {
+            copyComparator.SetChildY(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(1)));
+          }
         }
       }
 
@@ -405,6 +415,13 @@ namespace Bonsai.Core
       {
         var decorator = node as Decorator;
         decorator.SetChild(null);
+      }
+
+      else if (node.IsComparator())
+      {
+        var decorator = node as Comparator;
+        decorator.SetChildX(null);
+        decorator.SetChildY(null);
       }
     }
 

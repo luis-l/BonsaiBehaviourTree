@@ -20,12 +20,12 @@ MonoBehaviour:
   gridTexture: {fileID: 2800000, guid: 4ab4e605fe422164da65569c46a161d2, type: 3}
   failureSymbol: {fileID: 2800000, guid: 8db2b847ab6b6434c9da1e0cf721fd8e, type: 3}
   successSymbol: {fileID: 2800000, guid: 39cfff267dd954642b26f231c7a997ad, type: 3}
-  nodeBackgroundTexture: {fileID: 2800000, guid: 6c5508e99038cdf46bb29a177e477d6d,
-    type: 3}
+  nodeBackgroundTexture: {fileID: 2800000, guid: 6c5508e99038cdf46bb29a177e477d6d, type: 3}
   nodeGradient: {fileID: 2800000, guid: c453f51bbb9d4134d86679c771689df6, type: 3}
   portTexture: {fileID: 2800000, guid: dfda76d4e735e7a47bcf756d5d90c44d, type: 3}
   compositeColor: {r: 0.3773585, g: 0.3773585, b: 0.3773585, a: 1}
   decoratorColor: {r: 0.4553469, g: 0.38719293, b: 0.7264151, a: 1}
+  comparatorColor: {r: 0.33397114, g: 0.4972861, b: 0.745283, a: 1}
   conditionalColor: {r: 0.36663404, g: 0.7264151, b: 0.72088, a: 1}
   serviceColor: {r: 0.990566, g: 0.6200383, b: 0.13550198, a: 1}
   taskColor: {r: 0.59607846, g: 0.6431373, b: 0.5372549, a: 1}

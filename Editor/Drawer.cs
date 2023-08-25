@@ -150,6 +150,11 @@ namespace Bonsai.Designer
       {
         return BonsaiPreferences.Instance.comparatorColor;
       }
+      
+      else if (node.Behaviour is Core.GetterNode)
+      {
+        return BonsaiPreferences.Instance.getterColor;
+      }
 
       return BonsaiPreferences.Instance.compositeColor;
     }

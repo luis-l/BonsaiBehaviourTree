@@ -1,12 +1,7 @@
 namespace Bonsai.Core
 {
-    /// <summary>
-    /// Base class for a node that takes some values.
-    /// </summary>
-    public abstract class GetterNode<T> : BehaviourNode
+    public abstract class GetterNode : BehaviourNode
     {
-        public abstract T Get();
-
         public sealed override Status Run()
         {
             return Status.Success;
@@ -26,5 +21,13 @@ namespace Bonsai.Core
         {
             return 0;
         }
+    }
+
+    /// <summary>
+    /// Base class for a node that takes some values.
+    /// </summary>
+    public abstract class GetterNode<T> : GetterNode
+    {
+        public abstract T Get();
     }
 }

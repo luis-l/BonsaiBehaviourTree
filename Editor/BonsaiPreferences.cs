@@ -36,6 +36,7 @@ namespace Bonsai.Designer
     public Color conditionalColor;
     public Color serviceColor;
     public Color taskColor;
+    public Color getterColor;
 
     [Header("Status Colors")]
     public Color defaultNodeBackgroundColor;

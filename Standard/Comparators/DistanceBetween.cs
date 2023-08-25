@@ -8,7 +8,7 @@ namespace Bonsai.Standard
     /// <summary>
     /// Compares the distance between two Vector3 points.
     /// </summary>
-    [BonsaiNode("Comparator/", "DistanceBetween")]
+    [BonsaiNode("Comparators/", "DistanceBetween")]
     public class DistanceBetween : Comparator<Vector3>
     {
         private enum Type

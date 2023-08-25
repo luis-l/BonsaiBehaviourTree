@@ -210,9 +210,18 @@ namespace Bonsai.Designer
       foreach (BonsaiNode node in comparatorNodes)
       {
         var comparatorBehaviour = node.Behaviour as Comparator;
-        comparatorBehaviour.SetChildX(node.GetChildAt(0).Behaviour);
-        if (node.Children.Count == 2)
-          comparatorBehaviour.SetChildY(node.GetChildAt(1).Behaviour);
+        switch (node.Children.Count)
+        {
+          case 1:
+            comparatorBehaviour.SetChild(node.GetChildAt(0).Behaviour);
+            break;
+          case 2:
+            comparatorBehaviour.SetChilds(
+              node.GetChildAt(0).Behaviour,
+              node.GetChildAt(1).Behaviour
+            );
+            break;
+        }
       }
     }
 

@@ -13,8 +13,8 @@ namespace Bonsai.Core
             return 2;
         }
 
-        public abstract void SetChildX(object childrenX);
-        public abstract void SetChildY(object childrenY);
+        public abstract void SetChild(object children);
+        public abstract void SetChilds(object childrenX, object childrenY);
     }
 
     public abstract class Comparator<T> : Comparator
@@ -31,13 +31,20 @@ namespace Bonsai.Core
             return Compare(x, y) ? Status.Success : Status.Failure;
         }
 
-        public sealed override void SetChildX(object childX)
+        public sealed override void SetChild(object child)
         {
-            childrenX = childX as GetterNode<T>;
+            if (childrenX == null)
+            {
+                childrenX = child as GetterNode<T>;
+                return;
+            }
+
+            childrenY = child as GetterNode<T>;
         }
 
-        public sealed override void SetChildY(object childY)
+        public sealed override void SetChilds(object childX, object childY)
         {
+            childrenX = childX as GetterNode<T>;
             childrenY = childY as GetterNode<T>;
         }
 
@@ -54,7 +61,7 @@ namespace Bonsai.Core
         {
             return index switch
             {
-                0 => childrenX,
+                0 => childrenX ? childrenX : childrenY,
                 1 => childrenY,
                 _ => throw new ArgumentOutOfRangeException(nameof(index), index, null)
             };

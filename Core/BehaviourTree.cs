@@ -358,7 +358,24 @@ namespace Bonsai.Core
         else if (copyNode.IsDecorator() && nodeSource.ChildCount() == 1)
         {
           var copyDecorator = copyNode as Decorator;
-          copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0))); ;
+          copyDecorator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0)));
+        }
+        
+        else if (copyNode.IsComparator() && nodeSource.ChildCount() > 0)
+        {
+          var copyComparator = copyNode as Comparator;
+          switch (nodeSource.ChildCount())
+          {
+            case 1:
+              copyComparator.SetChild(GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0)));
+              break;
+            case 2:
+              copyComparator.SetChilds(
+                GetInstanceVersion(cloneBt, nodeSource.GetChildAt(0)),
+                GetInstanceVersion(cloneBt, nodeSource.GetChildAt(1))
+              );
+              break;
+          }
         }
       }
 
@@ -406,6 +423,12 @@ namespace Bonsai.Core
         var decorator = node as Decorator;
         decorator.SetChild(null);
       }
+
+      else if (node.IsComparator())
+      {
+        var decorator = node as Comparator;
+        decorator.SetChilds(null, null);
+      }
     }
 
 #if UNITY_EDITOR
@@ -418,6 +441,15 @@ namespace Bonsai.Core
         blackboard = CreateInstance<Blackboard>();
         blackboard.hideFlags = HideFlags.HideInHierarchy;
         AssetDatabase.AddObjectToAsset(blackboard, this);
+      }
+    }
+
+    public void OnValidate()
+    {
+      var hasNullable = allNodes.Any(node => node == null);
+      if (hasNullable)
+      {
+        allNodes = allNodes.Where(node => node != null).ToArray();
       }
     }
 

@@ -162,6 +162,7 @@ namespace Bonsai.Designer
       // Set parent-child connections matching those in the canvas. Only consider decorators and composites.
       SetCompositeChildren(canvas);
       SetDecoratorChildren(canvas);
+      SetComparatorChildren(canvas);
 
       // Re-add nodes to tree.
       if (canvas.Root != null)
@@ -198,6 +199,29 @@ namespace Bonsai.Designer
       {
         var decoratorBehaviour = node.Behaviour as Decorator;
         decoratorBehaviour.SetChild(node.GetChildAt(0).Behaviour);
+      }
+    }
+    
+    private void SetComparatorChildren(BonsaiCanvas canvas)
+    {
+      IEnumerable<BonsaiNode> comparatorNodes = canvas.Nodes
+        .Where(n => n.Behaviour.IsComparator() && n.ChildCount() > 0);
+
+      foreach (BonsaiNode node in comparatorNodes)
+      {
+        var comparatorBehaviour = node.Behaviour as Comparator;
+        switch (node.Children.Count)
+        {
+          case 1:
+            comparatorBehaviour.SetChild(node.GetChildAt(0).Behaviour);
+            break;
+          case 2:
+            comparatorBehaviour.SetChilds(
+              node.GetChildAt(0).Behaviour,
+              node.GetChildAt(1).Behaviour
+            );
+            break;
+        }
       }
     }
 

@@ -32,9 +32,11 @@ namespace Bonsai.Designer
     [Header("Node Colors")]
     public Color compositeColor;
     public Color decoratorColor;
+    public Color comparatorColor;
     public Color conditionalColor;
     public Color serviceColor;
     public Color taskColor;
+    public Color getterColor;
 
     [Header("Status Colors")]
     public Color defaultNodeBackgroundColor;

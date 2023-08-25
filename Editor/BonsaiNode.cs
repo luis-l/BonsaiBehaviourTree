@@ -177,6 +177,21 @@ namespace Bonsai.Designer
           newParent.OrphanChildren();
           newParent.children.Add(this);
         }
+        
+        else if (newParent.behaviour is Comparator)
+        {
+          if (newParent.children.Count == 2)
+          {
+            var firstChildren = newParent.children[0];
+            newParent.OrphanChildren();
+            newParent.children.Add(firstChildren);
+            newParent.children.Add(this);
+          }
+          else
+          {
+            newParent.children.Add(this);
+          }
+        }
 
         // else: Tasks cannot have children added.
       }

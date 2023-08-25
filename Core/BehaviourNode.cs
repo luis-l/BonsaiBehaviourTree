@@ -162,7 +162,7 @@ namespace Bonsai.Core
 
     public bool IsComposite()
     {
-      return MaxChildCount() > 1;
+      return MaxChildCount() == int.MaxValue;
     }
 
     public bool IsDecorator()
@@ -173,6 +173,11 @@ namespace Bonsai.Core
     public bool IsTask()
     {
       return MaxChildCount() == 0;
+    }
+    
+    public bool IsComparator()
+    {
+      return MaxChildCount() == 2;
     }
 
     /// <summary>

@@ -153,6 +153,7 @@ namespace Bonsai.Core
     public override void Description(StringBuilder builder)
     {
       builder.AppendFormat("Aborts {0}", abortType.ToString());
+      builder.AppendLine();
     }
   }
 }

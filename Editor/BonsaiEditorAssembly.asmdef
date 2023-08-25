@@ -1,10 +1,13 @@
 {
     "name": "BonsaiEditorAssembly",
+    "rootNamespace": "",
     "references": [
         "GUID:e663252ae8cdac9448492a619a23dbb5",
         "GUID:f12b1473fbbbd804b895981477fdf4e9"
     ],
-    "includePlatforms": [],
+    "includePlatforms": [
+        "Editor"
+    ],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

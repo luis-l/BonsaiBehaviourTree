@@ -1,4 +1,6 @@
 ﻿
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Bonsai.Core
@@ -100,5 +102,16 @@ namespace Bonsai.Core
       return int.MaxValue;
     }
 
+#if UNITY_EDITOR
+
+    private void OnValidate()
+    {
+      var hasNullable = children.Any(child => child == null);
+      if (hasNullable)
+      {
+        children = children.Where(child => child != null).ToArray();
+      }
+    }
+#endif
   }
 }

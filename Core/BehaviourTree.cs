@@ -421,15 +421,6 @@ namespace Bonsai.Core
       }
     }
 
-    public void OnValidate()
-    {
-      var hasNullable = allNodes.Any(node => node == null);
-      if (hasNullable)
-      {
-        allNodes = allNodes.Where(node => node != null).ToArray();
-      }
-    }
-
     [HideInInspector]
     public Vector2 panPosition = Vector2.zero;
 
